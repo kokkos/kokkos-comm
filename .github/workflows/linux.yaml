@@ -19,7 +19,7 @@ jobs:
       - name: Build Kokkos
         run: |
           git clone https://github.com/kokkos/kokkos.git
-          cd kokkos && git checkout 4.2.00`
+          cd kokkos && git checkout 4.2.00
           cmake -S kokkos -B kokkos-build -DCMAKE_INSTALL_PREFIX=kokkos-install -DCMAKE_CXX_BUILD_TYPE=Release -DKokkos_ENABLE_SERIAL=ON -DKokkos_ARCH_NATIVE=ON
           cmake --build kokkos-build --parallel $(nproc) -t install
       - name: Build KokkosComm
