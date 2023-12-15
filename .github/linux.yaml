@@ -1,8 +1,8 @@
 name: Linux
-run-name: Linux / Kokkos 4.2.00 / Serial / Release
+run-name: Linux
 on: [push]
 jobs:
-  Job1:
+   Kokkos-040200-Serial-Release:
     runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
