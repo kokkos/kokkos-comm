@@ -2,7 +2,7 @@ name: Linux
 run-name: Linux
 on: [push]
 jobs:
-   Kokkos-040200-Serial-Release:
+   Kokkos-040200-OpenMPI-Threads-Debug:
     env:
       KOKKOS_SRC: ${{ github.workspace }}/_deps/kokkos
       KOKKOS_BUILD: ${{ github.workspace }}/_deps/kokkos-build
@@ -15,7 +15,12 @@ jobs:
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Install MPI
-        run: sudo apt-get update && sudo apt-get install -y libopenmpi-dev openmpi-bin
+        run: |
+          sudo apt-get update && sudo apt-get install -y libopenmpi-dev openmpi-bin cmake
+          which mpirun
+          mpirun --version
+          which mpicxx
+          mpicxx --version
       - name: Check out repository code
         uses: actions/checkout@v4
       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
@@ -28,13 +33,43 @@ jobs:
         run: |
           git clone https://github.com/kokkos/kokkos.git "$KOKKOS_SRC"
           cd "$KOKKOS_SRC" && git checkout 4.2.00
-          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_THREADS=ON -DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_COMPILER=mpicxx
+          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Debug -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_THREADS=ON -DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_COMPILER=mpicxx
           cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
       - name: Build KokkosComm
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=Debug
           cmake --build "$COMM_BUILD" --parallel "$(nproc)"
       - name: Test KokkosComm
         run: |
           ctest -V --test-dir "$COMM_BUILD"
-          
+   Kokkos-040200-MPICH-Threads-Debug:
+    env:
+      KOKKOS_SRC: ${{ github.workspace }}/_deps/kokkos
+      KOKKOS_BUILD: ${{ github.workspace }}/_deps/kokkos-build
+      KOKKOS_INSTALL: ${{ github.workspace }}/_deps/kokkos-install
+      COMM_SRC: ${{ github.workspace }}
+      COMM_BUILD: ${{ github.workspace }}/build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install MPI
+        run: |
+          sudo apt-get update && sudo apt-get install -y mpich cmake
+          which mpirun
+          mpirun --version
+          which mpicxx
+          mpicxx --version
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Build Kokkos
+        run: |
+          git clone https://github.com/kokkos/kokkos.git "$KOKKOS_SRC"
+          cd "$KOKKOS_SRC" && git checkout 4.2.00
+          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Debug -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_THREADS=ON -DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_COMPILER=mpicxx
+          cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
+      - name: Build KokkosComm
+        run: |
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=Debug
+          cmake --build "$COMM_BUILD" --parallel "$(nproc)"
+      - name: Test KokkosComm
+        run: |
+          ctest -V --test-dir "$COMM_BUILD"          

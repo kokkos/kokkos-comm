@@ -7,21 +7,35 @@ endif()
 
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+  URL https://github.com/google/googletest/archive/530d5c8c84abd2a46f38583ee817743c9b3a42b4.zip # 12-18-2023
 )
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 
+FetchContent_Declare(
+  mpitest
+  URL https://github.com/AdhocMan/gtest_mpi/archive/refs/tags/v1.1.0.zip
+)
+FetchContent_MakeAvailable(mpitest)
 
+add_executable(test-mpi test_mpi.cpp)
+add_test(NAME test-mpi-1
+        COMMAND mpirun -np 1 ./test-mpi
+)
+add_test(NAME test-mpi-2
+        COMMAND mpirun -np 2 ./test-mpi
+)
 
 add_executable(test-main test_main.cpp
-  test_send.cpp
+  test_isendrecv.cpp
+  test_sendrecv.cpp
 )
-target_link_libraries(test-main KokkosComm gtest)
+target_link_libraries(test-main KokkosComm gtest gtest_mpi)
 
 add_test(NAME test-main
-         COMMAND mpirun -np 2 ./test-main)
+         COMMAND mpirun -np 2 ./test-main
+)
 
 
