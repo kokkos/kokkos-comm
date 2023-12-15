@@ -22,12 +22,15 @@ jobs:
       - run: echo "🍏 This job's status is ${{ job.status }}."
       - name: Build Kokkos
         run: |
+          cd ${{ github.workspace }}
           git clone https://github.com/kokkos/kokkos.git
-          (cd kokkos && git checkout 4.2.00)
+          cd kokkos && git checkout 4.2.00
+          cd ${{ github.workspace }}
           cmake -S kokkos -B kokkos-build -DCMAKE_INSTALL_PREFIX=kokkos-install -DCMAKE_CXX_BUILD_TYPE=RelWithDebInfo -DKokkos_ENABLE_SERIAL=ON -DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_COMPILER=mpicxx
           cmake --build kokkos-build --parallel $(nproc) -t install
       - name: Build KokkosComm
         run: |
+          cd ${{ github.workspace }}
           cmake -S kokkos-comm -B kokkos-comm-build -DCMAKE_MODULE_PATH=kokkos-install/lib/cmake/Kokkos -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_CXX_BUILD_TYPE=RelWithDebInfo
           cmake --build kokkos-comm-build --parallel "$(nproc)"
             
