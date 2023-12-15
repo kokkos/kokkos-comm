@@ -1,0 +1,30 @@
+name: Linux
+run-name: Linux / Kokkos 4.2.00 / Serial / Release
+on: [push]
+jobs:
+  Job1:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
+      - run: echo "🍏 This job's status is ${{ job.status }}."
+      - name: Build Kokkos
+        run: |
+          git clone https://github.com/kokkos/kokkos.git
+          cd kokkos && git checkout 4.2.00`
+          cmake -S kokkos -B kokkos-build -DCMAKE_INSTALL_PREFIX=kokkos-install -DCMAKE_CXX_BUILD_TYPE=Release -DKokkos_ENABLE_SERIAL=ON -DKokkos_ARCH_NATIVE=ON
+          cmake --build kokkos-build --parallel $(nproc) -t install
+      - name: Build KokkosComm
+        run: |
+          cmake -S kokkos-comm -B kokkos-comm-build -DCMAKE_PREFIX_PATH=kokkos-install
+          cmake --build kokkos-comm-build --parallel $(nproc)
+            
+          
