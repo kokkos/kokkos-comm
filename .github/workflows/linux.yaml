@@ -24,11 +24,11 @@ jobs:
         run: |
           git clone https://github.com/kokkos/kokkos.git
           (cd kokkos && git checkout 4.2.00)
-          cmake -S kokkos -B kokkos-build -DCMAKE_INSTALL_PREFIX=kokkos-install -DCMAKE_CXX_BUILD_TYPE=Release -DKokkos_ENABLE_SERIAL=ON -DKokkos_ARCH_NATIVE=ON
+          cmake -S kokkos -B kokkos-build -DCMAKE_INSTALL_PREFIX=kokkos-install -DCMAKE_CXX_BUILD_TYPE=Release -DKokkos_ENABLE_SERIAL=ON -DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_COMPILER=mpicxx
           cmake --build kokkos-build --parallel $(nproc) -t install
       - name: Build KokkosComm
         run: |
-          cmake -S kokkos-comm -B kokkos-comm-build -DCMAKE_PREFIX_PATH=kokkos-install
-          cmake --build kokkos-comm-build --parallel $(nproc)
+          cmake -S kokkos-comm -B kokkos-comm-build -DCMAKE_MODULE_PATH=kokkos-install/lib/cmake/Kokkos -DCMAKE_CXX_COMPILER=mpicxx
+          cmake --build kokkos-comm-build --parallel "$(nproc)"
             
           
