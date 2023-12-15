@@ -3,6 +3,13 @@ run-name: Linux
 on: [push]
 jobs:
    Kokkos-040200-Serial-Release:
+    env:
+      KOKKOS_SRC: ${{ github.workspace }}/kokkos
+      KOKKOS_BUILD: ${{ github.workspace }}/kokkos-build
+      KOKKOS_INSTALL: ${{ github.workspace }}/kokkos-install
+      COMM_REL: kokkos-comm
+      COMM_SRC: ${{ github.workspace }}/"$COMM_REL"
+      COMM_BUILD: ${{ github.workspace }}/kokkos-comm-build
     runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
@@ -13,7 +20,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
         with:
-          path: kokkos-comm
+          path: "$COMM_REL"
       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
       - name: List files in the repository
@@ -22,16 +29,14 @@ jobs:
       - run: echo "🍏 This job's status is ${{ job.status }}."
       - name: Build Kokkos
         run: |
-          cd ${{ github.workspace }}
-          git clone https://github.com/kokkos/kokkos.git
-          cd kokkos && git checkout 4.2.00
-          cd ${{ github.workspace }}
-          cmake -S kokkos -B kokkos-build -DCMAKE_INSTALL_PREFIX=kokkos-install -DCMAKE_CXX_BUILD_TYPE=RelWithDebInfo -DKokkos_ENABLE_SERIAL=ON -DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_COMPILER=mpicxx
-          cmake --build kokkos-build --parallel $(nproc) -t install
+          git clone https://github.com/kokkos/kokkos.git "$KOKKOS_SRC"
+          cd "$KOKKOS_SRC" && git checkout 4.2.00
+          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_CXX_BUILD_TYPE=RelWithDebInfo -DKokkos_ENABLE_SERIAL=ON -DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_COMPILER=mpicxx
+          cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
       - name: Build KokkosComm
         run: |
           cd ${{ github.workspace }}
-          cmake -S kokkos-comm -B kokkos-comm-build -DKokkos_DIR=kokkos-install/lib/cmake/Kokkos -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_CXX_BUILD_TYPE=RelWithDebInfo
-          cmake --build kokkos-comm-build --parallel "$(nproc)"
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_CXX_BUILD_TYPE=RelWithDebInfo
+          cmake --build "$COMM_BUILD" --parallel "$(nproc)"
             
           
