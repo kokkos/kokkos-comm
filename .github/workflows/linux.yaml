@@ -4,12 +4,11 @@ on: [push]
 jobs:
    Kokkos-040200-Serial-Release:
     env:
-      KOKKOS_SRC: ${{ github.workspace }}/kokkos
-      KOKKOS_BUILD: ${{ github.workspace }}/kokkos-build
-      KOKKOS_INSTALL: ${{ github.workspace }}/kokkos-install
-      COMM_REL: kokkos-comm
-      COMM_SRC: ${{ github.workspace }}/"$COMM_REL"
-      COMM_BUILD: ${{ github.workspace }}/kokkos-comm-build
+      KOKKOS_SRC: ${{ github.workspace }}/_deps/kokkos
+      KOKKOS_BUILD: ${{ github.workspace }}/_deps/kokkos-build
+      KOKKOS_INSTALL: ${{ github.workspace }}/_deps/kokkos-install
+      COMM_SRC: ${{ github.workspace }}
+      COMM_BUILD: ${{ github.workspace }}/build
     runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
