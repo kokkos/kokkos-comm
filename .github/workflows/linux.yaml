@@ -31,7 +31,7 @@ jobs:
       - name: Build KokkosComm
         run: |
           cd ${{ github.workspace }}
-          cmake -S kokkos-comm -B kokkos-comm-build -DCMAKE_MODULE_PATH=kokkos-install/lib/cmake/Kokkos -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_CXX_BUILD_TYPE=RelWithDebInfo
+          cmake -S kokkos-comm -B kokkos-comm-build -DKokkos_DIR=kokkos-install/lib/cmake/Kokkos -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_CXX_BUILD_TYPE=RelWithDebInfo
           cmake --build kokkos-comm-build --parallel "$(nproc)"
             
           
