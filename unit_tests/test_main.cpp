@@ -2,25 +2,29 @@
 
 #include <mpi.h>
 
-int main(int argc, char* argv[]) {
-    MPI_Init(&argc, &argv);
+#include <Kokkos_Core.hpp>
 
-    int result = 0;
+int main(int argc, char *argv[]) {
+  MPI_Init(&argc, &argv);
+  Kokkos::initialize();
 
-    ::testing::InitGoogleTest(&argc, argv);
-    
-::testing::TestEventListeners& listeners =
-    ::testing::UnitTest::GetInstance()->listeners();
+  int result = 0;
 
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    if (rank != 0) {
-        delete listeners.Release(listeners.default_result_printer());
-    }
+  ::testing::InitGoogleTest(&argc, argv);
 
-    result = RUN_ALL_TESTS();
+  ::testing::TestEventListeners &listeners =
+      ::testing::UnitTest::GetInstance()->listeners();
 
-    MPI_Finalize();
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  if (rank != 0) {
+    delete listeners.Release(listeners.default_result_printer());
+  }
 
-    return result;
+  result = RUN_ALL_TESTS();
+
+  Kokkos::finalize();
+  MPI_Finalize();
+
+  return result;
 }

@@ -6,12 +6,13 @@
 
 namespace KokkosComm::Impl {
 template <typename SendView, typename ExecSpace>
-void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
+void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
+          MPI_Comm comm) {
 
-    using value_type = SendView::non_const_value_type;
+  using value_type = typename SendView::non_const_value_type;
 
-    KokkosView<char *> packed = Impl::pack(space, sv, comm);
+  auto packedView = Impl::pack(space, sv, comm);
 
-    MPI_Send(packed.data(), packed.size(), MPI_PACKED, dest, tag, comm);
+  MPI_Send(packedView.data(), packedView.size(), MPI_PACKED, dest, tag, comm);
 }
-} // namespace KokkosComm
+} // namespace KokkosComm::Impl

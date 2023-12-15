@@ -34,5 +34,7 @@ jobs:
         run: |
           cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo
           cmake --build "$COMM_BUILD" --parallel "$(nproc)"
-            
+      - name: Test KokkosComm
+        run: |
+          ctest -V --test-dir "$COMM_BUILD"
           
