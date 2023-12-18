@@ -21,7 +21,7 @@ auto pack_sv(const ExecSpace &space, const View &sv) {
       Kokkos::View<non_const_value_type *> packed(
           Kokkos::view_alloc(Kokkos::WithoutInitializing, "packed"),
           sv.extent(0));
-      pack(packed, sv);
+      pack(space, packed, sv);
       return packed;
     } else {
       static_assert(std::is_void_v<View>,
