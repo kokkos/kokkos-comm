@@ -2,3 +2,4 @@ _deps
 build
 Testing
 .vscode
+kokkos
