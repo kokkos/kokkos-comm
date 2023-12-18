@@ -23,13 +23,17 @@ void benchmark_sendrecv(benchmark::State &state) {
     state.SkipWithError("benchmark_sendrecv needs at least 2 ranks");
   }
 
+  using Scalar = double;
+
   auto space = Kokkos::DefaultExecutionSpace();
-  using view_type = Kokkos::View<double *>;
+  using view_type = Kokkos::View<Scalar *>;
   view_type a("", 1000000);
 
   while(state.KeepRunning()) {
     do_iteration(state, MPI_COMM_WORLD, send_recv<Kokkos::DefaultExecutionSpace, view_type>, space, rank, a);
   }
+
+  state.SetBytesProcessed(sizeof(Scalar) * state.iterations() * a.size() * 2);
 }
 
 BENCHMARK(benchmark_sendrecv)->UseManualTime()->Unit(benchmark::kMillisecond);
