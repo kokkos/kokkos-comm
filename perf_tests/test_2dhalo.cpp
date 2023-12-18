@@ -7,7 +7,7 @@
 void noop(benchmark::State, MPI_Comm) {}
 
 template <typename Space, typename View>
-void send_recv(benchmark::State &state, MPI_Comm comm, const Space &space, int rx, int ry, int rs, const View &v) {
+void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int rx, int ry, int rs, const View &v) {
 
   // 2D index of nbrs in minus and plus direction (periodic)
   const int xm1 = (rx + rs - 1) % rs;
@@ -36,15 +36,15 @@ void send_recv(benchmark::State &state, MPI_Comm comm, const Space &space, int r
 
   std::vector<KokkosComm::Req> reqs;
   // std::cerr << get_rank(rx, ry) << " -> " << get_rank(xp1, ry) << "\n";
-  reqs.push_back(KokkosComm::isend(space, xp1_s, get_rank(xp1, ry), 0, MPI_COMM_WORLD));
-  reqs.push_back(KokkosComm::isend(space, xm1_s, get_rank(xm1, ry), 0, MPI_COMM_WORLD));
-  reqs.push_back(KokkosComm::isend(space, yp1_s, get_rank(rx, yp1), 0, MPI_COMM_WORLD));
-  reqs.push_back(KokkosComm::isend(space, ym1_s, get_rank(rx, ym1), 0, MPI_COMM_WORLD));
+  reqs.push_back(KokkosComm::isend(space, xp1_s, get_rank(xp1, ry), 0, comm));
+  reqs.push_back(KokkosComm::isend(space, xm1_s, get_rank(xm1, ry), 0, comm));
+  reqs.push_back(KokkosComm::isend(space, yp1_s, get_rank(rx, yp1), 0, comm));
+  reqs.push_back(KokkosComm::isend(space, ym1_s, get_rank(rx, ym1), 0, comm));
   
-  KokkosComm::recv(space, xp1_r, get_rank(xp1, ry), 0, MPI_COMM_WORLD);
-  KokkosComm::recv(space, xm1_r, get_rank(xm1, ry), 0, MPI_COMM_WORLD);
-  KokkosComm::recv(space, yp1_r, get_rank(rx, yp1), 0, MPI_COMM_WORLD);
-  KokkosComm::recv(space, ym1_r, get_rank(rx, ym1), 0, MPI_COMM_WORLD);
+  KokkosComm::recv(space, xp1_r, get_rank(xp1, ry), 0, comm);
+  KokkosComm::recv(space, xm1_r, get_rank(xm1, ry), 0, comm);
+  KokkosComm::recv(space, yp1_r, get_rank(rx, yp1), 0, comm);
+  KokkosComm::recv(space, ym1_r, get_rank(rx, ym1), 0, comm);
 
   // wait for comm
   for (KokkosComm::Req &req : reqs) {

@@ -7,7 +7,7 @@
 namespace KokkosComm {
 
 class Req {
-private:
+
   // a type-erased view. Request uses these to keep temporary views alive for
   // the lifetime of "Immediate" MPI operations
   struct ViewHolderBase {
@@ -18,28 +18,30 @@ private:
     V v_;
   };
 
+  struct Record {
+    Record() : req_(MPI_REQUEST_NULL) {}
+    MPI_Request req_;
+    std::vector<std::shared_ptr<ViewHolderBase>> until_waits_;
+  };
+
 public:
-  Req() : req_(MPI_REQUEST_NULL) {}
+  Req() : record_(std::make_shared<Record>()) {}
 
-  MPI_Request &mpi_req() { return req_; }
+  MPI_Request &mpi_req() { return record_->req_; }
 
-  // FIXME: this isn't quite right because if a Req is copied, each one will
-  // need to be `wait`ed before the ViewHolders are destroyed Req should
-  // basically just be an std::shared_ptr to what are currently its members
   void wait() {
-    MPI_Wait(&req_, MPI_STATUS_IGNORE);
-    until_waits_.clear(); // drop any views we're keeping alive until wait()
+    MPI_Wait(&(record_->req_), MPI_STATUS_IGNORE);
+    record_->until_waits_
+        .clear(); // drop any views we're keeping alive until wait()
   }
 
   // keep a reference to this view around until wait() is called
   template <typename View> void keep_until_wait(const View &v) {
-    until_waits_.push_back(std::make_shared<ViewHolder<View>>(v));
+    record_->until_waits_.push_back(std::make_shared<ViewHolder<View>>(v));
   }
 
 private:
-  MPI_Request req_;
-
-  std::vector<std::shared_ptr<ViewHolderBase>> until_waits_;
+  std::shared_ptr<Record> record_;
 };
 
 } // namespace KokkosComm
