@@ -59,8 +59,10 @@ void benchmark_2dhalo(benchmark::State &state) {
   using Scalar = double;
   using grid_type = Kokkos::View<Scalar ***, Kokkos::LayoutRight>;
 
+  // problem size per rank
   int nx = 512;
   int ny = 512;
+  int nprops = 3;
 
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -74,7 +76,7 @@ void benchmark_2dhalo(benchmark::State &state) {
   if (rank < rs * rs) {
     auto space = Kokkos::DefaultExecutionSpace();
     // grid of elements, each with 3 properties, and a radius-1 halo
-    grid_type grid("", nx+2,ny+2,3);
+    grid_type grid("", nx+2, ny+2, nprops);
     while(state.KeepRunning()) {
       do_iteration(state, MPI_COMM_WORLD, send_recv<Kokkos::DefaultExecutionSpace, grid_type>, space, rx, ry, rs, grid);
     }
@@ -90,7 +92,8 @@ void benchmark_2dhalo(benchmark::State &state) {
   state.SetBytesProcessed(
       sizeof(Scalar) 
     * rs * rs // active ranks
-    * state.iterations() 
+    * state.iterations()
+    * nprops
     * (
         2 * nx // send x nbrs
       + 2 * nx // recv x nbs
