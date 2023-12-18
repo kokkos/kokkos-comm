@@ -28,3 +28,8 @@ ctest
   - Also, could introduce a runtime packing argument to the various functions, like a pack tag
 - More convenient collective wrappers
   - Outer dimension has destination rank?
+
+## Performance Tests
+
+* `test_2dhalo.cpp`: a 2d halo exchange
+* `test_sendrecv.cpp`: ping-pong between ranks 0 and 1
