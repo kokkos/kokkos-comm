@@ -1,5 +1,6 @@
 #include <mpi.h>
 #include <benchmark/benchmark.h>
+#include <Kokkos_Core.hpp>
 
 // This reporter does nothing.
 // We can use it to disable output from all but the root process
@@ -20,6 +21,8 @@ int main(int argc, char **argv) {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+  Kokkos::initialize();
+
   ::benchmark::Initialize(&argc, argv);
 
   if(rank == 0)
@@ -32,6 +35,7 @@ int main(int argc, char **argv) {
     ::benchmark::RunSpecifiedBenchmarks(&null);
   }
 
+  Kokkos::finalize();
   MPI_Finalize();
   return 0;
 }
