@@ -1,6 +1,7 @@
 #pragma once
 
 #include "KokkosComm_version.hpp"
+#include "KokkosComm_collective.hpp"
 #include "impl/KokkosComm_isend.hpp"
 #include "impl/KokkosComm_recv.hpp"
 #include "impl/KokkosComm_send.hpp"
@@ -26,4 +27,6 @@ void recv(const ExecSpace &space, const Recv &sv, int src, int tag,
           MPI_Comm comm) {
   return Impl::recv(space, sv, src, tag, comm);
 }
+
+
 } // namespace KokkosComm
