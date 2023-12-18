@@ -9,7 +9,7 @@ void noop(benchmark::State, MPI_Comm) {}
 template <typename Space, typename View>
 void send_recv(benchmark::State &state, MPI_Comm comm, const Space &space, int rx, int ry, int rs, const View &v) {
 
-  // 2D index of neights in minus and plus direction (periodic)
+  // 2D index of nbrs in minus and plus direction (periodic)
   const int xm1 = (rx + rs - 1) % rs;
   const int ym1 = (ry + rs - 1) % rs;
   const int xp1 = (rx + 1) % rs;
