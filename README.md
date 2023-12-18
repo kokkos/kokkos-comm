@@ -24,5 +24,7 @@ ctest
 - A better pack/unpack interface
   - implement these side-by-side since they're duals
   - allow something like "pack this type into half_t, other types into the same scalar"
+  - Maybe a `PackTraits<View>` where users can specialize `PackTraits` for any types they want to handle
+  - Also, could introduce a runtime packing argument to the various functions, like a pack tag
 - More convenient collective wrappers
   - Outer dimension has destination rank?
