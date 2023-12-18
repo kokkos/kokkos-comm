@@ -1,5 +1,5 @@
 # kokkos-comm
-MPI Wrapper for [Kokkos](https://github.com/kokkos/kokkos).
+A toy MPI wrapper for [Kokkos](https://github.com/kokkos/kokkos).
 
 ```
 mkdir -p build && cd build
@@ -7,6 +7,11 @@ cmake ..
 make
 ctest
 ```
+
+## Design
+
+- [x] use `Kokkos::deep_copy` to handle packing and unpacking of non-contiguous views
+  - When non-contiguous views are passed to an MPI function, a temporary contiguous view of matching extent is allocated, and `Kokkos::deep_copy` is used to pack the data.
 
 
 ## Considerations

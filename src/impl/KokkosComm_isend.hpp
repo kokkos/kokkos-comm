@@ -30,6 +30,7 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest,
       space.fence();
       MPI_Isend(packed.data(), packed.span() * sizeof(value_type), MPI_PACKED,
                 dest, tag, comm, &req.mpi_req());
+      req.keep_until_wait(packed);
       return req;
     } else {
       static_assert(std::is_void_v<SendView>,
