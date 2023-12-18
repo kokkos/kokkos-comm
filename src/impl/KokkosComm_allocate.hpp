@@ -15,7 +15,7 @@ typename packed_view<View>::type allocate_packed(const std::string &label,
     return typename packed_view<View>::type(
         Kokkos::view_alloc(Kokkos::WithoutInitializing, label), v.extent(0));
   } else {
-    static_assert(std::is_void_v<>,
+    static_assert(std::is_void_v<View>,
                   "allocate_packed only supports rank-1 views");
   }
 }
