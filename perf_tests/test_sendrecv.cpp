@@ -3,13 +3,13 @@
 #include "KokkosComm.hpp"
 
 template <typename Space, typename View>
-void send_recv(benchmark::State &state, MPI_Comm comm, const Space &space, int rank, const View &v) {
+void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int rank, const View &v) {
   if (0 == rank) {
-    KokkosComm::send(space, v, 1, 0, MPI_COMM_WORLD);
-    KokkosComm::recv(space, v, 1, 0, MPI_COMM_WORLD);
+    KokkosComm::send(space, v, 1, 0, comm);
+    KokkosComm::recv(space, v, 1, 0, comm);
   } else if (1 == rank) {
-    KokkosComm::recv(space, v, 0, 0, MPI_COMM_WORLD);
-    KokkosComm::send(space, v, 0, 0, MPI_COMM_WORLD);
+    KokkosComm::recv(space, v, 0, 0, comm);
+    KokkosComm::send(space, v, 0, 0, comm);
   }
 }
 

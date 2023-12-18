@@ -33,7 +33,7 @@ TYPED_TEST(IsendRecv, 1D_contig) {
                      MPI_COMM_WORLD);
     int errs;
     Kokkos::parallel_reduce(a.extent(0), KOKKOS_LAMBDA (const int& i, int& lsum) {
-        lsum += a(i) != i;
+        lsum += a(i) != typename TestFixture::Scalar(i);
     }, errs);
     ASSERT_EQ(errs, 0);
   }
@@ -60,7 +60,7 @@ TYPED_TEST(IsendRecv, 1D_noncontig) {
                      MPI_COMM_WORLD);
     int errs;
     Kokkos::parallel_reduce(a.extent(0), KOKKOS_LAMBDA (const int& i, int& lsum) {
-        lsum += a(i) != i;
+        lsum += a(i) != typename TestFixture::Scalar(i);
     }, errs);
     ASSERT_EQ(errs, 0);
   }
