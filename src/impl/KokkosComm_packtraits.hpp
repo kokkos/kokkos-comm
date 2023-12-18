@@ -1,5 +1,3 @@
 #pragma once
 
-template <typename ViewType>
-struct PackTraits {
-};
+template <typename ViewType> struct PackTraits {};

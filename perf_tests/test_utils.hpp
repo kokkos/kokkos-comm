@@ -14,7 +14,7 @@ void do_iteration(benchmark::State &state, MPI_Comm comm, F &&func, Args... args
     using Duration = std::chrono::duration<double>;
 
     auto start = Clock::now();
-    func(comm, args...);
+    func(state, comm, args...);
     Duration elapsed = Clock::now() - start;
 
     double max_elapsed_second;
