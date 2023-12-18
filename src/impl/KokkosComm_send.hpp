@@ -22,7 +22,8 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
   } else {
     if constexpr (SendView::rank == 1) {
       Kokkos::View<typename SendView::non_const_value_type *> packed(
-          "", sv.extent(0));
+          Kokkos::view_alloc(Kokkos::WithoutInitializing, "packed"),
+          sv.extent(0));
       pack(space, packed, sv);
       space.fence();
       MPI_Send(packed.data(), packed.span() * sizeof(value_type), MPI_PACKED,

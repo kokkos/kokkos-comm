@@ -22,7 +22,14 @@ void recv(const ExecSpace &space, const RecvView &rv, int src, int tag,
     if constexpr (RecvView::rank == 1) {
       Kokkos::View<typename RecvView::non_const_value_type *> packed(
           Kokkos::view_alloc(Kokkos::WithoutInitializing, "packed"),
-          rv.extent(0) * sizeof(value_type));
+          rv.extent(0));
+      MPI_Recv(packed.data(), packed.span() * sizeof(value_type), MPI_PACKED,
+               src, tag, comm, MPI_STATUS_IGNORE);
+      unpack(space, rv, packed);
+    } else if constexpr (RecvView::rank == 2) {
+      Kokkos::View<typename RecvView::non_const_value_type **> packed(
+          Kokkos::view_alloc(Kokkos::WithoutInitializing, "packed"),
+          rv.extent(0), rv.extent(1));
       MPI_Recv(packed.data(), packed.span() * sizeof(value_type), MPI_PACKED,
                src, tag, comm, MPI_STATUS_IGNORE);
       unpack(space, rv, packed);

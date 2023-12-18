@@ -16,10 +16,9 @@ unset(BENCHMARK_ENABLE_TESTING)
 
 add_executable(perf_test-main test_main.cpp
   test_sendrecv.cpp
+  test_2dhalo.cpp
 )
 target_link_libraries(perf_test-main KokkosComm benchmark::benchmark)
-
 add_test(NAME perf_test-main
          COMMAND mpirun -np 2 ./perf_test-main)
-
 

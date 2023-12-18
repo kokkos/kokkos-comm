@@ -7,7 +7,7 @@ void send_recv(benchmark::State &state, MPI_Comm comm, const Space &space, int r
   if (0 == rank) {
     KokkosComm::send(space, v, 1, 0, MPI_COMM_WORLD);
     KokkosComm::recv(space, v, 1, 0, MPI_COMM_WORLD);
-  } else {
+  } else if (1 == rank) {
     KokkosComm::recv(space, v, 0, 0, MPI_COMM_WORLD);
     KokkosComm::send(space, v, 0, 0, MPI_COMM_WORLD);
   }
