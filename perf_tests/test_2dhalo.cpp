@@ -7,7 +7,7 @@
 void noop(benchmark::State, MPI_Comm) {}
 
 template <typename Space, typename View>
-void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int rx, int ry, int rs, const View &v) {
+void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, int ny, int rx, int ry, int rs, const View &v) {
 
   // 2D index of nbrs in minus and plus direction (periodic)
   const int xm1 = (rx + rs - 1) % rs;
@@ -25,26 +25,26 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int rx, in
   };
 
   // send/recv subviews
-  auto xp1_s = Kokkos::subview(v, v.extent(0)-1, make_pair(1, v.extent(1)-2), Kokkos::ALL);
-  auto xp1_r = Kokkos::subview(v, v.extent(0)-0, make_pair(1, v.extent(1)-2), Kokkos::ALL);
-  auto xm1_s = Kokkos::subview(v, 1, make_pair(1, v.extent(1)-2), Kokkos::ALL);
-  auto xm1_r = Kokkos::subview(v, 0, make_pair(1, v.extent(1)-2), Kokkos::ALL);
-  auto yp1_s = Kokkos::subview(v, make_pair(1, v.extent(0)-2), v.extent(1)-1, Kokkos::ALL);
-  auto yp1_r = Kokkos::subview(v, make_pair(1, v.extent(0)-2), v.extent(1)-0, Kokkos::ALL);
-  auto ym1_s = Kokkos::subview(v, make_pair(1, v.extent(0)-2), 1, Kokkos::ALL);
-  auto ym1_r = Kokkos::subview(v, make_pair(1, v.extent(0)-2), 0, Kokkos::ALL);
+  auto xp1_s = Kokkos::subview(v, v.extent(0)-2, make_pair(1, ny+1), Kokkos::ALL);
+  auto xp1_r = Kokkos::subview(v, v.extent(0)-1, make_pair(1, ny+1), Kokkos::ALL);
+  auto xm1_s = Kokkos::subview(v, 1, make_pair(1, ny+1), Kokkos::ALL);
+  auto xm1_r = Kokkos::subview(v, 0, make_pair(1, ny+1), Kokkos::ALL);
+  auto yp1_s = Kokkos::subview(v, make_pair(1, nx+1), v.extent(1)-2, Kokkos::ALL);
+  auto yp1_r = Kokkos::subview(v, make_pair(1, nx+1), v.extent(1)-1, Kokkos::ALL);
+  auto ym1_s = Kokkos::subview(v, make_pair(1, nx+1), 1, Kokkos::ALL);
+  auto ym1_r = Kokkos::subview(v, make_pair(1, nx+1), 0, Kokkos::ALL);
 
   std::vector<KokkosComm::Req> reqs;
   // std::cerr << get_rank(rx, ry) << " -> " << get_rank(xp1, ry) << "\n";
   reqs.push_back(KokkosComm::isend(space, xp1_s, get_rank(xp1, ry), 0, comm));
-  reqs.push_back(KokkosComm::isend(space, xm1_s, get_rank(xm1, ry), 0, comm));
-  reqs.push_back(KokkosComm::isend(space, yp1_s, get_rank(rx, yp1), 0, comm));
-  reqs.push_back(KokkosComm::isend(space, ym1_s, get_rank(rx, ym1), 0, comm));
+  reqs.push_back(KokkosComm::isend(space, xm1_s, get_rank(xm1, ry), 1, comm));
+  reqs.push_back(KokkosComm::isend(space, yp1_s, get_rank(rx, yp1), 2, comm));
+  reqs.push_back(KokkosComm::isend(space, ym1_s, get_rank(rx, ym1), 3, comm));
   
-  KokkosComm::recv(space, xp1_r, get_rank(xp1, ry), 0, comm);
   KokkosComm::recv(space, xm1_r, get_rank(xm1, ry), 0, comm);
-  KokkosComm::recv(space, yp1_r, get_rank(rx, yp1), 0, comm);
-  KokkosComm::recv(space, ym1_r, get_rank(rx, ym1), 0, comm);
+  KokkosComm::recv(space, xp1_r, get_rank(xp1, ry), 1, comm);
+  KokkosComm::recv(space, ym1_r, get_rank(rx, ym1), 2, comm);
+  KokkosComm::recv(space, yp1_r, get_rank(rx, yp1), 3, comm);
 
   // wait for comm
   for (KokkosComm::Req &req : reqs) {
@@ -78,7 +78,7 @@ void benchmark_2dhalo(benchmark::State &state) {
     // grid of elements, each with 3 properties, and a radius-1 halo
     grid_type grid("", nx+2, ny+2, nprops);
     while(state.KeepRunning()) {
-      do_iteration(state, MPI_COMM_WORLD, send_recv<Kokkos::DefaultExecutionSpace, grid_type>, space, rx, ry, rs, grid);
+      do_iteration(state, MPI_COMM_WORLD, send_recv<Kokkos::DefaultExecutionSpace, grid_type>, space, nx, ny, rx, ry, rs, grid);
     }
   } else {
     while(state.KeepRunning()) {
