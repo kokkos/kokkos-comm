@@ -28,6 +28,7 @@ ctest
   - Also, could introduce a runtime packing argument to the various functions, like a pack tag
 - More convenient collective wrappers
   - Outer dimension has destination rank?
+- Custom reductions?
 
 ## Performance Tests
 
