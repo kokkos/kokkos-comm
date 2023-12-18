@@ -23,6 +23,9 @@ public:
 
   MPI_Request &mpi_req() { return req_; }
 
+  // FIXME: this isn't quite right because if a Req is copied, each one will
+  // need to be `wait`ed before the ViewHolders are destroyed Req should
+  // basically just be an std::shared_ptr to what are currently its members
   void wait() {
     MPI_Wait(&req_, MPI_STATUS_IGNORE);
     until_waits_.clear(); // drop any views we're keeping alive until wait()
