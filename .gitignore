@@ -3,3 +3,4 @@ build
 Testing
 .vscode
 kokkos
+docs/_build

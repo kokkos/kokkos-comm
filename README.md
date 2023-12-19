@@ -20,14 +20,11 @@ ctest
   - what `pack` does for `View`
   - what `unpack` does for `View`
 
-
 ## Considerations
 
 - MPI threaded-ness and Kokkos backends (Serial with multiple instances, Threads, etc)
 - Are there circumstances in which we can fuse packing into another kernel?
 - A better pack/unpack interface
-  - implement these side-by-side since they're duals
-  - allow something like "pack this type into half_t, other types into the same scalar"
   - Maybe a `PackTraits<View>` where users can specialize `PackTraits` for any types they want to handle
   - Also, could introduce a runtime packing argument to the various functions, like a pack tag
 - More convenient collective wrappers
