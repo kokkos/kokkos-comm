@@ -11,8 +11,13 @@ FetchContent_Declare(
 )
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
+# FetchContent_MakeAvailable(googletest)
+# was making install install googletest as well
+# EXCLUDE_FROM_ALL here seems to be the magic
+if (NOT googletest_POPULATED)
+  FetchContent_Populate(googletest)
+  add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
 
 # FetchContent_Declare(
 #   mpitest

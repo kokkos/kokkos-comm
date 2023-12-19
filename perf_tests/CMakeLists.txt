@@ -10,7 +10,13 @@ FetchContent_Declare(
   benchmark
   URL https://github.com/google/benchmark/archive/refs/tags/v1.8.3.zip
 )
-FetchContent_MakeAvailable(benchmark)
+# FetchContent_MakeAvailable(benchmark)
+# was making install install benchmark as well
+# EXCLUDE_FROM_ALL here seems to be the magic
+if (NOT benchmark_POPULATED)
+  FetchContent_Populate(benchmark)
+  add_subdirectory(${benchmark_SOURCE_DIR} ${benchmark_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
 unset(BENCHMARK_ENABLE_TESTING)
 
 

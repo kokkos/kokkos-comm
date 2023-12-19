@@ -1,0 +1,6 @@
+@PACKAGE_INIT@
+
+set(KokkosComm_INCLUDE_DIR   "@CMAKE_INSTALL_FULL_INCLUDEDIR@" )
+set(KokkosComm_DATA_DIR   "@CMAKE_INSTALL_PREFIX@/@RELATIVE_DATA_INSTALL_DIR@" )
+set(KokkosComm_ICONS_DIR   "@CMAKE_INSTALL_PREFIX@/share/icons" )
+set(KokkosComm_CONFIG_DIR  "${installedPrefix}/@CONFIG_INSTALL_DIR@" )
