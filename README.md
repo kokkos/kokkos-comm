@@ -10,6 +10,10 @@ make
 ctest
 ```
 
+## Documentation
+
+[cwpearson.github.io/kokkos-comm/](https://cwpearson.github.io/kokkos-comm/)
+
 ## Design
 
 - [x] use `Kokkos::deep_copy` to handle packing and unpacking of non-contiguous views

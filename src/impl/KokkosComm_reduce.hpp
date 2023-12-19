@@ -18,9 +18,9 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv,
             MPI_Op op, int root, MPI_Comm comm) {
 
   const int rank = [=]() -> int {
-    int rank;
-    MPI_Comm_rank(comm, &rank);
-    return rank;
+    int _r;
+    MPI_Comm_rank(comm, &_r);
+    return _r;
   }();
 
   if (KokkosComm::Traits<SendView>::needs_pack(sv)) {
