@@ -1,7 +1,7 @@
 #include <mpi.h>
 
 #include <gtest/gtest.h>
-#include <gtest_mpi/gtest_mpi.hpp>
+// #include <gtest_mpi/gtest_mpi.hpp>
 
 
 #include <Kokkos_Core.hpp>
