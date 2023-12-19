@@ -21,6 +21,7 @@ FetchContent_MakeAvailable(googletest)
 # FetchContent_MakeAvailable(mpitest)
 
 add_executable(test-mpi test_mpi.cpp)
+kokkoscomm_add_cxx_flags(TARGET test-mpi)
 add_test(NAME test-mpi-1
         COMMAND mpirun -np 1 ./test-mpi
 )
@@ -35,6 +36,7 @@ add_executable(test-main test_main.cpp
 target_link_libraries(test-main KokkosComm gtest 
 #gtest_mpi
 )
+kokkoscomm_add_cxx_flags(TARGET test-main)
 
 add_test(NAME test-main
          COMMAND mpirun -np 2 ./test-main

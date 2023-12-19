@@ -22,7 +22,7 @@ message(STATUS "MPI_CXX_LIBRARIES =           ${MPI_CXX_LIBRARIES}")
 include(cmake/flags.cmake)
 
 add_subdirectory(src)
-kokkoscomm_add_cxx_flags(TARGET KokkosComm)
+kokkoscomm_add_cxx_flags(TARGET KokkosComm INTERFACE)
 
 set(KOKKOSCOMM_VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR} CACHE STRING "" FORCE)
 set(KOKKOSCOMM_VERSION_MINOR ${CMAKE_PROJECT_VERSION_MINOR} CACHE STRING "" FORCE)

@@ -20,24 +20,34 @@ check_cxx_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments CXX_HAS_NO_GNU_ZE
 function(kokkoscomm_add_cxx_flags)
 
     message(STATUS ${ARGN})
-    cmake_parse_arguments(ADD_CXX_FLAGS "" TARGET "" ${ARGN})
+    cmake_parse_arguments(ADD_CXX_FLAGS "INTERFACE" "TARGET" "" ${ARGN})
+
+    if(ADD_CXX_FLAGS_INTERFACE)
+        set(TARGET_COMPILE_OPTIONS_KEYWORD INTERFACE)
+    else()
+        set(TARGET_COMPILE_OPTIONS_KEYWORD PUBLIC)
+    endif()
 
     if(CXX_HAS_WEXTRA)
-        target_compile_options(${ADD_CXX_FLAGS_TARGET} INTERFACE -Wextra )
+        target_compile_options(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} -Wextra)
     endif()
     if(CXX_HAS_WSHADOW)
-        target_compile_options(${ADD_CXX_FLAGS_TARGET} INTERFACE -Wshadow)
+        target_compile_options(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} -Wshadow)
     endif()
     if(CXX_HAS_WPEDANTIC)
-        target_compile_options(${ADD_CXX_FLAGS_TARGET} INTERFACE -Wpedantic)
+        target_compile_options(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} -Wpedantic)
     endif()
     if(NOT CXX_HAS_WPEDANTIC AND CXX_HAS_PEDANTIC)
-        target_compile_options(${ADD_CXX_FLAGS_TARGET} INTERFACE -pedantic)
+        target_compile_options(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} -pedantic)
     endif()
 
     # gtest includes sometimes yield this warning
     if(CXX_HAS_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-        target_compile_options(${ADD_CXX_FLAGS_TARGET} INTERFACE -Wno-gnu-zero-variadic-macro-arguments)
+        target_compile_options(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} -Wno-gnu-zero-variadic-macro-arguments)
     endif()
+
+    # kokkos requires C++17
+    set_property(TARGET ${ADD_CXX_FLAGS_TARGET} PROPERTY CXX_STANDARD 17)
+    set_property(TARGET ${ADD_CXX_FLAGS_TARGET} PROPERTY CXX_EXTENSIONS OFF)
 
 endfunction()
