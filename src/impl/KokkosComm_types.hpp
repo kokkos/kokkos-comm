@@ -2,14 +2,22 @@
 
 #include <mpi.h>
 
-namespace KokkosComm::Impl {
-template <typename Scalar> struct mpi_type {};
+#include <Kokkos_Core.hpp>
 
-template <> struct mpi_type<double> {
-  static const MPI_Datatype value = MPI_DOUBLE;
+namespace KokkosComm::Impl {
+template <typename Scalar> MPI_Datatype mpi_type() {
+  static_assert(std::is_void_v<Scalar>, "mpi_type not implemented");
 };
 
-template <typename Scalar>
-inline MPI_Datatype mpi_type_v = mpi_type<Scalar>::value;
+template <> inline MPI_Datatype mpi_type<double>() { return MPI_DOUBLE; }
+template <> inline MPI_Datatype mpi_type<float>() { return MPI_FLOAT; }
+template <> inline MPI_Datatype mpi_type<Kokkos::complex<float>>() {
+  return MPI_COMPLEX;
+}
+template <> inline MPI_Datatype mpi_type<Kokkos::complex<double>>() {
+  return MPI_DOUBLE_COMPLEX;
+}
+
+template <typename Scalar> inline MPI_Datatype mpi_type_v = mpi_type<Scalar>();
 
 }; // namespace KokkosComm::Impl
