@@ -31,6 +31,7 @@ add_test(NAME test-mpi-2
 
 add_executable(test-main test_main.cpp
   test_isendrecv.cpp
+  test_reduce.cpp
   test_sendrecv.cpp
 )
 target_link_libraries(test-main KokkosComm gtest 
