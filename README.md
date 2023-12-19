@@ -14,6 +14,8 @@ ctest
 
 [cwpearson.github.io/kokkos-comm/](https://cwpearson.github.io/kokkos-comm/)
 
+https://www.sphinx-doc.org/en/master/usage/domains/cpp.html
+
 ## Design
 
 - [x] use `Kokkos::deep_copy` to handle packing and unpacking of non-contiguous views
