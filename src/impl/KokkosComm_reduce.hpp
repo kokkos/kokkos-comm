@@ -43,7 +43,7 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv,
   }();
 
   auto packed_sv = pack_sv(space, sv);
-  auto packed_rv = (rank == root) ? allocate_packed(rv) : rv;
+  auto packed_rv = (rank == root) ? allocate_packed("packed_rv", rv) : rv;
 
   MPI_Reduce(packed_sv.data(), packed_rv.data(),
              packed_sv.span() * sizeof(send_type), mpi_type_v<send_type>, op,
