@@ -15,6 +15,10 @@ ctest
 - [x] use `Kokkos::deep_copy` to handle packing and unpacking of non-contiguous views
   - When non-contiguous views are passed to an MPI function, a temporary contiguous view of matching extent is allocated, and `Kokkos::deep_copy` is used to pack the data.
 - [x] "Immediate" functions (e.g. `isend`) return a `KokkosComm::Req`, which can be `wait()`-ed to block until the input view can be reused. `Req` also manages the lifetimes of any intermediate views needed for packing the data, releasing those views when `wait()` is complete.
+- [x] `KokkosComm::Traits<View>` can be specialized for a `View`:
+  - whether `View` needs to be packed or not
+  - what `pack` does for `View`
+  - what `unpack` does for `View`
 
 
 ## Considerations

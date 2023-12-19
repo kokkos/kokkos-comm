@@ -13,6 +13,10 @@ allocate_packed_for(const ExecSpace &space, const std::string &label,
     return typename KokkosComm::Traits<View>::non_const_packed_view_type(
         Kokkos::view_alloc(space, Kokkos::WithoutInitializing, label),
         v.extent(0));
+  } else if constexpr (View::rank == 2) {
+    return typename KokkosComm::Traits<View>::non_const_packed_view_type(
+        Kokkos::view_alloc(space, Kokkos::WithoutInitializing, label),
+        v.extent(0), v.extent(1));
   } else {
     static_assert(std::is_void_v<View>,
                   "allocate_packed only supports rank-1 views");

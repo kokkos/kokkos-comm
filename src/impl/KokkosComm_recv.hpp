@@ -11,32 +11,19 @@ namespace KokkosComm::Impl {
 template <typename RecvView, typename ExecSpace>
 void recv(const ExecSpace &space, const RecvView &rv, int src, int tag,
           MPI_Comm comm) {
-
-  using value_type = typename RecvView::value_type;
-  using non_const_value_type = typename RecvView::non_const_value_type;
-
-  if (rv.span_is_contiguous()) {
-    MPI_Recv(rv.data(), rv.span() * sizeof(value_type), MPI_PACKED, src, tag,
-             comm, MPI_STATUS_IGNORE);
+  if (KokkosComm::Traits<RecvView>::needs_unpack(rv)) {
+    using PackedScalar =
+        typename KokkosComm::Traits<RecvView>::packed_view_type::value_type;
+    auto packed = allocate_packed_for(space, "packed", rv);
+    space.fence();
+    MPI_Recv(packed.data(), packed.span() * sizeof(PackedScalar), MPI_PACKED,
+             src, tag, comm, MPI_STATUS_IGNORE);
+    unpack(space, rv, packed);
+    space.fence();
   } else {
-    if constexpr (RecvView::rank == 1) {
-      Kokkos::View<non_const_value_type *> packed(
-          Kokkos::view_alloc(Kokkos::WithoutInitializing, "packed"),
-          rv.extent(0));
-      MPI_Recv(packed.data(), packed.span() * sizeof(value_type), MPI_PACKED,
-               src, tag, comm, MPI_STATUS_IGNORE);
-      unpack(space, rv, packed);
-    } else if constexpr (RecvView::rank == 2) {
-      Kokkos::View<non_const_value_type **> packed(
-          Kokkos::view_alloc(Kokkos::WithoutInitializing, "packed"),
-          rv.extent(0), rv.extent(1));
-      MPI_Recv(packed.data(), packed.span() * sizeof(value_type), MPI_PACKED,
-               src, tag, comm, MPI_STATUS_IGNORE);
-      unpack(space, rv, packed);
-    } else {
-      static_assert(std::is_void_v<RecvView>,
-                    "recv only supports rank-1 views");
-    }
+    using RecvScalar = typename RecvView::value_type;
+    MPI_Recv(rv.data(), rv.span(), mpi_type_v<RecvScalar>, src, tag, comm,
+             MPI_STATUS_IGNORE);
   }
 }
 } // namespace KokkosComm::Impl

@@ -9,6 +9,12 @@ template <typename Scalar> MPI_Datatype mpi_type() {
   static_assert(std::is_void_v<Scalar>, "mpi_type not implemented");
 };
 
+template <> inline MPI_Datatype mpi_type<unsigned int>() {
+  return MPI_UNSIGNED;
+}
+template <> inline MPI_Datatype mpi_type<unsigned long>() {
+  return MPI_UNSIGNED_LONG;
+}
 template <> inline MPI_Datatype mpi_type<long long>() { return MPI_LONG_LONG; }
 template <> inline MPI_Datatype mpi_type<int>() { return MPI_INT; }
 template <> inline MPI_Datatype mpi_type<double>() { return MPI_DOUBLE; }
