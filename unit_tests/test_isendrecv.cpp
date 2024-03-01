@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if KOKKOSCOMM_ENABLE_MDSPAN
 #if KOKKOSCOMM_EXPERIMENTAL_MDSPAN
 #include <experimental/mdspan>
 #define MDSPAN_PREFIX() experimental::
@@ -24,6 +25,7 @@ using std::MDSPAN_PREFIX() dextents;
 using std::MDSPAN_PREFIX() extents;
 using std::MDSPAN_PREFIX() layout_stride;
 using std::MDSPAN_PREFIX() mdspan;
+#endif // KOKKOSCOMM_ENABLE_MDSPAN
 
 #include <gtest/gtest.h>
 
