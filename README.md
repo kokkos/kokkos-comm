@@ -29,26 +29,42 @@ ctest
 
 ## Documentation
 
-[cwpearson.github.io/kokkos-comm/](https://cwpearson.github.io/kokkos-comm/)
+[cwpearson.github.io/kokkos-mpi/](https://cwpearson.github.io/kokkos-mpi/)
 
 https://www.sphinx-doc.org/en/master/usage/domains/cpp.html
 
 
-
 ## Design
 
-- [ ] Overloads for `Kokkos::view`
-- [ ] Overloads of `std::mdspan`
-- [x] use `Kokkos::deep_copy` to handle packing and unpacking of non-contiguous views
+| | `Kokkos::View` | `mdspan` |
+|-|-|-|
+| MPI_Isend  | x | x |
+| MPI_Recv   | x | x |
+| MPI_Send   | x |   |
+| MPI_Reduce |   |   |
+
+- [x] host data `mdspan` 
+- [ ] device data `mdspan`
+  - [ ] first pass could be a MpiDatatypePacker which just constructs an MPI Datatype matching the mdspan and hands it off to MPI to deal with the non-contiguous data
+  - [ ] second pass would be to somehow associate a Kokkos memory space with the `mdspan` so we know how to allocate intermediate packing buffers
+- [x] use `Kokkos::deep_copy` to handle packing and unpacking of non-contiguous `Kokkos::View`
   - When non-contiguous views are passed to an MPI function, a temporary contiguous view of matching extent is allocated, and `Kokkos::deep_copy` is used to pack the data.
 - [x] "Immediate" functions (e.g. `isend`) return a `KokkosComm::Req`, which can be `wait()`-ed to block until the input view can be reused. `Req` also manages the lifetimes of any intermediate views needed for packing the data, releasing those views when `wait()` is complete.
-- [x] `KokkosComm::Traits<View>` can be specialized for a `View`:
+- [x] `KokkosComm::Traits` is specialized for `Kokkos::View` and `mdspan`
   - whether `View` needs to be packed or not
   - what `pack` does for `View`
   - what `unpack` does for `View`
+  - spans (distance between beginning of first byte and end of last byte)
 
 ## Considerations
 
+- macOS xcode 15.3 doesn't support `std::mdspan`, so we use `kokkos/mdspan`.
+- Pluggable packing strategies
+  - This would probably be a template parameter on the interface, which would be specialized to actually implement the various MPI operations
+  - Constructing matching MPI datatype and sending
+  - Packing into a contiguous buffer and sending
+- How to handle discriminate between mdspans of host or device data, for packing
+  - Alternatively, construct an MPI datatype matching the non-contiguous sp
 - MPI threaded-ness and Kokkos backends (Serial with multiple instances, Threads, etc)
 - Are there circumstances in which we can fuse packing into another kernel?
 - A better pack/unpack interface
