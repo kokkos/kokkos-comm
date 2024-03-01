@@ -3,9 +3,8 @@
 #include <gtest/gtest.h>
 // #include <gtest_mpi/gtest_mpi.hpp>
 
-
-#include <Kokkos_Core.hpp>
 #include <KokkosComm.hpp>
+#include <Kokkos_Core.hpp>
 
 int main(int argc, char *argv[]) {
 #if 0
@@ -60,9 +59,9 @@ int main(int argc, char *argv[]) {
 
   Kokkos::initialize();
 
-
-  auto& test_listeners = ::testing::UnitTest::GetInstance()->listeners();
-  if (0 != rank) delete test_listeners.Release(test_listeners.default_result_printer());
+  auto &test_listeners = ::testing::UnitTest::GetInstance()->listeners();
+  if (0 != rank)
+    delete test_listeners.Release(test_listeners.default_result_printer());
 
   // run tests
   auto exit_code = RUN_ALL_TESTS();
