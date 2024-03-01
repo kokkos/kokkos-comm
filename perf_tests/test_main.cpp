@@ -1,13 +1,13 @@
-#include <mpi.h>
-#include <benchmark/benchmark.h>
 #include <Kokkos_Core.hpp>
+#include <benchmark/benchmark.h>
+#include <mpi.h>
 
 // This reporter does nothing.
 // We can use it to disable output from all but the root process
 class NullReporter : public ::benchmark::BenchmarkReporter {
 public:
   NullReporter() {}
-  virtual bool ReportContext(const Context &) {return true;}
+  virtual bool ReportContext(const Context &) { return true; }
   virtual void ReportRuns(const std::vector<Run> &) {}
   virtual void Finalize() {}
 };
@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 
   ::benchmark::Initialize(&argc, argv);
 
-  if(rank == 0)
+  if (rank == 0)
     // root process will use a reporter from the usual set provided by
     // ::benchmark
     ::benchmark::RunSpecifiedBenchmarks();
