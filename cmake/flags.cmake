@@ -56,8 +56,17 @@ function(kokkoscomm_add_cxx_flags)
         target_compile_options(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} $<BUILD_INTERFACE:-Wno-gnu-zero-variadic-macro-arguments>)
     endif()
 
-    # kokkos requires C++17
-    set_property(TARGET ${ADD_CXX_FLAGS_TARGET} PROPERTY CXX_STANDARD 17)
+    if (KOKKOSCOMM_ENABLE_MDSPAN)
+        # message(STATUS "set c++23 on ${ADD_CXX_FLAGS_TARGET}")
+        set_property(TARGET ${ADD_CXX_FLAGS_TARGET} PROPERTY CXX_STANDARD 23)
+        target_compile_definitions(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} KOKKOSCOMM_ENABLE_MDSPAN)
+    else()
+        set_property(TARGET ${ADD_CXX_FLAGS_TARGET} PROPERTY CXX_STANDARD 20)
+    endif()
     set_property(TARGET ${ADD_CXX_FLAGS_TARGET} PROPERTY CXX_EXTENSIONS OFF)
+    # kokkos/mdspan is experimental
+    if (KOKKOSCOMM_USE_KOKKOS_MDSPAN)
+        target_compile_definitions(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} KOKKOSCOMM_EXPERIMENTAL_MDSPAN)
+    endif()
 
 endfunction()

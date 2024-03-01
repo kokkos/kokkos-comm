@@ -20,8 +20,8 @@
 #include "KokkosComm_traits.hpp"
 
 template <typename Dst, typename Src, typename ExecSpace>
-void unpack(const ExecSpace &space, const Dst &dst, const Src &src) {
+void unpack(const ExecSpace &space, Dst &dst, const Src &src) {
   Kokkos::Tools::pushRegion("KokkosComm::unpack");
-  KokkosComm::Traits<Src>::unpack(space, dst, src);
+  KokkosComm::Traits<Dst>::unpack(space, dst, src);
   Kokkos::Tools::popRegion();
 }

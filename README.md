@@ -3,9 +3,26 @@ A toy MPI wrapper for [Kokkos](https://github.com/kokkos/kokkos).
 
 ## Getting Started
 
+* **Requires c++20**
+* **Requires c++23 for std::mdspan**
+
+### macOS
+
+macOS standard toolchain has incomplete `std::mdspan` support: `std::layout_stride` is not implemented as of xcode 15.3 release candidates
+
+At sandia, with MPICH and the VPN enabled, you may need to do this before running any tests:
+```bash
+export FI_PROVIDER=tcp
+```
+
+
 ```
 mkdir -p build && cd build
-cmake ..
+cmake .. \
+  -DCMAKE_CXX_COMPILER=mpicxx \
+  -DKokkosComm_ENABLE_MDSPAN=ON \
+  -DKokkosComm_USE_KOKKOS_MDSPAN=ON \
+  -DKokkos_DIR=/path/to/kokkos-install/lib/cmake/Kokkos
 make
 ctest
 ```
@@ -15,6 +32,8 @@ ctest
 [cwpearson.github.io/kokkos-comm/](https://cwpearson.github.io/kokkos-comm/)
 
 https://www.sphinx-doc.org/en/master/usage/domains/cpp.html
+
+
 
 ## Design
 - [ ] Overloads for `Kokkos::view`
@@ -42,3 +61,10 @@ https://www.sphinx-doc.org/en/master/usage/domains/cpp.html
 
 * `test_2dhalo.cpp`: a 2d halo exchange
 * `test_sendrecv.cpp`: ping-pong between ranks 0 and 1
+
+## Contributing
+
+```bash
+shopt -s globstar
+clang-format-8 -i {src,unit_tests,perf_tests}/**/*.{c,h}pp
+```

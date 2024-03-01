@@ -8,6 +8,10 @@ option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" ON)
 set(KOKKOSCOMM_ENABLE_PERFTESTS ${KokkosComm_ENABLE_PERFTESTS} CACHE BOOL "" FORCE)
 option(KokkosComm_ENABLE_TESTS "Build KokkosComm perf tests" ON)
 set(KOKKOSCOMM_ENABLE_TESTS ${KokkosComm_ENABLE_TESTS} CACHE BOOL "" FORCE)
+option(KokkosComm_ENABLE_MDSPAN "Build std::mdspan overloads (requires c++23)" OFF)
+set(KOKKOSCOMM_ENABLE_MDSPAN ${KokkosComm_ENABLE_MDSPAN} CACHE BOOL "" FORCE)
+option(KokkosComm_USE_KOKKOS_MDSPAN "Use Kokkos mdspan implementation" OFF)
+set(KOKKOSCOMM_USE_KOKKOS_MDSPAN ${KokkosComm_USE_KOKKOS_MDSPAN} CACHE BOOL "" FORCE)
 
 find_package(Kokkos REQUIRED)
 find_package(MPI REQUIRED)
@@ -19,6 +23,19 @@ message(STATUS "MPI_CXX_COMPILE_DEFINITIONS = ${MPI_CXX_COMPILE_DEFINITIONS}")
 message(STATUS "MPI_CXX_INCLUDE_DIRS =        ${MPI_CXX_INCLUDE_DIRS}")
 message(STATUS "MPI_CXX_LINK_FLAGS =          ${MPI_CXX_LINK_FLAGS}")
 message(STATUS "MPI_CXX_LIBRARIES =           ${MPI_CXX_LIBRARIES}")
+
+if(KOKKOSCOMM_USE_KOKKOS_MDSPAN)
+    include(FetchContent)
+    message(STATUS "retrieving kokkos/mdspan...")
+    FetchContent_Declare(
+        kokkos_mdspan
+        GIT_REPOSITORY https://github.com/kokkos/mdspan.git
+        GIT_TAG        9ceface91483775a6c74d06ebf717bbb2768452f # mdspan-0.6.0
+        )
+    FetchContent_MakeAvailable(kokkos_mdspan)
+    FetchContent_GetProperties(kokkos_mdspan)
+    # add_subdirectory(${kokkos_mdspan_SOURCE_DIR}) #  ${kokkos_mdspan_BINARY_DIR}
+endif()
 
 include(cmake/flags.cmake)
 

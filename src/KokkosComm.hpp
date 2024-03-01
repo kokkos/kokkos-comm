@@ -37,8 +37,7 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
 }
 
 template <typename Recv, typename ExecSpace>
-void recv(const ExecSpace &space, const Recv &sv, int src, int tag,
-          MPI_Comm comm) {
+void recv(const ExecSpace &space, Recv &sv, int src, int tag, MPI_Comm comm) {
   return Impl::recv(space, sv, src, tag, comm);
 }
 
