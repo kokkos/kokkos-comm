@@ -2,14 +2,14 @@
 
 #include "KokkosComm.hpp"
 
-
-template <typename T>
-class Reduce : public testing::Test {
- public:
+template <typename T> class Reduce : public testing::Test {
+public:
   using Scalar = T;
 };
 
-using ScalarTypes = ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>, Kokkos::complex<double>>;
+using ScalarTypes =
+    ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>,
+                     Kokkos::complex<double>>;
 TYPED_TEST_SUITE(Reduce, ScalarTypes);
 
 /*!
@@ -33,23 +33,28 @@ TYPED_TEST(Reduce, 1D_contig) {
   }
 
   // fill send buffer
-  Kokkos::parallel_for(sendv.extent(0), KOKKOS_LAMBDA(const int i){ sendv(i) = rank + i; });
+  Kokkos::parallel_for(
+      sendv.extent(0), KOKKOS_LAMBDA(const int i) { sendv(i) = rank + i; });
 
-  KokkosComm::reduce(Kokkos::DefaultExecutionSpace(), sendv, recvv, MPI_SUM, 0, MPI_COMM_WORLD);
-  
+  KokkosComm::reduce(Kokkos::DefaultExecutionSpace(), sendv, recvv, MPI_SUM, 0,
+                     MPI_COMM_WORLD);
+
   if (0 == rank) {
     int errs;
-    Kokkos::parallel_reduce(recvv.extent(0), KOKKOS_LAMBDA (const int& i, int& lsum) {
-      Scalar acc = 0;
-      for (int r = 0; r < size; ++r) {
-        acc += r + i;
-      }
-      lsum += recvv(i) != acc;
-      // if (recvv(i) != acc) {
-      //   Kokkos::printf("%f != %f @ %lu\n", double(Kokkos::abs(recvv(i))), double(Kokkos::abs(acc)), size_t(i));
-      // }
-    }, errs);
+    Kokkos::parallel_reduce(
+        recvv.extent(0),
+        KOKKOS_LAMBDA(const int &i, int &lsum) {
+          Scalar acc = 0;
+          for (int r = 0; r < size; ++r) {
+            acc += r + i;
+          }
+          lsum += recvv(i) != acc;
+          // if (recvv(i) != acc) {
+          //   Kokkos::printf("%f != %f @ %lu\n", double(Kokkos::abs(recvv(i))),
+          //   double(Kokkos::abs(acc)), size_t(i));
+          // }
+        },
+        errs);
     ASSERT_EQ(errs, 0);
   }
 }
-
