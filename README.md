@@ -36,6 +36,7 @@ https://www.sphinx-doc.org/en/master/usage/domains/cpp.html
 
 
 ## Design
+
 - [ ] Overloads for `Kokkos::view`
 - [ ] Overloads of `std::mdspan`
 - [x] use `Kokkos::deep_copy` to handle packing and unpacking of non-contiguous views
@@ -66,5 +67,5 @@ https://www.sphinx-doc.org/en/master/usage/domains/cpp.html
 
 ```bash
 shopt -s globstar
-clang-format-8 -i {src,unit_tests,perf_tests}/**/*.{c,h}pp
+clang-format-8 -i {src,unit_tests,perf_tests}/**/*.[ch]pp
 ```

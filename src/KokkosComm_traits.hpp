@@ -65,7 +65,7 @@ template <KokkosView View> struct Traits<View> {
 #if KOKKOSCOMM_ENABLE_MDSPAN
 
 template <Mdspan Span> struct Traits<Span> {
-  static bool is_contiguous(const Span &v) { return true; }
+
   static bool needs_unpack(const Span &v) { return !is_contiguous(v); }
   static bool needs_pack(const Span &v) { return !is_contiguous(v); }
 
@@ -76,26 +76,107 @@ template <Mdspan Span> struct Traits<Span> {
 
   static auto data_handle(non_const_packed_view_type &v) { return v.data(); }
 
+  static constexpr size_t rank() { return Span::extents_type::rank(); }
+
   static size_t span(const packed_view_type &packed) { return packed.size(); }
   static size_t span(const Span &v) {
-    throw std::runtime_error("unimplemented");
+    std::array<typename Span::index_type, rank()> first, last;
+    for (size_t i = 0; i < rank(); ++i) {
+      first[i] = 0;
+      last[i] = v.extents().extent(i) - 1;
+    }
+    return &v[last] - &v[first] + sizeof(typename Span::value_type);
+  }
+
+  static bool is_contiguous(const Span &v) {
+    size_t prod = 1;
+    for (size_t i = 0; i < rank(); ++i) {
+      prod *= v.extents().extent(i);
+    }
+    return prod == span(v);
   }
 
   template <typename ExecSpace>
-  static void pack(const ExecSpace &space,
-                   const non_const_packed_view_type &dst, const Span &src) {
-    throw std::runtime_error("unimplemented");
+  static void pack(const ExecSpace &space, non_const_packed_view_type &dst,
+                   const Span &src) {
+
+    using md_index = std::array<typename Span::index_type, rank()>;
+
+    md_index index, ext;
+    index = {0};
+    for (size_t i = 0; i < rank(); ++i) {
+      ext[i] = src.extents().extent(i);
+    }
+    size_t offset = 0;
+
+    auto index_lt = [](const md_index &a, const md_index &b) -> bool {
+      for (size_t i = 0; i < rank(); ++i) {
+        if (!(a[i] < b[i])) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    auto increment = [&]() -> void {
+      for (size_t i = 0; i < rank(); ++i) {
+        ++index[i];
+        if (index[i] >= ext[i] && i != rank() - 1 /* don't wrap final index*/) {
+          index[i] = 0;
+        } else {
+          break;
+        }
+      }
+
+      ++offset;
+    };
+
+    for (; index_lt(index, ext); increment()) {
+      dst[offset] = src[index];
+    }
   }
 
   template <typename ExecSpace>
   static void unpack(const ExecSpace &space, Span &dst,
                      const non_const_packed_view_type &src) {
-    throw std::runtime_error("unimplemented");
+
+    using md_index = std::array<typename Span::index_type, rank()>;
+
+    md_index index, ext;
+    index = {0};
+    for (size_t i = 0; i < rank(); ++i) {
+      ext[i] = dst.extents().extent(i);
+    }
+    size_t offset = 0;
+
+    auto index_lt = [](const md_index &a, const md_index &b) -> bool {
+      for (size_t i = 0; i < rank(); ++i) {
+        if (!(a[i] < b[i])) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    auto increment = [&]() -> void {
+      for (size_t i = 0; i < rank(); ++i) {
+        ++index[i];
+        if (index[i] >= ext[i] && i != rank() - 1 /* don't wrap final index*/) {
+          index[i] = 0;
+        } else {
+          break;
+        }
+      }
+
+      ++offset;
+    };
+
+    for (; index_lt(index, ext); increment()) {
+      dst[index] = src[offset];
+    }
   }
 
   static constexpr bool is_reference_counted() { return true; }
-
-  static constexpr size_t rank() { return Span::extents_type::rank(); }
 };
 
 #endif // KOKKOSCOMM_ENABLE_MDSPAN
