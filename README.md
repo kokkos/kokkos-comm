@@ -1,5 +1,7 @@
 # kokkos-mpi
-A toy MPI wrapper for [Kokkos](https://github.com/kokkos/kokkos).
+
+> [!WARNING]
+> UNOFFICIAL MPI interfaces for [Kokkos](https://github.com/kokkos/kokkos) C++ Performance Portability Programming EcoSystem
 
 ## Getting Started
 
