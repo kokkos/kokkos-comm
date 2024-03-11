@@ -1,4 +1,4 @@
-# kokkos-comm
+# kokkos-mpi
 A toy MPI wrapper for [Kokkos](https://github.com/kokkos/kokkos).
 
 ## Getting Started
@@ -43,6 +43,7 @@ https://www.sphinx-doc.org/en/master/usage/domains/cpp.html
 | MPI_Send   | x |   |
 | MPI_Reduce |   |   |
 
+- [ ] Communicator
 - [x] host data `mdspan` 
 - [ ] device data `mdspan`
   - [ ] first pass could be a MpiDatatypePacker which just constructs an MPI Datatype matching the mdspan and hands it off to MPI to deal with the non-contiguous data
