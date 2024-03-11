@@ -45,9 +45,10 @@ https://www.sphinx-doc.org/en/master/usage/domains/cpp.html
 | MPI_Send   | x |   |
 | MPI_Reduce |   |   |
 
-- [ ] Communicator
-- [x] host data `mdspan` 
-- [ ] device data `mdspan`
+- [ ] Grab and reuse Kokkos Core configuration
+- [ ] MPI Communicator wrapper
+
+- [ ] Packing
   - [ ] first pass could be a MpiDatatypePacker which just constructs an MPI Datatype matching the mdspan and hands it off to MPI to deal with the non-contiguous data
   - [ ] second pass would be to somehow associate a Kokkos memory space with the `mdspan` so we know how to allocate intermediate packing buffers
 - [x] use `Kokkos::deep_copy` to handle packing and unpacking of non-contiguous `Kokkos::View`
@@ -58,6 +59,9 @@ https://www.sphinx-doc.org/en/master/usage/domains/cpp.html
   - what `pack` does for `View`
   - what `unpack` does for `View`
   - spans (distance between beginning of first byte and end of last byte)
+- [ ] Future work
+  - [x] host data `mdspan` 
+  - [ ] device data `mdspan`
 
 ## Considerations
 
