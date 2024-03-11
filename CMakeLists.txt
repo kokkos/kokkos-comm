@@ -2,7 +2,7 @@
 # 3.12: CMAKE_PROJECT_VERSION_MAJOR
 # 3.15: PUBLIC_HEADER files for interface libraries
 cmake_minimum_required(VERSION 3.12)
-project(KokkosComm VERSION 0.0.1)
+project(KokkosComm VERSION 0.0.2)
 
 option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" ON)
 set(KOKKOSCOMM_ENABLE_PERFTESTS ${KokkosComm_ENABLE_PERFTESTS} CACHE BOOL "" FORCE)
