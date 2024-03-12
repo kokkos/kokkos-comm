@@ -20,14 +20,17 @@ check_cxx_compiler_flag(-Wformat=2 CXX_HAS_WFORMAT2)
 check_cxx_compiler_flag(-Wmissing-include-dirs CXX_HAS_WMISSING_INCLUDE_DIRS)
 check_cxx_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments CXX_HAS_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
 
+
 function(kokkoscomm_add_cxx_flags)
 
     cmake_parse_arguments(ADD_CXX_FLAGS "INTERFACE" "TARGET" "" ${ARGN})
 
     if(ADD_CXX_FLAGS_INTERFACE)
         set(TARGET_COMPILE_OPTIONS_KEYWORD INTERFACE)
+        set(TARGET_COMPILE_FEATURES_KEYWORD INTERFACE)
     else()
         set(TARGET_COMPILE_OPTIONS_KEYWORD PRIVATE)
+        set(TARGET_COMPILE_FEATURES_KEYWORD PRIVATE)
     endif()
 
     if(CXX_HAS_WEXTRA)
@@ -56,17 +59,24 @@ function(kokkoscomm_add_cxx_flags)
         target_compile_options(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} $<BUILD_INTERFACE:-Wno-gnu-zero-variadic-macro-arguments>)
     endif()
 
+    # mdspan-related definitions
     if (KOKKOSCOMM_ENABLE_MDSPAN)
-        # message(STATUS "set c++23 on ${ADD_CXX_FLAGS_TARGET}")
-        set_property(TARGET ${ADD_CXX_FLAGS_TARGET} PROPERTY CXX_STANDARD 23)
         target_compile_definitions(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} KOKKOSCOMM_ENABLE_MDSPAN)
+        if(KOKKOSCOMM_USE_STD_MDSPAN)
+            target_compile_definitions(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} KOKKOSCOMM_USE_STD_MDSPAN)
+        elseif(KOKKOSCOMM_USE_KOKKOS_MDSPAN)
+            target_compile_definitions(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} KOKKOSCOMM_USE_KOKKOS_MDSPAN)
+            target_compile_definitions(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} KOKKOSCOMM_MDSPAN_IN_EXPERIMENTAL)
+        endif()
+    endif()      
+
+    # choose cxx standard
+    set_target_properties(${ADD_CXX_FLAGS_TARGET} PROPERTIES CXX_EXTENSIONS OFF)
+    if (KOKKOSCOMM_ENABLE_MDSPAN AND KOKKOSCOMM_USE_STD_MDSPAN)
+        target_compile_features(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_FEATURES_KEYWORD} cxx_std_23)
     else()
-        set_property(TARGET ${ADD_CXX_FLAGS_TARGET} PROPERTY CXX_STANDARD 20)
+        target_compile_features(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_FEATURES_KEYWORD} cxx_std_20)
     endif()
-    set_property(TARGET ${ADD_CXX_FLAGS_TARGET} PROPERTY CXX_EXTENSIONS OFF)
-    # kokkos/mdspan is experimental
-    if (KOKKOSCOMM_USE_KOKKOS_MDSPAN)
-        target_compile_definitions(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} KOKKOSCOMM_EXPERIMENTAL_MDSPAN)
-    endif()
+    
 
 endfunction()

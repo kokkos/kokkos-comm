@@ -28,4 +28,4 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv,
   return Impl::reduce(space, sv, rv, op, root, comm);
 }
 
-} // namespace KokkosComm
+}  // namespace KokkosComm

@@ -14,13 +14,13 @@
 //
 //@HEADER
 
-#include <mpi.h>
-
 #include <gtest/gtest.h>
 // #include <gtest_mpi/gtest_mpi.hpp>
 
 #include <KokkosComm.hpp>
 #include <Kokkos_Core.hpp>
+
+#include "KokkosComm_include_mpi.hpp"
 
 int main(int argc, char *argv[]) {
 #if 0

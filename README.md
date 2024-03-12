@@ -5,8 +5,7 @@
 
 ## Getting Started
 
-* **Requires c++20**
-* **Requires c++23 for std::mdspan**
+[cwpearson.github.io/kokkos-mpi/](https://cwpearson.github.io/kokkos-mpi/)
 
 ### macOS
 
@@ -31,9 +30,6 @@ ctest
 
 ## Documentation
 
-[cwpearson.github.io/kokkos-mpi/](https://cwpearson.github.io/kokkos-mpi/)
-
-https://www.sphinx-doc.org/en/master/usage/domains/cpp.html
 
 
 ## Design
@@ -49,9 +45,10 @@ https://www.sphinx-doc.org/en/master/usage/domains/cpp.html
 - [ ] MPI Communicator wrapper
 
 - [ ] Packing
-  - [ ] first pass could be a MpiDatatypePacker which just constructs an MPI Datatype matching the mdspan and hands it off to MPI to deal with the non-contiguous data
-  - [ ] second pass would be to somehow associate a Kokkos memory space with the `mdspan` so we know how to allocate intermediate packing buffers
-- [x] use `Kokkos::deep_copy` to handle packing and unpacking of non-contiguous `Kokkos::View`
+  - [x] Tentative `Packer` interface.
+  - [x] Packer::MpiDatatype which just constructs an MPI Datatype matching the mdspan and hands it off to MPI to deal with the non-contiguous data
+  - [x] Packer::DeepCopy uses `Kokkos::deep_copy` to handle packing and unpacking of non-contiguous `Kokkos::View`
+    - [ ] second pass would be to somehow associate a Kokkos memory space with the `mdspan` so we know how to allocate intermediate packing buffers
   - When non-contiguous views are passed to an MPI function, a temporary contiguous view of matching extent is allocated, and `Kokkos::deep_copy` is used to pack the data.
 - [x] "Immediate" functions (e.g. `isend`) return a `KokkosComm::Req`, which can be `wait()`-ed to block until the input view can be reused. `Req` also manages the lifetimes of any intermediate views needed for packing the data, releasing those views when `wait()` is complete.
 - [x] `KokkosComm::Traits` is specialized for `Kokkos::View` and `mdspan`

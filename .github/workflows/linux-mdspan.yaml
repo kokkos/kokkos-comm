@@ -1,0 +1,36 @@
+name: Linux (mdspan)
+run-name: Linux (mdspan)
+on: [push]
+jobs:
+   Kokkos-040200-OpenMPI-OpenMP-kokkosmdspan-Release:
+    env:
+      KOKKOS_SRC: ${{ github.workspace }}/_deps/kokkos
+      KOKKOS_BUILD: ${{ github.workspace }}/_deps/kokkos-build
+      KOKKOS_INSTALL: ${{ github.workspace }}/_deps/kokkos-install
+      COMM_SRC: ${{ github.workspace }}
+      COMM_BUILD: ${{ github.workspace }}/build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Install MPI
+        run: |
+          sudo apt-get update && sudo apt-get install -y libopenmpi-dev openmpi-bin cmake
+          which mpirun
+          mpirun --version
+          which mpicxx
+          mpicxx --version
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Build Kokkos
+        run: |
+          git clone https://github.com/kokkos/kokkos.git "$KOKKOS_SRC"
+          cd "$KOKKOS_SRC" && git checkout 4.2.00
+          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_OPENMP=ON -DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_COMPILER=mpicxx
+          cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
+      - name: Build KokkosComm
+        run: |
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wshadow -Wpedantic" -DKokkosComm_ENABLE_MDSPAN=ON -DKokkosComm_USE_KOKKOS_MDSPAN=ON
+          VERBOSE=1 cmake --build "$COMM_BUILD"
+      - name: Test KokkosComm
+        run: |
+          ctest -V --test-dir "$COMM_BUILD"

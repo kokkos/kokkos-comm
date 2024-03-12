@@ -18,8 +18,9 @@
 
 #include "KokkosComm.hpp"
 
-template <typename T> class SendRecv : public testing::Test {
-public:
+template <typename T>
+class SendRecv : public testing::Test {
+ public:
   using Scalar = T;
 };
 
@@ -60,7 +61,8 @@ TYPED_TEST(SendRecv, 1D_noncontig) {
   // this is C-style layout, i.e. b(0,0) is next to b(0,1)
   Kokkos::View<typename TestFixture::Scalar **, Kokkos::LayoutRight> b("a", 10,
                                                                        10);
-  auto a = Kokkos::subview(b, 2, Kokkos::ALL); // take column 2 (non-contiguous)
+  auto a =
+      Kokkos::subview(b, Kokkos::ALL, 2);  // take column 2 (non-contiguous)
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);

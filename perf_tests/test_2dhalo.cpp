@@ -25,7 +25,6 @@ void noop(benchmark::State, MPI_Comm) {}
 template <typename Space, typename View>
 void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx,
                int ny, int rx, int ry, int rs, const View &v) {
-
   // 2D index of nbrs in minus and plus direction (periodic)
   const int xm1 = (rx + rs - 1) % rs;
   const int ym1 = (ry + rs - 1) % rs;
@@ -72,13 +71,12 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx,
 }
 
 void benchmark_2dhalo(benchmark::State &state) {
-
-  using Scalar = double;
+  using Scalar    = double;
   using grid_type = Kokkos::View<Scalar ***, Kokkos::LayoutRight>;
 
   // problem size per rank
-  int nx = 512;
-  int ny = 512;
+  int nx     = 512;
+  int ny     = 512;
   int nprops = 3;
 
   int rank, size;
@@ -100,12 +98,12 @@ void benchmark_2dhalo(benchmark::State &state) {
     }
   } else {
     while (state.KeepRunning()) {
-      do_iteration(state, MPI_COMM_WORLD, noop); // do nothing...
+      do_iteration(state, MPI_COMM_WORLD, noop);  // do nothing...
     }
   }
 
   state.counters["active_ranks"] = rs * rs;
-  state.counters["nx"] = nx;
+  state.counters["nx"]           = nx;
   // clang-format off
   state.SetBytesProcessed(
       sizeof(Scalar) 

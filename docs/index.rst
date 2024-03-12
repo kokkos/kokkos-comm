@@ -4,25 +4,33 @@
    contain the root `toctree` directive.
 
 KokkosComm documentation!
-======================================
+=========================
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: API:
 
+   api/core
    api/traits
-   api/p2p
-   api/collective
+   api/packing
 
 Usage
 -----
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Usage:
 
    usage/getting_started
 
+Developer
+---------
+
+.. toctree::
+   :maxdepth: 2
+   :caption: For Developers:
+
+   dev/docs
 
 Indices and tables
 ==================

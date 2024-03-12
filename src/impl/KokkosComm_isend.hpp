@@ -18,34 +18,37 @@
 
 #include <iostream>
 
-#include <mpi.h>
-
 #include <Kokkos_Core.hpp>
 
+#include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_request.hpp"
+#include "KokkosComm_traits.hpp"
 
 // impl
-#include "KokkosComm_mdspan.hpp"
-#include "KokkosComm_pack.hpp"
+#include "KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm::Impl {
 
 template <typename Span, typename ExecSpace>
 KokkosComm::Req isend(const ExecSpace &space, const Span &ss, int dest, int tag,
                       MPI_Comm comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
+
   KokkosComm::Req req;
 
-  using KCT = KokkosComm::Traits<Span>;
+  using KCT  = KokkosComm::Traits<Span>;
+  using KCPT = KokkosComm::PackTraits<Span>;
 
-  if (KCT::needs_pack(ss)) {
-    using PackedScalar = typename KCT::packed_view_type::value_type;
-    auto packed = allocate_packed_for(space, "packed", ss);
-    pack(space, packed, ss);
+  if (KCPT::needs_pack(ss)) {
+    using Packer  = typename KCPT::packer_type;
+    using MpiArgs = typename Packer::args_type;
+
+    MpiArgs args = Packer::pack(space, ss);
     space.fence();
-    MPI_Isend(KCT::data_handle(packed),
-              KCT::span(packed) * sizeof(PackedScalar), MPI_PACKED, dest, tag,
+
+    MPI_Isend(KCT::data_handle(args.view), args.count, args.datatype, dest, tag,
               comm, &req.mpi_req());
-    req.keep_until_wait(packed);
+    req.keep_until_wait(args.view);
   } else {
     using SendScalar = typename Span::value_type;
     MPI_Isend(KCT::data_handle(ss), KCT::span(ss), mpi_type_v<SendScalar>, dest,
@@ -54,7 +57,9 @@ KokkosComm::Req isend(const ExecSpace &space, const Span &ss, int dest, int tag,
       req.keep_until_wait(ss);
     }
   }
+
+  Kokkos::Tools::popRegion();
   return req;
 }
 
-} // namespace KokkosComm::Impl
+}  // namespace KokkosComm::Impl

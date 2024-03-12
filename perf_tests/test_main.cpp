@@ -14,14 +14,15 @@
 //
 //@HEADER
 
+#include "KokkosComm_include_mpi.hpp"
+
 #include <Kokkos_Core.hpp>
 #include <benchmark/benchmark.h>
-#include <mpi.h>
 
 // This reporter does nothing.
 // We can use it to disable output from all but the root process
 class NullReporter : public ::benchmark::BenchmarkReporter {
-public:
+ public:
   NullReporter() {}
   virtual bool ReportContext(const Context &) { return true; }
   virtual void ReportRuns(const std::vector<Run> &) {}
@@ -31,7 +32,6 @@ public:
 // The main is rewritten to allow for MPI initializing and for selecting a
 // reporter according to the process rank
 int main(int argc, char **argv) {
-
   MPI_Init(&argc, &argv);
 
   int rank;

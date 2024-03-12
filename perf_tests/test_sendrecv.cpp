@@ -40,7 +40,7 @@ void benchmark_sendrecv(benchmark::State &state) {
 
   using Scalar = double;
 
-  auto space = Kokkos::DefaultExecutionSpace();
+  auto space      = Kokkos::DefaultExecutionSpace();
   using view_type = Kokkos::View<Scalar *>;
   view_type a("", 1000000);
 

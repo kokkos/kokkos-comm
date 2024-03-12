@@ -15,7 +15,7 @@
 //@HEADER
 
 #if KOKKOSCOMM_ENABLE_MDSPAN
-#if KOKKOSCOMM_EXPERIMENTAL_MDSPAN
+#if KOKKOSCOMM_MDSPAN_IN_EXPERIMENTAL
 #include <experimental/mdspan>
 #define MDSPAN_PREFIX() experimental::
 #else
@@ -27,14 +27,15 @@ using std::MDSPAN_PREFIX() dextents;
 using std::MDSPAN_PREFIX() extents;
 using std::MDSPAN_PREFIX() layout_stride;
 using std::MDSPAN_PREFIX() mdspan;
-#endif // KOKKOSCOMM_ENABLE_MDSPAN
+#endif  // KOKKOSCOMM_ENABLE_MDSPAN
 
 #include <gtest/gtest.h>
 
 #include "KokkosComm.hpp"
 
-template <typename T> class IsendRecv : public testing::Test {
-public:
+template <typename T>
+class IsendRecv : public testing::Test {
+ public:
   using Scalar = T;
 };
 
@@ -79,7 +80,8 @@ TYPED_TEST(IsendRecv, 1D_noncontig) {
   // this is C-style layout, i.e. b(0,0) is next to b(0,1)
   Kokkos::View<typename TestFixture::Scalar **, Kokkos::LayoutRight> b("a", 10,
                                                                        10);
-  auto a = Kokkos::subview(b, 2, Kokkos::ALL); // take column 2 (non-contiguous)
+  auto a =
+      Kokkos::subview(b, Kokkos::ALL, 2);  // take column 2 (non-contiguous)
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -108,10 +110,38 @@ TYPED_TEST(IsendRecv, 1D_noncontig) {
 
 #if KOKKOSCOMM_ENABLE_MDSPAN
 
+TYPED_TEST(IsendRecv, 1D_mdspan_contig) {
+  using ScalarType = typename TestFixture::Scalar;
+
+  std::vector<ScalarType> v(100);
+  auto a = mdspan(&v[2], 13);  // 13 scalars starting at index 2
+
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  if (0 == rank) {
+    int dst = 1;
+    for (size_t i = 0; i < a.extent(0); ++i) {
+      a[i] = i;
+    }
+    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a,
+                                            dst, 0, MPI_COMM_WORLD);
+    req.wait();
+  } else if (1 == rank) {
+    int src = 0;
+    KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0,
+                     MPI_COMM_WORLD);
+    int errs = 0;
+    for (size_t i = 0; i < a.extent(0); ++i) {
+      errs += (a[i] != ScalarType(i));
+    }
+    ASSERT_EQ(errs, 0);
+  }
+}
+
 TYPED_TEST(IsendRecv, 1D_mdspan_noncontig) {
   using ScalarType = typename TestFixture::Scalar;
 
-  // this is C-style layout, i.e. b(0,0) is next to b(0,1)
   std::vector<ScalarType> v(100);
 
   using ExtentsType = dextents<std::size_t, 1>;
@@ -144,4 +174,4 @@ TYPED_TEST(IsendRecv, 1D_mdspan_noncontig) {
   }
 }
 
-#endif // KOKKOSCOMM_ENABLE_MDSPAN
+#endif  // KOKKOSCOMM_ENABLE_MDSPAN
