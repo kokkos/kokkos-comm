@@ -1,6 +1,11 @@
 name: Linux (mdspan)
 run-name: Linux (mdspan)
-on: [push]
+on:
+  pull_request:
+    paths-ignore:
+    - 'docs/**'
+    types: [ opened, reopened, synchronize ]
+    
 jobs:
    Kokkos-040200-OpenMPI-OpenMP-kokkosmdspan-Release:
     env:
