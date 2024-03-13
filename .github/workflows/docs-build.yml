@@ -2,8 +2,11 @@ name: Docs build
 run-name: Docs build
 on:
   pull_request:
-    paths:
-      - docs/**
+    paths-ignore:
+      - cmake/**
+      - src/**
+      - perf_tests/**
+      - unit_tests/**
     types: [ opened, reopened, synchronize ]
 
 jobs:
