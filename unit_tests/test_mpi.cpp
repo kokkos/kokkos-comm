@@ -14,9 +14,9 @@
 //
 //@HEADER
 
-#include <mpi.h>
-
 #include <iostream>
+
+#include <mpi.h>
 
 int main(int argc, char *argv[]) {
   // Initialize MPI before any call to gtest_mpi

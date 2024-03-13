@@ -49,7 +49,7 @@ jobs:
     steps:
       - name: Install MPI
         run: |
-          brew install open-mpi cmake
+          brew install mpich cmake
           which mpirun
           mpirun --version
           which mpicxx

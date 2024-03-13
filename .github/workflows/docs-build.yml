@@ -1,0 +1,18 @@
+name: Docs build
+run-name: Docs build
+on: [push]
+
+
+jobs:
+  # Build job
+  build:
+    runs-on: ubuntu-latest
+    env:
+      MDBOOK_VERSION: 0.4.36
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install sphinx
+        run: |
+          pip install -U -r docs/requirements.txt
+      - name: Build with sphinx
+        run: make -C docs html

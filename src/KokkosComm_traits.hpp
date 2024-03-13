@@ -14,28 +14,28 @@
 //
 //@HEADER
 
+/*! \brief Defines a common interface for Kokkos::View-like types
+    \file KokkosComm_traits.hpp
+*/
+
 #pragma once
 
 #include "KokkosComm_mdspan.hpp"
 
+#include "KokkosComm_concepts.hpp"
+
 namespace KokkosComm {
 
-template <typename T> concept KokkosView = Kokkos::is_view_v<T>;
-
-#if KOKKOSCOMM_ENABLE_MDSPAN
-template <typename T> concept Mdspan = is_mdspan_v<T>;
-#endif
-
-template <typename T> struct Traits {
+template <typename T>
+struct Traits {
   static_assert(std::is_void_v<T>,
                 "KokkosComm::Traits not specialized for type");
 };
 
 /*! \brief This can be specialized to do custom behavior for a particular view*/
-template <KokkosView View> struct Traits<View> {
+template <KokkosView View>
+struct Traits<View> {
   static bool is_contiguous(const View &v) { return v.span_is_contiguous(); }
-  static bool needs_unpack(const View &v) { return !is_contiguous(v); }
-  static bool needs_pack(const View &v) { return !is_contiguous(v); }
 
   static auto data_handle(const View &v) { return v.data(); }
 
@@ -47,6 +47,9 @@ template <KokkosView View> struct Traits<View> {
                    typename View::memory_space>;
 
   static size_t span(const View &v) { return v.span(); }
+
+  static size_t extent(const View &v, const int i) { return v.extent(i); }
+  static size_t stride(const View &v, const int i) { return v.stride(i); }
 
   template <typename ExecSpace>
   static void pack(const ExecSpace &space,
@@ -66,26 +69,28 @@ template <KokkosView View> struct Traits<View> {
 };
 #if KOKKOSCOMM_ENABLE_MDSPAN
 
-template <Mdspan Span> struct Traits<Span> {
-
-  static bool needs_unpack(const Span &v) { return !is_contiguous(v); }
-  static bool needs_pack(const Span &v) { return !is_contiguous(v); }
-
+template <Mdspan Span>
+struct Traits<Span> {
   static auto data_handle(const Span &v) { return v.data_handle(); }
 
   using non_const_packed_view_type = std::vector<typename Span::value_type>;
-  using packed_view_type = std::vector<typename Span::value_type>;
+  using packed_view_type           = std::vector<typename Span::value_type>;
 
   static auto data_handle(non_const_packed_view_type &v) { return v.data(); }
 
   static constexpr size_t rank() { return Span::extents_type::rank(); }
+
+  static size_t extent(const Span &v, const int i) {
+    return v.extents().extent(i);
+  }
+  static size_t stride(const Span &v, const int i) { return v.stride(i); }
 
   static size_t span(const packed_view_type &packed) { return packed.size(); }
   static size_t span(const Span &v) {
     std::array<typename Span::index_type, rank()> first, last;
     for (size_t i = 0; i < rank(); ++i) {
       first[i] = 0;
-      last[i] = v.extents().extent(i) - 1;
+      last[i]  = v.extents().extent(i) - 1;
     }
     return &v[last] - &v[first] + sizeof(typename Span::value_type);
   }
@@ -101,7 +106,6 @@ template <Mdspan Span> struct Traits<Span> {
   template <typename ExecSpace>
   static void pack(const ExecSpace &space, non_const_packed_view_type &dst,
                    const Span &src) {
-
     using md_index = std::array<typename Span::index_type, rank()>;
 
     md_index index, ext;
@@ -141,7 +145,6 @@ template <Mdspan Span> struct Traits<Span> {
   template <typename ExecSpace>
   static void unpack(const ExecSpace &space, Span &dst,
                      const non_const_packed_view_type &src) {
-
     using md_index = std::array<typename Span::index_type, rank()>;
 
     md_index index, ext;
@@ -181,5 +184,5 @@ template <Mdspan Span> struct Traits<Span> {
   static constexpr bool is_reference_counted() { return true; }
 };
 
-#endif // KOKKOSCOMM_ENABLE_MDSPAN
-} // namespace KokkosComm
+#endif  // KOKKOSCOMM_ENABLE_MDSPAN
+}  // namespace KokkosComm

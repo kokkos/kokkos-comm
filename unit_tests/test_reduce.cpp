@@ -18,8 +18,9 @@
 
 #include "KokkosComm.hpp"
 
-template <typename T> class Reduce : public testing::Test {
-public:
+template <typename T>
+class Reduce : public testing::Test {
+ public:
   using Scalar = T;
 };
 
@@ -35,15 +36,14 @@ operation is sum, so recvbuf[i] should be sum(0..size) + i * size
 
 */
 TYPED_TEST(Reduce, 1D_contig) {
-
-  using Scalar = typename TestFixture::Scalar;
+  using TestScalar = typename TestFixture::Scalar;
 
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  Kokkos::View<Scalar *> sendv("sendv", 10);
-  Kokkos::View<Scalar *> recvv;
+  Kokkos::View<TestScalar *> sendv("sendv", 10);
+  Kokkos::View<TestScalar *> recvv;
   if (0 == rank) {
     Kokkos::resize(recvv, sendv.extent(0));
   }
@@ -60,7 +60,7 @@ TYPED_TEST(Reduce, 1D_contig) {
     Kokkos::parallel_reduce(
         recvv.extent(0),
         KOKKOS_LAMBDA(const int &i, int &lsum) {
-          Scalar acc = 0;
+          TestScalar acc = 0;
           for (int r = 0; r < size; ++r) {
             acc += r + i;
           }

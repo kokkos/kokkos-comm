@@ -16,14 +16,16 @@
 
 #pragma once
 
-#include <Kokkos_Core.hpp>
+#include "KokkosComm_mdspan.hpp"
 
-// src
-#include "KokkosComm_traits.hpp"
+namespace KokkosComm {
 
-template <typename Dst, typename Src, typename ExecSpace>
-void pack(const ExecSpace &space, Dst &dst, const Src &src) {
-  Kokkos::Tools::pushRegion("KokkosComm::pack");
-  KokkosComm::Traits<Src>::pack(space, dst, src);
-  Kokkos::Tools::popRegion();
-}
+template <typename T>
+concept KokkosView = Kokkos::is_view_v<T>;
+
+#if KOKKOSCOMM_ENABLE_MDSPAN
+template <typename T>
+concept Mdspan = is_mdspan_v<T>;
+#endif
+
+}  // namespace KokkosComm

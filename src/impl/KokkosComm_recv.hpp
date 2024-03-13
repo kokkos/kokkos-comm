@@ -16,12 +16,13 @@
 
 #pragma once
 
-#include <mpi.h>
-
 #include <Kokkos_Core.hpp>
 
+#include "KokkosComm_pack_traits.hpp"
+#include "KokkosComm_traits.hpp"
+
 // impl
-#include "KokkosComm_unpack.hpp"
+#include "KokkosComm_include_mpi.hpp"
 
 /* FIXME: If RecvView is a Kokkos view, it can be a const ref
    same is true for an mdspan?
@@ -30,21 +31,26 @@ namespace KokkosComm::Impl {
 template <typename RecvView, typename ExecSpace>
 void recv(const ExecSpace &space, RecvView &rv, int src, int tag,
           MPI_Comm comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
 
-  using KCT = KokkosComm::Traits<RecvView>;
+  using KCT  = KokkosComm::Traits<RecvView>;
+  using KCPT = KokkosComm::PackTraits<RecvView>;
 
-  if (KCT::needs_unpack(rv)) {
-    using PackedScalar = typename KCT::packed_view_type::value_type;
-    auto packed = allocate_packed_for(space, "packed", rv);
+  if (KCPT::needs_unpack(rv)) {
+    using Packer = typename KCPT::packer_type;
+    using Args   = typename Packer::args_type;
+
+    Args args = Packer::allocate_packed_for(space, "packed", rv);
     space.fence();
-    MPI_Recv(KCT::data_handle(packed), KCT::span(packed) * sizeof(PackedScalar),
-             MPI_PACKED, src, tag, comm, MPI_STATUS_IGNORE);
-    unpack(space, rv, packed);
-    space.fence();
+    MPI_Recv(KCT::data_handle(args.view), args.count, args.datatype, src, tag,
+             comm, MPI_STATUS_IGNORE);
+    Packer::unpack_into(space, rv, args.view);
   } else {
     using RecvScalar = typename RecvView::value_type;
     MPI_Recv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<RecvScalar>, src,
              tag, comm, MPI_STATUS_IGNORE);
   }
+
+  Kokkos::Tools::popRegion();
 }
-} // namespace KokkosComm::Impl
+}  // namespace KokkosComm::Impl

@@ -43,4 +43,4 @@ void recv(const ExecSpace &space, Recv &sv, int src, int tag, MPI_Comm comm) {
   return Impl::recv(space, sv, src, tag, comm);
 }
 
-} // namespace KokkosComm
+}  // namespace KokkosComm
