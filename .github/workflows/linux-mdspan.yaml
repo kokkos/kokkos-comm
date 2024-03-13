@@ -3,6 +3,7 @@ run-name: Linux (mdspan)
 on:
   pull_request:
     paths-ignore:
+    - README.md
     - 'docs/**'
     types: [ opened, reopened, synchronize ]
     

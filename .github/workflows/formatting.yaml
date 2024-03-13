@@ -4,6 +4,7 @@ run-name: clang-format check
 on:
   pull_request:
     paths-ignore:
+    - README.md
     - 'docs/**'
     types: [ opened, reopened, synchronize ]
 
