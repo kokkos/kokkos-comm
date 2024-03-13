@@ -1,7 +1,11 @@
 name: clang-format check
 run-name: clang-format check
 
-on: [push, pull_request]
+on:
+  pull_request:
+    paths-ignore:
+    - 'docs/**'
+    types: [ opened, reopened, synchronize ]
 
 permissions: read-all
 
