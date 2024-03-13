@@ -3,6 +3,7 @@ run-name: macOS
 on:
   pull_request:
     paths-ignore:
+    - README.md
     - 'docs/**'
     types: [ opened, reopened, synchronize ]
     
