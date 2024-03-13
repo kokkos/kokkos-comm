@@ -1,8 +1,8 @@
 Extending the Documentation
 ===========================
 
-reStructedText
---------------
+Using reStructedText
+--------------------
 
 * `Basics of rST <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
 * `Documenting C++ with rST <https://www.sphinx-doc.org/en/master/usage/domains/cpp.html>`_
@@ -25,3 +25,4 @@ Building a local copy of the docs
     make -C docs html
 
     # open docs/_build/html/index.html in your favorite browser
+    

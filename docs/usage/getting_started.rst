@@ -48,6 +48,7 @@ Known Quirks
 ------------
 
 At Sandia, with the VPN enabled while using MPICH, you may have to do the following:
-```bash
-export FI_PROVIDER=tcp
-```
+
+.. code-block:: bash
+
+    export FI_PROVIDER=tcp
