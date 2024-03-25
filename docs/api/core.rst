@@ -6,8 +6,8 @@ Core
     :header-rows: 1
 
     * - MPI
-      - KokkosComm::
-      - Kokkos::View
+      - ``KokkosComm::``
+      - ``Kokkos::View``
       - mdspan
     * - MPI_Send
       - send
