@@ -25,6 +25,9 @@ namespace Packer {
 
 template <KokkosView View>
 struct MpiArgs {
+  using packer_type =
+      Packer;  // the type of the packer that produced these arguments
+
   View view;
   MPI_Datatype datatype;
   int count;
@@ -71,7 +74,7 @@ struct DeepCopy {
 template <KokkosView View>
 struct MpiDatatype {
   using non_const_packed_view_type = View;
-  using args_type                  = MpiArgs<non_const_packed_view_type>;
+  using args_type = MpiArgs<non_const_packed_view_type, MpiDatatype<View>>;
 
   // don't actually allocate - return the provided view, but with
   // a datatype that describes the data in the view
