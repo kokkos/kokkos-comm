@@ -34,7 +34,7 @@ Developer
 .. toctree::
    :maxdepth: 2
 
-   dev/contributing
+   CONTRIBUTING
    dev/docs
 
 Indices and tables
