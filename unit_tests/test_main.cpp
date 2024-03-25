@@ -15,70 +15,70 @@
 //@HEADER
 
 #include <gtest/gtest.h>
-// #include <gtest_mpi/gtest_mpi.hpp>
 
 #include <KokkosComm.hpp>
 #include <Kokkos_Core.hpp>
 
 #include "KokkosComm_include_mpi.hpp"
 
+class MpiEnvironment : public ::testing::Environment {
+ public:
+  ~MpiEnvironment() override {}
+
+  // Override this to define how to set up the environment.
+  void SetUp() override { comm_ = MPI_COMM_WORLD; }
+
+  // Override this to define how to tear down the environment.
+  void TearDown() override {}
+
+  MPI_Comm comm_;
+};
+
+class MpiListener : public testing::EmptyTestEventListener {
+  void OnTestPartResult(const testing::TestPartResult &result) override {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    int globalFailed;
+    int rankFailed = result.failed();
+    MPI_Reduce(&rankFailed, &globalFailed, 1, MPI_INT, MPI_LOR, 0,
+               MPI_COMM_WORLD);
+
+    if (globalFailed && 0 == rank) {
+      std::cout << "[rank " << rank << "]: Failed" << std::endl;
+    }
+  }
+};
+
 int main(int argc, char *argv[]) {
-#if 0
+  // Intialize google test
+  ::testing::InitGoogleTest(&argc, argv);
+
   // Initialize MPI before any call to gtest_mpi
   MPI_Init(&argc, &argv);
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   if (0 == rank) {
-    std::cerr << argv[0] << " (KokkosComm " << KOKKOSCOMM_VERSION_MAJOR << "." << KOKKOSCOMM_VERSION_MINOR << "." << KOKKOSCOMM_VERSION_PATCH << ")\n";
-      std::cerr << "size=" << size << "\n";
+    std::cerr << argv[0] << " (KokkosComm " << KOKKOSCOMM_VERSION_MAJOR << "."
+              << KOKKOSCOMM_VERSION_MINOR << "." << KOKKOSCOMM_VERSION_PATCH
+              << ")\n";
+    std::cerr << "size=" << size << "\n";
   }
+
   Kokkos::initialize();
-  if (0 == rank) std::cerr << __FILE__ << ":" << __LINE__ << " did initialize()\n";
 
   // Intialize google test
   ::testing::InitGoogleTest(&argc, argv);
-  if (0 == rank) std::cerr << __FILE__ << ":" << __LINE__ << " did ::testing::InitGoogleTest()\n";
 
-  // Add a test environment, which will initialize a test communicator
-  // (a duplicate of MPI_COMM_WORLD)
-  ::testing::AddGlobalTestEnvironment(new gtest_mpi::MPITestEnvironment());
-  if (0 == rank) std::cerr << __FILE__ << ":" << __LINE__ << " did testing::AddGlobalTestEnvironment()\n";
-
-  auto& test_listeners = ::testing::UnitTest::GetInstance()->listeners();
-  if (0 == rank) std::cerr << __FILE__ << ":" << __LINE__ << " did ::testing::UnitTest::GetInstance()->listeners()\n";
-
-  // Remove default listener and replace with the custom MPI listener
-  delete test_listeners.Release(test_listeners.default_result_printer());
-  if (0 == rank) std::cerr << __FILE__ << ":" << __LINE__ << " removed default listener\n";
-  test_listeners.Append(new gtest_mpi::PrettyMPIUnitTestResultPrinter());
-  if (0 == rank) std::cerr << __FILE__ << ":" << __LINE__ << " added MPI listener\n";
-
-  // run tests
-  auto exit_code = RUN_ALL_TESTS();
-  if (0 == rank) std::cerr << __FILE__ << ":" << __LINE__ << " ran tests\n";
-
-  // Finalize MPI before exiting
-  Kokkos::finalize();
-  MPI_Finalize();
-
-  return exit_code;
-#else
-  // Intialize google test
-  ::testing::InitGoogleTest(&argc, argv);
-
-  // Initialize MPI before any call to gtest_mpi
-  MPI_Init(&argc, &argv);
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-  Kokkos::initialize();
+  ::testing::AddGlobalTestEnvironment(new MpiEnvironment());
 
   auto &test_listeners = ::testing::UnitTest::GetInstance()->listeners();
   if (0 != rank)
     delete test_listeners.Release(test_listeners.default_result_printer());
 
+  test_listeners.Append(new MpiListener);
+
   // run tests
   auto exit_code = RUN_ALL_TESTS();
 
@@ -87,5 +87,4 @@ int main(int argc, char *argv[]) {
   MPI_Finalize();
 
   return exit_code;
-#endif
 }

@@ -20,8 +20,16 @@ Core
       - isend
       - ✓
       - ✓
+    * - MPI_Recv
+      - recv
+      - ✓
+      - ✓
     * - MPI_Reduce
       - reduce
+      - ✓
+      - ✓
+    * - MPI_Send
+      - send
       - ✓
       - ✓
 
@@ -100,10 +108,10 @@ Related Types
 
     .. cpp:function:: void KokkosComm::Req::wait()
 
-        Call MPI_Wait on the held MPI_Request and drop copies of any previous arguments to Req::keep_until_wait().
+        Call MPI_Wait on the held MPI_Request and drop copies of any previous arguments to Req::drop_at_wait().
 
     .. cpp:function:: template<typename View> \
-                      void KokkosComm::Req::keep_until_wait(const View &v)
+                      void KokkosComm::Req::drop_at_wait(const View &v)
 
         Extend the lifetime of v at least until Req::wait() is called.
         This is useful to prevent a View from being destroyed during an asynchronous MPI operation.

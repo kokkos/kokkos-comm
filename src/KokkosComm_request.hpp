@@ -23,6 +23,21 @@
 namespace KokkosComm {
 
 class Req {
+  // a type-erased callable
+  struct CallableBase {
+    virtual ~CallableBase() {}
+
+    virtual void operator()() = 0;
+  };
+  template <typename F>
+  struct CallableHolder : CallableBase {
+    CallableHolder(const F &f) : f_(f) {}
+
+    virtual void operator()() override { return f_(); }
+
+    F f_;
+  };
+
   // a type-erased view. Request uses these to keep temporary views alive for
   // the lifetime of "Immediate" MPI operations
   struct ViewHolderBase {
@@ -38,6 +53,7 @@ class Req {
     Record() : req_(MPI_REQUEST_NULL) {}
     MPI_Request req_;
     std::vector<std::shared_ptr<ViewHolderBase>> until_waits_;
+    std::vector<std::shared_ptr<CallableBase>> at_waits_;
   };
 
  public:
@@ -49,12 +65,21 @@ class Req {
     MPI_Wait(&(record_->req_), MPI_STATUS_IGNORE);
     record_->until_waits_
         .clear();  // drop any views we're keeping alive until wait()
+    for (auto &c : record_->at_waits_) {
+      (*c)();
+    }
+    record_->at_waits_.clear();
   }
 
   // keep a reference to this view around until wait() is called
   template <typename View>
-  void keep_until_wait(const View &v) {
+  void drop_at_wait(const View &v) {
     record_->until_waits_.push_back(std::make_shared<ViewHolder<View>>(v));
+  }
+
+  template <typename Callable>
+  void call_and_drop_at_wait(const Callable &c) {
+    record_->at_waits_.push_back(std::make_shared<CallableHolder<Callable>>(c));
   }
 
  private:
