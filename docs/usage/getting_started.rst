@@ -8,7 +8,7 @@ A basic build:
 
 .. code-block:: bash
 
-    cmake -S /path/to/kokkos-mpi \
+    cmake -S /path/to/kokkos-comm \
       -B /path/to/build/directory \
       -DCMAKE_CXX_COMPILER=mpicxx \
       -Kokkos_DIR=/path/to/kokkos/install/lib/cmake/Kokkos
@@ -23,7 +23,7 @@ As of March 2024, only Clang 18 has full ``std::mdspan`` support, so you will pr
 
 .. code-block:: bash
 
-    cmake -S /path/to/kokkos-mpi \
+    cmake -S /path/to/kokkos-comm \
       -B /path/to/build/directory \
       -DCMAKE_CXX_COMPILER=mpicxx \
       -Kokkos_DIR=/path/to/kokkos/install/lib/cmake/Kokkos \
