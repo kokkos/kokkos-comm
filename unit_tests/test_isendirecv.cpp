@@ -109,7 +109,6 @@ TYPED_TEST(IsendIrecv, 1D_noncontig) {
     ASSERT_EQ(errs, 0);
   }
 }
-#if 0
 
 #if KOKKOSCOMM_ENABLE_MDSPAN
 
@@ -131,9 +130,10 @@ TYPED_TEST(IsendIrecv, 1D_mdspan_contig) {
                                             dst, 0, MPI_COMM_WORLD);
     req.wait();
   } else if (1 == rank) {
-    int src = 0;
-    KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0,
-                     MPI_COMM_WORLD);
+    int src             = 0;
+    KokkosComm::Req req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a,
+                                            src, 0, MPI_COMM_WORLD);
+    req.wait();
     int errs = 0;
     for (size_t i = 0; i < a.extent(0); ++i) {
       errs += (a[i] != ScalarType(i));
@@ -166,9 +166,10 @@ TYPED_TEST(IsendIrecv, 1D_mdspan_noncontig) {
                                             dst, 0, MPI_COMM_WORLD);
     req.wait();
   } else if (1 == rank) {
-    int src = 0;
-    KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0,
-                     MPI_COMM_WORLD);
+    int src             = 0;
+    KokkosComm::Req req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a,
+                                            src, 0, MPI_COMM_WORLD);
+    req.wait();
     int errs = 0;
     for (size_t i = 0; i < a.extent(0); ++i) {
       errs += (a[i] != ScalarType(i));
@@ -176,6 +177,5 @@ TYPED_TEST(IsendIrecv, 1D_mdspan_noncontig) {
     ASSERT_EQ(errs, 0);
   }
 }
-#endif
 
 #endif  // KOKKOSCOMM_ENABLE_MDSPAN
