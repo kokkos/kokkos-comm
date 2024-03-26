@@ -115,3 +115,9 @@ Related Types
 
         Extend the lifetime of v at least until Req::wait() is called.
         This is useful to prevent a View from being destroyed during an asynchronous MPI operation.
+
+    .. cpp:function:: template<typename Callable> \
+                    void KokkosComm::Req::call_and_drop_at_wait(const Callable &c)
+
+      Store a copy of ``c``, and invoke ``c()`` when ``wait`` is called.
+      Destroy the copy of ``c`` afterwards.
