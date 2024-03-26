@@ -23,7 +23,8 @@
 namespace KokkosComm {
 
 class Req {
-  // a type-erased callable
+  // a type-erased callable. Req uses these to attach callbacks to be executed
+  // at wait
   struct InvokableHolderBase {
     virtual ~InvokableHolderBase() {}
 
@@ -52,8 +53,8 @@ class Req {
   struct Record {
     Record() : req_(MPI_REQUEST_NULL) {}
     MPI_Request req_;
-    std::vector<std::shared_ptr<ViewHolderBase>> until_waits_;
-    std::vector<std::shared_ptr<InvokableHolderBase>> at_waits_;
+    std::vector<std::shared_ptr<ViewHolderBase>> wait_drops_;
+    std::vector<std::shared_ptr<InvokableHolderBase>> wait_callbacks_;
   };
 
  public:
@@ -63,18 +64,24 @@ class Req {
 
   void wait() {
     MPI_Wait(&(record_->req_), MPI_STATUS_IGNORE);
-    record_->until_waits_.clear();  // drop any views we're keeping alive until wait()
+    record_->wait_drops_
+        .clear();  // drop any views we're keeping alive until wait()
+    for (auto &c : record_->wait_callbacks_) {
+      (*c)();
+    }
+    record_->wait_callbacks_.clear();
   }
 
   // keep a reference to this view around until wait() is called
   template <typename View>
   void drop_at_wait(const View &v) {
-    record_->until_waits_.push_back(std::make_shared<ViewHolder<View>>(v));
+    record_->wait_drops_.push_back(std::make_shared<ViewHolder<View>>(v));
   }
 
   template <Invokable Fn>
   void call_and_drop_at_wait(const Fn &f) {
-    record_->at_waits_.push_back(std::make_shared<InvokableHolder<Fn>>(f));
+    record_->wait_callbacks_.push_back(
+        std::make_shared<InvokableHolder<Fn>>(f));
   }
 
  private:
