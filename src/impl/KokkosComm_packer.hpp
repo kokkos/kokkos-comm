@@ -23,7 +23,7 @@
 namespace KokkosComm::Impl {
 namespace Packer {
 
-template <typename View>
+template <ViewOrMdspan View>
 struct MpiArgs {
   View view;
   MPI_Datatype datatype;
@@ -40,7 +40,7 @@ struct DeepCopy {
                    typename View::memory_space>;
   using args_type = MpiArgs<non_const_packed_view_type>;
 
-  template <typename ExecSpace>
+  template <KokkosExecutionSpace ExecSpace>
   static args_type allocate_packed_for(const ExecSpace &space,
                                        const std::string &label,
                                        const View &src) {
@@ -68,33 +68,28 @@ struct DeepCopy {
     }
   }
 
-  template <typename ExecSpace>
+  template <KokkosExecutionSpace ExecSpace>
   static args_type pack(const ExecSpace &space, const View &src) {
     args_type args = allocate_packed_for(space, "DeepCopy::pack", src);
     Kokkos::deep_copy(space, args.view, src);
     return args;
   }
 
-  template <typename ExecSpace>
+  template <KokkosExecutionSpace ExecSpace>
   static void unpack_into(const ExecSpace &space, const View &dst,
                           const non_const_packed_view_type &src) {
     Kokkos::deep_copy(space, dst, src);
   }
 };
 
-template <typename View>
-#if KOKKOSCOMM_ENABLE_MDSPAN
-    requires KokkosView<View> || Mdspan<View>
-#else
-requires KokkosView<View>
-#endif
-    struct MpiDatatype {
+template <ViewOrMdspan View>
+struct MpiDatatype {
   using non_const_packed_view_type = View;
   using args_type                  = MpiArgs<non_const_packed_view_type>;
 
   // don't actually allocate - return the provided view, but with
   // a datatype that describes the data in the view
-  template <typename ExecSpace>
+  template <KokkosExecutionSpace ExecSpace>
   static args_type allocate_packed_for(const ExecSpace & /*space*/,
                                        const std::string & /*label*/,
                                        const View &src) {
@@ -115,13 +110,13 @@ requires KokkosView<View>
   }
 
   // pack is a no-op: rely on MPI's datatype engine
-  template <typename ExecSpace>
+  template <KokkosExecutionSpace ExecSpace>
   static args_type pack(const ExecSpace &space, const View &src) {
     return allocate_packed_for(space, "", src);
   }
 
   // unpack is a no-op: rely on MPI's datatype engine
-  template <typename ExecSpace>
+  template <KokkosExecutionSpace ExecSpace>
   static void unpack_into(const ExecSpace & /*space*/, const View & /*dst*/,
                           const non_const_packed_view_type & /*src*/) {
     return;

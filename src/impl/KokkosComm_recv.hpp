@@ -18,6 +18,7 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "impl/KokkosComm_concepts.hpp"
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_traits.hpp"
 
@@ -28,7 +29,7 @@
    same is true for an mdspan?
 */
 namespace KokkosComm::Impl {
-template <typename RecvView, typename ExecSpace>
+template <KokkosExecutionSpace ExecSpace, ViewOrMdspan RecvView>
 void recv(const ExecSpace &space, RecvView &rv, int src, int tag,
           MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");

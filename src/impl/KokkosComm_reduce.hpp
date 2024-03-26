@@ -26,7 +26,8 @@
 #include "KokkosComm_types.hpp"
 
 namespace KokkosComm::Impl {
-template <typename SendView, typename RecvView, typename ExecSpace>
+template <KokkosExecutionSpace ExecSpace, ViewOrMdspan SendView,
+          ViewOrMdspan RecvView>
 void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv,
             MPI_Op op, int root, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::reduce");

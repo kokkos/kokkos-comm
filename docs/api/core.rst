@@ -29,7 +29,7 @@ Core
 Point-to-point
 --------------
 
-.. cpp:function:: template <typename SendView, typename ExecSpace> \
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, ViewOrMdspan SendView> \
                   Req KokkosComm::isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
 
     MPI_Isend wrapper
@@ -43,7 +43,7 @@ Point-to-point
     :tparam ExecSpace: A Kokkos execution space to operate in
     :returns: A KokkosComm::Req representing the asynchronous communication and any lifetime-extended views.
 
-.. cpp:function:: template <typename SendView, typename ExecSpace> \
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, ViewOrMdspan SendView> \
                   void KokkosComm::send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
 
     MPI_Send wrapper
@@ -56,8 +56,8 @@ Point-to-point
     :tparam SendView: A Kokkos::View to send
     :tparam ExecSpace: A Kokkos execution space to operate in
 
-.. cpp:function:: template <typename Recv, typename ExecSpace> \
-                  void KokkosComm::recv(const ExecSpace &space, Recv &rv, int src, int tag, MPI_Comm comm)
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, ViewOrMdspan RecvView> \
+                  void KokkosComm::recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
 
     MPI_Recv wrapper
 
@@ -73,7 +73,7 @@ Point-to-point
 Collective
 ----------
 
-.. cpp:function:: template <typename SendView, typename RecvView, typename ExecSpace> \
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, ViewOrMdspan SendView, ViewOrMdspan RecvView> \
                   void KokkosComm::reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Op op, int root, MPI_Comm comm)
 
     MPI_Reduce wrapper

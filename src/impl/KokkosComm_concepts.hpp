@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <Kokkos_Core.hpp>
+
 #include "KokkosComm_mdspan.hpp"
 
 namespace KokkosComm {
@@ -23,9 +25,18 @@ namespace KokkosComm {
 template <typename T>
 concept KokkosView = Kokkos::is_view_v<T>;
 
+template <typename T>
+concept KokkosExecutionSpace = Kokkos::is_execution_space_v<T>;
+
 #if KOKKOSCOMM_ENABLE_MDSPAN
 template <typename T>
 concept Mdspan = is_mdspan_v<T>;
+
+template <typename T>
+concept ViewOrMdspan = KokkosView<T> || Mdspan<T>;
+#else
+template <typename T>
+concept ViewOrMdspan = KokkosView<T>;
 #endif
 
 }  // namespace KokkosComm
