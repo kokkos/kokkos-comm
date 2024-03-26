@@ -25,5 +25,7 @@ concept KokkosView = Kokkos::is_view_v<T>;
 
 template <typename T>
 concept KokkosExecutionSpace = Kokkos::is_execution_space_v<T>;
+template <typename Fn>
+concept Invokable = std::is_invocable_v<Fn>;
 
 }  // namespace KokkosComm
