@@ -82,13 +82,8 @@ struct DeepCopy {
   }
 };
 
-template <typename View>
-#if KOKKOSCOMM_ENABLE_MDSPAN
-    requires KokkosView<View> || Mdspan<View>
-#else
-requires KokkosView<View>
-#endif
-    struct MpiDatatype {
+template <ViewLike View>
+struct MpiDatatype {
   using non_const_packed_view_type = View;
   using args_type                  = MpiArgs<non_const_packed_view_type>;
 
@@ -98,9 +93,8 @@ requires KokkosView<View>
   static args_type allocate_packed_for(const ExecSpace & /*space*/,
                                        const std::string & /*label*/,
                                        const View &src) {
-    using ValueType = typename View::value_type;
-
-    using KCT = KokkosComm::Traits<View>;
+    using KCT       = KokkosComm::Traits<View>;
+    using ValueType = typename KCT::scalar_type;
 
     MPI_Datatype type = mpi_type<ValueType>();
     for (size_t d = 0; d < KokkosComm::Traits<View>::rank(); ++d) {

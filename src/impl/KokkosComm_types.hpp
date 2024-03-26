@@ -28,6 +28,11 @@ MPI_Datatype mpi_type() {
 };
 
 template <>
+inline MPI_Datatype mpi_type<char>() {
+  return MPI_CHAR;
+}
+
+template <>
 inline MPI_Datatype mpi_type<unsigned int>() {
   return MPI_UNSIGNED;
 }

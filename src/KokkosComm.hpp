@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "KokkosComm_view_traits.hpp"
 #include "KokkosComm_collective.hpp"
 #include "KokkosComm_version.hpp"
 #include "impl/KokkosComm_isend.hpp"
@@ -26,7 +27,7 @@
 
 namespace KokkosComm {
 
-template <typename SendView, typename ExecSpace>
+template <typename ExecSpace, ViewLike SendView>
 Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
   return Impl::isend(space, sv, dest, tag, comm);

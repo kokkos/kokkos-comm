@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <Kokkos_Core.hpp>
+
 #include "KokkosComm_mdspan.hpp"
 
 namespace KokkosComm {

@@ -22,7 +22,7 @@
 
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_request.hpp"
-#include "KokkosComm_traits.hpp"
+#include "KokkosComm_view_traits.hpp"
 
 // impl
 #include "KokkosComm_include_mpi.hpp"
@@ -50,7 +50,7 @@ KokkosComm::Req isend(const ExecSpace &space, const Span &ss, int dest, int tag,
               comm, &req.mpi_req());
     req.keep_until_wait(args.view);
   } else {
-    using SendScalar = typename Span::value_type;
+    using SendScalar = typename KCT::scalar_type;
     MPI_Isend(KCT::data_handle(ss), KCT::span(ss), mpi_type_v<SendScalar>, dest,
               tag, comm, &req.mpi_req());
     if (KCT::is_reference_counted()) {

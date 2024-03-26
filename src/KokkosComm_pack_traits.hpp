@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "KokkosComm_traits.hpp"
+#include "KokkosComm_view_traits.hpp"
 
 #include "KokkosComm_concepts.hpp"
 #include "KokkosComm_mdspan.hpp"

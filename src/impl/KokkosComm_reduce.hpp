@@ -19,7 +19,7 @@
 #include <Kokkos_Core.hpp>
 
 #include "KokkosComm_pack_traits.hpp"
-#include "KokkosComm_traits.hpp"
+#include "KokkosComm_view_traits.hpp"
 
 // impl
 #include "KokkosComm_include_mpi.hpp"

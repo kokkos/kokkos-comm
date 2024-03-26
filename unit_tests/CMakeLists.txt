@@ -25,6 +25,9 @@ endif()
 # )
 # FetchContent_MakeAvailable(mpitest)
 
+add_executable(compileonly compileonly_view_traits.cpp)
+target_link_libraries(compileonly KokkosComm)
+
 add_executable(test-mpi test_mpi.cpp)
 add_test(NAME test-mpi-1
         COMMAND mpirun -np 1 ./test-mpi
