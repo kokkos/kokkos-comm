@@ -33,10 +33,10 @@ endif()
 # Standalone MPI smoke tests (do not use KokkosComm)
 add_executable(test-mpi test_mpi.cpp)
 add_test(NAME test-mpi-1
-        COMMAND mpirun -np 1 ./test-mpi
+        COMMAND ${MPIEXEC_EXECUTABLE}  ${MPIEXEC_NUMPROC_FLAG} 1 ./test-mpi
 )
 add_test(NAME test-mpi-2
-        COMMAND mpirun -np 2 ./test-mpi
+        COMMAND ${MPIEXEC_EXECUTABLE}  ${MPIEXEC_NUMPROC_FLAG} 2 ./test-mpi
 )
 # doesn't use KokkosComm, so explicitly link MPI
 target_link_libraries(test-mpi MPI::MPI_CXX)
