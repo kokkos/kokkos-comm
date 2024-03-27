@@ -18,8 +18,6 @@
 
 #include "impl/KokkosComm_reduce.hpp"
 
-#include <Kokkos_Core.hpp>
-
 namespace KokkosComm {
 
 template <typename SendView, typename RecvView, typename ExecSpace>

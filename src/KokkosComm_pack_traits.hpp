@@ -18,9 +18,9 @@
 
 #include "KokkosComm_traits.hpp"
 
-#include "KokkosComm_concepts.hpp"
-#include "KokkosComm_mdspan.hpp"
-#include "KokkosComm_packer.hpp"
+#include "impl/KokkosComm_concepts.hpp"
+#include "impl/KokkosComm_mdspan.hpp"
+#include "impl/KokkosComm_packer.hpp"
 
 /*! \brief Defines a common interface for packing and unpacking
    Kokkos::View-like types \file KokkosComm_traits.hpp

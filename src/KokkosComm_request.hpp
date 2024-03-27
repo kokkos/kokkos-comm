@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "KokkosComm_include_mpi.hpp"
+#include "impl/KokkosComm_include_mpi.hpp" // MPI_REQUEST_NULL, MPI_STATUS_IGNORE
 
 namespace KokkosComm {
 

@@ -20,9 +20,8 @@
 
 #pragma once
 
-#include "KokkosComm_mdspan.hpp"
-
-#include "KokkosComm_concepts.hpp"
+#include "impl/KokkosComm_mdspan.hpp"
+#include "impl/KokkosComm_concepts.hpp"
 
 namespace KokkosComm {
 
