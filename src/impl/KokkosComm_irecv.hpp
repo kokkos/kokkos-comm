@@ -70,6 +70,7 @@ Req irecv(const ExecSpace &space, RecvView &rv, int src, int tag,
     using RecvScalar = typename RecvView::value_type;
     MPI_Irecv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<RecvScalar>, src,
               tag, comm, &req.mpi_req());
+    req.keep_until_wait(rv);
   }
   return req;
 
