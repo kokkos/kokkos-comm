@@ -26,7 +26,7 @@ class Req {
   // a type-erased callable. Req uses these to attach callbacks to be executed
   // at wait
   struct InvokableHolderBase {
-    virtual ~InvokableHolderBase() {}
+    virtual ~InvokableHolderBase() = default;
 
     virtual void operator()() = 0;
   };
