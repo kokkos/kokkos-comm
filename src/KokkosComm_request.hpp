@@ -74,7 +74,7 @@ class Req {
 
   // keep a reference to this view around until wait() is called
   template <typename View>
-  void drop_at_wait(const View &v) {
+  void keep_until_wait(const View &v) {
     record_->wait_drops_.push_back(std::make_shared<ViewHolder<View>>(v));
   }
 
