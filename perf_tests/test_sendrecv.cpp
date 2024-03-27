@@ -16,7 +16,7 @@
 
 #include "test_utils.hpp"
 
-#include "KokkosComm.hpp"
+#include <KokkosComm.hpp>
 
 template <typename Space, typename View>
 void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int rank,

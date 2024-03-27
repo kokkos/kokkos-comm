@@ -20,7 +20,7 @@
 
 #include <benchmark/benchmark.h>
 
-#include "KokkosComm_include_mpi.hpp"
+#include <KokkosComm_include_mpi.hpp>
 
 // F is a function that takes (state, MPI_Comm, args...)
 template <typename F, typename... Args>

@@ -16,7 +16,7 @@
 
 #include <gtest/gtest.h>
 
-#include "KokkosComm.hpp"
+#include <KokkosComm.hpp>
 
 template <typename T>
 class SendRecv : public testing::Test {

@@ -31,7 +31,7 @@ using std::MDSPAN_PREFIX() mdspan;
 
 #include <gtest/gtest.h>
 
-#include "KokkosComm.hpp"
+#include <KokkosComm.hpp>
 
 template <typename T>
 class IsendRecv : public testing::Test {
