@@ -34,7 +34,7 @@ class Req {
   struct InvokableHolder : InvokableHolderBase {
     InvokableHolder(const Fn &f) : f_(f) {}
 
-    virtual void operator()() override { return f_(); }
+    virtual void operator()() override { f_(); }
 
     Fn f_;
   };
