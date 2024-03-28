@@ -35,6 +35,7 @@ Developer
    :maxdepth: 2
 
    CONTRIBUTING
+   dev/testing
    dev/docs
 
 Indices and tables

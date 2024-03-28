@@ -19,12 +19,6 @@ if (NOT googletest_POPULATED)
   add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-# FetchContent_Declare(
-#   mpitest
-#   URL https://github.com/AdhocMan/gtest_mpi/archive/refs/tags/v1.1.0.zip
-# )
-# FetchContent_MakeAvailable(mpitest)
-
 add_executable(test-mpi test_mpi.cpp)
 add_test(NAME test-mpi-1
         COMMAND mpirun -np 1 ./test-mpi
@@ -38,9 +32,7 @@ add_executable(test-main test_main.cpp
   test_reduce.cpp
   test_sendrecv.cpp
 )
-target_link_libraries(test-main KokkosComm gtest 
-#gtest_mpi
-)
+target_link_libraries(test-main KokkosComm::KokkosComm gtest)
 
 add_test(NAME test-main
          COMMAND mpirun -np 2 ./test-main

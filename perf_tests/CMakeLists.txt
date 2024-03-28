@@ -25,7 +25,7 @@ add_executable(perf_test-main test_main.cpp
   test_2dhalo.cpp
 )
 kokkoscomm_add_cxx_flags(TARGET perf_test-main)
-target_link_libraries(perf_test-main KokkosComm benchmark::benchmark)
+target_link_libraries(perf_test-main KokkosComm::KokkosComm benchmark::benchmark)
 add_test(NAME perf_test-main
          COMMAND mpirun -np 2 ./perf_test-main)
 

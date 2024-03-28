@@ -18,10 +18,10 @@
 
 #include "KokkosComm_collective.hpp"
 #include "KokkosComm_version.hpp"
-#include "impl/KokkosComm_isend.hpp"
-#include "impl/KokkosComm_recv.hpp"
-#include "impl/KokkosComm_send.hpp"
-#include "impl/KokkosComm_concepts.hpp"
+#include "KokkosComm_isend.hpp"
+#include "KokkosComm_recv.hpp"
+#include "KokkosComm_send.hpp"
+#include "KokkosComm_concepts.hpp"
 
 #include <Kokkos_Core.hpp>
 

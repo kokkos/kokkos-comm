@@ -18,8 +18,8 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "impl/KokkosComm_concepts.hpp"
-#include "impl/KokkosComm_reduce.hpp"
+#include "KokkosComm_concepts.hpp"
+#include "KokkosComm_reduce.hpp"
 
 namespace KokkosComm {
 
