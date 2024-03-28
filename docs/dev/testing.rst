@@ -38,7 +38,7 @@ Testing the Install
 
     VERBOSE=1 cmake --build "$KC_INSTALL_BUILD"
 
-    ctest -V --test-dir "$KC_INSTALL_BUILD ""   
+    ctest -V --test-dir "$KC_INSTALL_BUILD"
 
 
     
