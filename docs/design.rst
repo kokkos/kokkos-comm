@@ -11,7 +11,7 @@ KokkosComm has an analogous concept, `KokkosComm::Req`.
 
 There are three consequences
 
-First, to ensure compatibility with MPI semantics, KokkosComm immediate functions will call the corresponding MPI function before they return.
+- First, to ensure compatibility with MPI semantics, KokkosComm immediate functions will call the corresponding MPI function before they return.
 
 Second, the KokkosComm packing strategy may require that an intermediate view be allocated, and this view needs to have a lifetime at least as long as the communication.
 The ``KokkosComm::Req::keep_until_wait`` interface allows the `KokkosComm::Req` to hold those views until ``wait`` is called.
