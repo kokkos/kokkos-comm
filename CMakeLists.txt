@@ -53,9 +53,6 @@ endif()
 include(cmake/flags.cmake)
 
 add_subdirectory(src)
-kokkoscomm_add_cxx_flags(TARGET KokkosComm INTERFACE)
-message(STATUS ${KOKKOSCOMM_PUBLIC_HEADERS})
-set_target_properties(KokkosComm PROPERTIES PUBLIC_HEADER "${KOKKOSCOMM_PUBLIC_HEADERS}")
 
 ## Version config file
 set(KOKKOSCOMM_VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR} CACHE STRING "" FORCE)
