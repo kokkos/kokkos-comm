@@ -52,6 +52,8 @@ endif()
 
 include(cmake/flags.cmake)
 
+include (GNUInstallDirs)
+
 add_subdirectory(src)
 
 ## Version config file
@@ -65,6 +67,7 @@ configure_file(
 )
 target_include_directories(KokkosComm INTERFACE 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src/>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 ## Package config file
