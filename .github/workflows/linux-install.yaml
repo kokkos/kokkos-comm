@@ -45,20 +45,24 @@ jobs:
       - name: Build and Install KokkosComm
         run: |
           VERBOSE=1 cmake --build "$COMM_BUILD" --target install
-      - name: Remove remnants of build
+      - name: Remove remnants of KokkosComm build
         run: |
           rm -rf $"COMM_BUILD"
-      - name: Build KokkosComm Unit Tests against Installed
+      - name: Configure KokkosComm Unit Tests against Installed
         run: |
           cmake -S "$COMM_SRC"/unit_tests -B "$COMM_UNIT_TESTS_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DKokkosComm_DIR="$COMM_INSTALL"/lib/cmake/KokkosComm -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          VERBOSE=1 cmake --build "$COMM_UNIT_TESTS_BUILD"
-      - name: Build KokkosComm Perf Tests against Installed
+      - name: Build KokkosComm Unit Tests
         run: |
-          cmake -S "$COMM_SRC"/perf_tests -B "$COMM_PERF_TESTS_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DKokkosComm_DIR="$COMM_INSTALL"/lib/cmake/KokkosComm -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          VERBOSE=1 cmake --build "$COMM_PERF_TESTS_BUILD"
+          VERBOSE=1 cmake --build "$COMM_UNIT_TESTS_BUILD"
       - name: Run KokkosComm Unit Tests against Install
         run: |
           ctest -V --test-dir "$COMM_UNIT_TESTS_BUILD"
+      - name: Configure KokkosComm Perf Tests against Installed
+        run: |
+          cmake -S "$COMM_SRC"/perf_tests -B "$COMM_PERF_TESTS_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DKokkosComm_DIR="$COMM_INSTALL"/lib/cmake/KokkosComm -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - name: Build KokkosComm Perf Tests
+        run: |
+          VERBOSE=1 cmake --build "$COMM_PERF_TESTS_BUILD"
       - name: Run KokkosComm Unit Tests against Install
         run: |
           ctest -V --test-dir "$COMM_PERF_TESTS_BUILD"
