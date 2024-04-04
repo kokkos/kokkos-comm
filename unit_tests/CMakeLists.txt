@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.12) # same as Kokkos Comm
 project(KokkosCommUnitTests VERSION 0.0.2)
 
 # Treat the unit tests as a separate project
