@@ -11,7 +11,7 @@ A basic build:
     cmake -S /path/to/kokkos-comm \
       -B /path/to/build/directory \
       -DCMAKE_CXX_COMPILER=mpicxx \
-      -Kokkos_DIR=/path/to/kokkos/install/lib/cmake/Kokkos
+      -DKokkos_DIR=/path/to/kokkos/install/lib/cmake/Kokkos
 
     make -C /path/to/build/directory
 

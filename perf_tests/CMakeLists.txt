@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.12) # same as Kokkos Comm
 project(KokkosCommPerfTests VERSION 0.0.2)
+enable_testing()
 
 # Treat the perf tests as a separate project
 # If not included in the Kokkos Comm build,
@@ -34,7 +35,9 @@ add_executable(perf_test-main test_main.cpp
   test_sendrecv.cpp
   test_2dhalo.cpp
 )
-kokkoscomm_add_cxx_flags(TARGET perf_test-main)
+if(KOKKOSCOMM_TESTS_ARE_SUBDIRECTORY)
+  kokkoscomm_add_cxx_flags(TARGET perf_test-main)
+endif()
 target_link_libraries(perf_test-main KokkosComm::KokkosComm benchmark::benchmark)
 add_test(NAME perf_test-main
          COMMAND mpirun -np 2 ./perf_test-main)

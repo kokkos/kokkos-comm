@@ -22,7 +22,7 @@ set(KOKKOSCOMM_USE_STD_MDSPAN ${KokkosComm_USE_STD_MDSPAN} CACHE BOOL "" FORCE)
 find_package(Kokkos REQUIRED)
 find_package(MPI REQUIRED)
 
-include(cmake/flags.cmake)
+
 
 message(STATUS "Kokkos MPI: MPI_VERSION =                 ${MPI_VERSION}")
 message(STATUS "Kokkos MPI: MPI_CXX_COMPILER =            ${MPI_CXX_COMPILER}")
@@ -53,7 +53,7 @@ if(KOKKOSCOMM_ENABLE_MDSPAN AND KOKKOSCOMM_USE_KOKKOS_MDSPAN)
 endif()
 
 
-
+include(cmake/flags.cmake)
 add_subdirectory(src)
 kokkoscomm_add_cxx_flags(TARGET KokkosComm INTERFACE)
 message(STATUS ${KOKKOSCOMM_PUBLIC_HEADERS})
@@ -120,7 +120,8 @@ install(
 
 
 if(KOKKOSCOMM_ENABLE_TESTS OR KOKKOSCOMM_ENABLE_PERFTESTS)
-    enable_testing()
+    set(KOKKOSCOMM_TESTS_ARE_SUBDIRECTORY CACHE BOOL ON "")
+    # enable_testing()
 endif()
 if(KOKKOSCOMM_ENABLE_TESTS)
     add_subdirectory(unit_tests)

@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.12) # same as Kokkos Comm
 project(KokkosCommUnitTests VERSION 0.0.2)
+enable_testing()
 
 # Treat the unit tests as a separate project
 # If not included in the Kokkos Comm build,
@@ -43,6 +44,9 @@ add_executable(test-main test_main.cpp
   test_sendrecv.cpp
 )
 target_link_libraries(test-main KokkosComm::KokkosComm gtest)
+if(KOKKOSCOMM_TESTS_ARE_SUBDIRECTORY)
+  kokkoscomm_add_cxx_flags(TARGET test-main)
+endif()
 
 add_test(NAME test-main
          COMMAND mpirun -np 2 ./test-main
