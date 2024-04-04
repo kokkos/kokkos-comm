@@ -31,8 +31,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
+        run: ls ${{ github.workspace }}
       - name: Build Kokkos
         run: |
           git clone https://github.com/kokkos/kokkos.git --branch master --depth 1 "$KOKKOS_SRC"
