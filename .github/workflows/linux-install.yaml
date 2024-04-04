@@ -16,7 +16,8 @@ jobs:
       COMM_SRC: ${{ github.workspace }}
       COMM_BUILD: ${{ github.workspace }}/build
       COMM_INSTALL: ${{ github.workspace }}/install
-      COMM_INSTALL_BUILD: ${{ github.workspace }}/install-build
+      COMM_UNIT_TESTS_BUILD: ${{ github.workspace }}/unit-tests-build
+      COMM_PERF_TESTS_BUILD: ${{ github.workspace }}/perf-tests-build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -36,7 +37,7 @@ jobs:
         run: |
           git clone https://github.com/kokkos/kokkos.git "$KOKKOS_SRC"
           cd "$KOKKOS_SRC" && git checkout 4.2.00
-          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_OPENMP=ON -DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_COMPILER=mpicxx
+          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_OPENMP=ON -DCMAKE_CXX_COMPILER=mpicxx
           cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
       - name: Build and Install KokkosComm
         run: |
@@ -47,8 +48,15 @@ jobs:
           rm -rf ${{ github.workspace }}/build
       - name: Build KokkosComm Unit Tests against Installed
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_INSTALL_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_PREFIX_PATH="$COMM_INSTALL" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=Release -DKokkosComm_INSTALL_TESTING=ON
-          VERBOSE=1 cmake --build "$COMM_INSTALL_BUILD" --target install
+          cmake -S "$COMM_SRC"/unit_tests -B "$COMM_UNIT_TESTS_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_PREFIX_PATH="$COMM_INSTALL" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=Release
+          VERBOSE=1 cmake --build "$COMM_UNIT_TESTS_BUILD"
+      - name: Build KokkosComm Perf Tests against Installed
+        run: |
+          cmake -S "$COMM_SRC"/perf_tests -B "$COMM_PERF_TESTS_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_PREFIX_PATH="$COMM_INSTALL" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=Release
+          VERBOSE=1 cmake --build "$COMM_PERF_TESTS_BUILD"
       - name: Run KokkosComm Unit Tests against Install
         run: |
-          ctest -V --test-dir "$COMM_INSTALL_BUILD"
+          ctest -V --test-dir "$COMM_UNIT_TESTS_BUILD"
+      - name: Run KokkosComm Unit Tests against Install
+        run: |
+          ctest -V --test-dir "$COMM_PERF_TESTS_BUILD"

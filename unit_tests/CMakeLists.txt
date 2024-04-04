@@ -1,3 +1,12 @@
+project(KokkosCommUnitTests VERSION 0.0.2)
+
+# Treat the unit tests as a separate project
+# If not included in the Kokkos Comm build,
+# find Kokkos Comm to do a standalone build
+if (NOT TARGET KokkosComm::KokkosComm)
+  find_package(KokkosComm REQUIRED)
+endif()
+
 include(FetchContent)
 
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
