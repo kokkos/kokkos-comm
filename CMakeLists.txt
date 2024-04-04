@@ -66,9 +66,13 @@ configure_file(
     ${CMAKE_CURRENT_BINARY_DIR}/src/KokkosComm_version.hpp
     @ONLY
 )
+
+# this sets CMAKE_INSTALL_[...]DIR
+include(GNUInstallDirs)
+
 target_include_directories(KokkosComm INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src/>
-    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 ## Package config file
@@ -91,8 +95,7 @@ export (
     FILE ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommTargets.cmake
 )
 
-# this sets CMAKE_INSTALL_[...]DIR
-include(GNUInstallDirs)
+
 install(
     TARGETS KokkosComm
     EXPORT KokkosCommTargets # does this do anything?
