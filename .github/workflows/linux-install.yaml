@@ -8,7 +8,7 @@ on:
     types: [ opened, reopened, synchronize ]
     
 jobs:
-   Kokkos-040201-OpenMPI:
+   Kokkos-master-OpenMPI:
     env:
       KOKKOS_SRC: ${{ github.workspace }}/_deps/kokkos
       KOKKOS_BUILD: ${{ github.workspace }}/_deps/kokkos-build
@@ -35,7 +35,7 @@ jobs:
           ls ${{ github.workspace }}
       - name: Build Kokkos
         run: |
-          git clone https://github.com/kokkos/kokkos.git --branch 4.2.01 --depth 1 "$KOKKOS_SRC"
+          git clone https://github.com/kokkos/kokkos.git --branch master --depth 1 "$KOKKOS_SRC"
           cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_OPENMP=ON -DCMAKE_CXX_COMPILER=mpicxx
           cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
       - name: Configure KokkosComm
