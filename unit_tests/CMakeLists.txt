@@ -44,7 +44,7 @@ add_executable(test-main test_main.cpp
   test_sendrecv.cpp
 )
 target_link_libraries(test-main KokkosComm::KokkosComm gtest)
-if(KOKKOSCOMM_TESTS_ARE_SUBDIRECTORY)
+if(KOKKOSCOMM_ENABLE_TESTS)
   kokkoscomm_add_cxx_flags(TARGET test-main)
 endif()
 

@@ -35,7 +35,7 @@ add_executable(perf_test-main test_main.cpp
   test_sendrecv.cpp
   test_2dhalo.cpp
 )
-if(KOKKOSCOMM_TESTS_ARE_SUBDIRECTORY)
+if(KOKKOSCOMM_ENABLE_TESTS)
   kokkoscomm_add_cxx_flags(TARGET perf_test-main)
 endif()
 target_link_libraries(perf_test-main KokkosComm::KokkosComm benchmark::benchmark)

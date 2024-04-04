@@ -22,8 +22,6 @@ set(KOKKOSCOMM_USE_STD_MDSPAN ${KokkosComm_USE_STD_MDSPAN} CACHE BOOL "" FORCE)
 find_package(Kokkos REQUIRED)
 find_package(MPI REQUIRED)
 
-
-
 message(STATUS "Kokkos MPI: MPI_VERSION =                 ${MPI_VERSION}")
 message(STATUS "Kokkos MPI: MPI_CXX_COMPILER =            ${MPI_CXX_COMPILER}")
 message(STATUS "Kokkos MPI: MPI_CXX_COMPILE_OPTIONS =     ${MPI_CXX_COMPILE_OPTIONS}")
@@ -119,10 +117,6 @@ install(
 )
 
 
-if(KOKKOSCOMM_ENABLE_TESTS OR KOKKOSCOMM_ENABLE_PERFTESTS)
-    set(KOKKOSCOMM_TESTS_ARE_SUBDIRECTORY CACHE BOOL ON "")
-    # enable_testing()
-endif()
 if(KOKKOSCOMM_ENABLE_TESTS)
     add_subdirectory(unit_tests)
 endif()

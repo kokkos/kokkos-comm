@@ -40,7 +40,7 @@ jobs:
           cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
       - name: Configure KokkosComm
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wshadow -Wpedantic" -DKokkosComm_ENABLE_TESTS=OFF -DKokkosComm_ENABLE_PERFTESTS=OFF -DCMAKE_INSTALL_PREFIX="$COMM_INSTALL"
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKokkosComm_ENABLE_TESTS=OFF -DKokkosComm_ENABLE_PERFTESTS=OFF -DCMAKE_INSTALL_PREFIX="$COMM_INSTALL"
       - name: Build and Install KokkosComm
         run: |
           VERBOSE=1 cmake --build "$COMM_BUILD" --target install
@@ -49,7 +49,7 @@ jobs:
           rm -rf $"COMM_BUILD"
       - name: Configure KokkosComm Unit Tests against Installed
         run: |
-          cmake -S "$COMM_SRC"/unit_tests -B "$COMM_UNIT_TESTS_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DKokkosComm_DIR="$COMM_INSTALL"/lib/cmake/KokkosComm -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          cmake -S "$COMM_SRC"/unit_tests -B "$COMM_UNIT_TESTS_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DKokkosComm_ROOT="$COMM_INSTALL" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo
       - name: Build KokkosComm Unit Tests
         run: |
           VERBOSE=1 cmake --build "$COMM_UNIT_TESTS_BUILD"
@@ -58,7 +58,7 @@ jobs:
           ctest -V --test-dir "$COMM_UNIT_TESTS_BUILD"
       - name: Configure KokkosComm Perf Tests against Installed
         run: |
-          cmake -S "$COMM_SRC"/perf_tests -B "$COMM_PERF_TESTS_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DKokkosComm_DIR="$COMM_INSTALL"/lib/cmake/KokkosComm -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          cmake -S "$COMM_SRC"/perf_tests -B "$COMM_PERF_TESTS_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DKokkosComm_ROOT="$COMM_INSTALL" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo
       - name: Build KokkosComm Perf Tests
         run: |
           VERBOSE=1 cmake --build "$COMM_PERF_TESTS_BUILD"
