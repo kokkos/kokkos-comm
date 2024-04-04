@@ -43,7 +43,6 @@ Configuration Options
   * Causes ``KOKKOSCOMM_MDSPAN_IN_EXPERIMENTAL`` to be defined in source files
 * ``KokkosComm_ENABLE_PERFTESTS``: (default=ON) build performance tests
 * ``KokkosComm_ENABLE_TESTS``: (default=ON) build unit tests
-* ``KokkosComm_INSTALL_TESTING``: (default=OFF) don't define the KokkosComm library -- rather, use `find_package` to load KokkosComm. This is intended to be used by developers to test `cmake --build --target install` in conjuction with ``-DKokkosComm_ENABLE_PERFTESTS=ON`` and ``-DKokkosComm_ENABLE_TESTS=ON``.
 
 Known Quirks
 ------------
