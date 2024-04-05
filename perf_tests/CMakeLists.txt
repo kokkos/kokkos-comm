@@ -40,6 +40,6 @@ if(KOKKOSCOMM_ENABLE_TESTS)
 endif()
 target_link_libraries(perf_test-main KokkosComm::KokkosComm benchmark::benchmark)
 add_test(NAME perf_test-main
-         COMMAND mpirun -np 2 ./perf_test-main)
+         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./perf_test-main)
 
 

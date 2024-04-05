@@ -34,11 +34,11 @@ jobs:
         run: |
           git clone https://github.com/kokkos/kokkos.git "$KOKKOS_SRC"
           cd "$KOKKOS_SRC" && git checkout 4.2.00
-          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Debug -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_THREADS=ON -DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_COMPILER=mpicxx
+          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Debug -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_THREADS=ON -DKokkos_ARCH_NATIVE=ON
           cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
       - name: Build KokkosComm
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wshadow -Wpedantic"
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wshadow -Wpedantic"
           VERBOSE=1 cmake --build "$COMM_BUILD"
       - name: Test KokkosComm
         run: |
@@ -66,11 +66,11 @@ jobs:
         run: |
           git clone https://github.com/kokkos/kokkos.git "$KOKKOS_SRC"
           cd "$KOKKOS_SRC" && git checkout 4.2.00
-          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_THREADS=ON -DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_COMPILER=mpicxx
+          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_THREADS=ON -DKokkos_ARCH_NATIVE=ON
           cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
       - name: Build KokkosComm
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wshadow -Wpedantic"
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wshadow -Wpedantic"
           VERBOSE=1 cmake --build "$COMM_BUILD"
       - name: Test KokkosComm
         run: |

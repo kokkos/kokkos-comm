@@ -19,6 +19,8 @@ Testing the Install
 
     set -eou pipefail
 
+    export KOKKOS_SRC="$PWD"/kokkos
+    export KOKKOS_BUILD="$PWD"/kokkos-build
     export KOKKOS_INSTALL="$PWD"/kokkos-install
     export COMM_SRC="$PWD"
     export COMM_BUILD=build
@@ -26,8 +28,17 @@ Testing the Install
     export COMM_UNIT_TESTS_BUILD=unit-tests-build
     export COMM_PERF_TESTS_BUILD=perf-tests-build
 
+    echo "==== CLONE KOKKOS ===="
+    git clone https://github.com/kokkos/kokkos.git --branch master --depth 1 "$KOKKOS_SRC" || true
+
+    echo "==== CONFIGURE KOKKOS ===="
+    cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_OPENMP=ON
+
+    echo "==== BUILD & INSTALL KOKKOS ===="
+    cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
+
     echo "==== CFG KOKKOS COMM ===="
-    cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKokkosComm_ENABLE_TESTS=OFF -DKokkosComm_ENABLE_PERFTESTS=OFF -DCMAKE_INSTALL_PREFIX="$COMM_INSTALL"
+    cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKokkosComm_ENABLE_TESTS=OFF -DKokkosComm_ENABLE_PERFTESTS=OFF -DCMAKE_INSTALL_PREFIX="$COMM_INSTALL"
 
     echo "==== BUILD & INSTALL KOKKOS COMM ===="
     VERBOSE=1 cmake --build "$COMM_BUILD" --target install
@@ -37,20 +48,20 @@ Testing the Install
 
     echo "==== CFG UNIT TESTS ===="
     rm -rf "$COMM_UNIT_TESTS_BUILD"
-    cmake -S "$COMM_SRC"/unit_tests -B "$COMM_UNIT_TESTS_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DKokkosComm_ROOT="$COMM_INSTALL" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    cmake -S "$COMM_SRC"/unit_tests -B "$COMM_UNIT_TESTS_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DKokkosComm_ROOT="$COMM_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
     echo "==== BUILD UNIT TESTS ===="
-    VERBOSE=1 cmake --build "$COMM_UNIT_TESTS_BUILD"
+    VERBOSE=1 cmake --build "$COMM_UNIT_TESTS_BUILD" --parallel 4
 
     echo "==== RUN UNIT TESTS ===="
     ctest -V --test-dir "$COMM_UNIT_TESTS_BUILD"
 
     echo "==== CFG PERF TESTS ===="
     rm -rf "$COMM_PERF_TESTS_BUILD"
-    cmake -S "$COMM_SRC"/perf_tests -B "$COMM_PERF_TESTS_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DKokkosComm_ROOT="$COMM_INSTALL" -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    cmake -S "$COMM_SRC"/perf_tests -B "$COMM_PERF_TESTS_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DKokkosComm_ROOT="$COMM_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
     echo "==== BUILD PERF TESTS ===="
-    VERBOSE=1 cmake --build "$COMM_PERF_TESTS_BUILD"
+    VERBOSE=1 cmake --build "$COMM_PERF_TESTS_BUILD"  --parallel 4
 
     echo "==== RUN PERF TESTS ===="
     ctest -V --test-dir "$COMM_PERF_TESTS_BUILD"
