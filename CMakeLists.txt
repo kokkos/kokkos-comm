@@ -120,8 +120,10 @@ install(
 
 
 if(KOKKOSCOMM_ENABLE_TESTS)
+    enable_testing()
     add_subdirectory(unit_tests)
 endif()
 if(KOKKOSCOMM_ENABLE_PERFTESTS)
+    enable_testing()
     add_subdirectory(perf_tests)
 endif()
