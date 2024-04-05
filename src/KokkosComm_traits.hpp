@@ -63,7 +63,9 @@ struct Traits<View> {
     Kokkos::deep_copy(space, dst, src);
   }
 
-  static constexpr bool is_reference_counted() { return true; }
+  static constexpr bool is_reference_counted() {
+    return !View::memory_traits::is_unmanaged;
+  }
 
   static constexpr size_t rank() { return View::rank; }
 };
