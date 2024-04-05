@@ -11,7 +11,7 @@ A basic build:
     cmake -S /path/to/kokkos-comm \
       -B /path/to/build/directory \
       -DCMAKE_CXX_COMPILER=mpicxx \
-      -Kokkos_DIR=/path/to/kokkos/install/lib/cmake/Kokkos
+      -DKokkos_ROOT=/path/to/kokkos-install
 
     make -C /path/to/build/directory
 
@@ -26,7 +26,7 @@ As of March 2024, only Clang 18 has full ``std::mdspan`` support, so you will pr
     cmake -S /path/to/kokkos-comm \
       -B /path/to/build/directory \
       -DCMAKE_CXX_COMPILER=mpicxx \
-      -Kokkos_ROOT=/path/to/kokkos/install/ \
+      -DKokkos_ROOT=/path/to/kokkos-install/ \
       -DKokkosComm_ENABLE_MDSPAN=ON \
       -DKokkosComm_USE_KOKKOS_MDSPAN=ON
 

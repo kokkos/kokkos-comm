@@ -1,5 +1,14 @@
 @PACKAGE_INIT@
 
+GET_FILENAME_COMPONENT(KokkosComm_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+INCLUDE("${KokkosComm_CMAKE_DIR}/KokkosCommTargets.cmake")
+UNSET(KokkosComm_CMAKE_DIR)
+
+include(CMakeFindDependencyMacro)
+find_dependency(MPI)
+find_dependency(Kokkos)
+
+## FIXME: do we need this?
 set(KokkosComm_INCLUDE_DIR   "@CMAKE_INSTALL_FULL_INCLUDEDIR@" )
 set(KokkosComm_DATA_DIR   "@CMAKE_INSTALL_PREFIX@/@RELATIVE_DATA_INSTALL_DIR@" )
 set(KokkosComm_ICONS_DIR   "@CMAKE_INSTALL_PREFIX@/share/icons" )

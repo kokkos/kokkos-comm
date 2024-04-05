@@ -50,8 +50,8 @@ if(KOKKOSCOMM_ENABLE_MDSPAN AND KOKKOSCOMM_USE_KOKKOS_MDSPAN)
     FetchContent_MakeAvailable(kokkos_mdspan)
 endif()
 
-include(cmake/flags.cmake)
 
+include(cmake/flags.cmake)
 add_subdirectory(src)
 kokkoscomm_add_cxx_flags(TARGET KokkosComm INTERFACE)
 message(STATUS ${KOKKOSCOMM_PUBLIC_HEADERS})
@@ -66,50 +66,50 @@ configure_file(
     ${CMAKE_CURRENT_BINARY_DIR}/src/KokkosComm_version.hpp
     @ONLY
 )
-target_include_directories(KokkosComm INTERFACE 
+
+# this sets CMAKE_INSTALL_[...]DIR
+include(GNUInstallDirs)
+
+target_include_directories(KokkosComm INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src/>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 ## Package config file
 include(CMakePackageConfigHelpers)
 configure_package_config_file (
-  ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
-  ${PROJECT_BINARY_DIR}/cmake/KokkosComm/${PROJECT_NAME}Config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
-  NO_SET_AND_CHECK_MACRO
-  NO_CHECK_REQUIRED_COMPONENTS_MACRO
+    ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
+    ${PROJECT_BINARY_DIR}/cmake/KokkosComm/${PROJECT_NAME}Config.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+    NO_SET_AND_CHECK_MACRO
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO
 )
 write_basic_package_version_file(
-  "${version_config}" VERSION ${GENERIC_LIB_VERSION} COMPATIBILITY SameMajorVersion
+    ${PROJECT_BINARY_DIR}/cmake/KokkosComm/${PROJECT_NAME}Version.cmake
+    COMPATIBILITY SameMajorVersion
 )
-
-enable_testing()
-if(KOKKOSCOMM_ENABLE_TESTS)
-    add_subdirectory(unit_tests)
-endif()
-if(KOKKOSCOMM_ENABLE_PERFTESTS)
-    add_subdirectory(perf_tests)
-endif()
 
 export (
-  TARGETS KokkosComm
-  NAMESPACE "${PROJECT_NAME}::"
-  FILE ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommTargets.cmake
+    TARGETS KokkosComm
+    NAMESPACE "${PROJECT_NAME}::"
+    FILE ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommTargets.cmake
 )
+
 
 install(
     TARGETS KokkosComm
     EXPORT KokkosCommTargets # does this do anything?
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(
     DIRECTORY "${PROJECT_BINARY_DIR}/src/"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.hpp")
 install(
-    FILES "${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake"
+    FILES 
+    "${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake"
+    "${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm/
 )
 install(
@@ -117,3 +117,11 @@ install(
     NAMESPACE "${PROJECT_NAME}::"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )
+
+
+if(KOKKOSCOMM_ENABLE_TESTS)
+    add_subdirectory(unit_tests)
+endif()
+if(KOKKOSCOMM_ENABLE_PERFTESTS)
+    add_subdirectory(perf_tests)
+endif()

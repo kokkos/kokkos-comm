@@ -1,3 +1,14 @@
+cmake_minimum_required(VERSION 3.12) # same as Kokkos Comm
+project(KokkosCommUnitTests VERSION 0.0.2)
+enable_testing()
+
+# Treat the unit tests as a separate project
+# If not included in the Kokkos Comm build,
+# find Kokkos Comm to do a standalone build
+if (NOT TARGET KokkosComm::KokkosComm)
+  find_package(KokkosComm REQUIRED)
+endif()
+
 include(FetchContent)
 
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
@@ -19,12 +30,6 @@ if (NOT googletest_POPULATED)
   add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-# FetchContent_Declare(
-#   mpitest
-#   URL https://github.com/AdhocMan/gtest_mpi/archive/refs/tags/v1.1.0.zip
-# )
-# FetchContent_MakeAvailable(mpitest)
-
 add_executable(test-mpi test_mpi.cpp)
 add_test(NAME test-mpi-1
         COMMAND mpirun -np 1 ./test-mpi
@@ -38,9 +43,10 @@ add_executable(test-main test_main.cpp
   test_reduce.cpp
   test_sendrecv.cpp
 )
-target_link_libraries(test-main KokkosComm gtest 
-#gtest_mpi
-)
+target_link_libraries(test-main KokkosComm::KokkosComm gtest)
+if(KOKKOSCOMM_ENABLE_TESTS)
+  kokkoscomm_add_cxx_flags(TARGET test-main)
+endif()
 
 add_test(NAME test-main
          COMMAND mpirun -np 2 ./test-main

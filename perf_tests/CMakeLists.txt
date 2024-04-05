@@ -1,3 +1,14 @@
+cmake_minimum_required(VERSION 3.12) # same as Kokkos Comm
+project(KokkosCommPerfTests VERSION 0.0.2)
+enable_testing()
+
+# Treat the perf tests as a separate project
+# If not included in the Kokkos Comm build,
+# find Kokkos Comm to do a standalone build
+if (NOT TARGET KokkosComm::KokkosComm)
+  find_package(KokkosComm REQUIRED)
+endif()
+
 include(FetchContent)
 
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
@@ -24,8 +35,10 @@ add_executable(perf_test-main test_main.cpp
   test_sendrecv.cpp
   test_2dhalo.cpp
 )
-kokkoscomm_add_cxx_flags(TARGET perf_test-main)
-target_link_libraries(perf_test-main KokkosComm benchmark::benchmark)
+if(KOKKOSCOMM_ENABLE_TESTS)
+  kokkoscomm_add_cxx_flags(TARGET perf_test-main)
+endif()
+target_link_libraries(perf_test-main KokkosComm::KokkosComm benchmark::benchmark)
 add_test(NAME perf_test-main
          COMMAND mpirun -np 2 ./perf_test-main)
 

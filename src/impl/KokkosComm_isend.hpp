@@ -20,7 +20,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "impl/KokkosComm_concepts.hpp"
+#include "KokkosComm_concepts.hpp"
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_request.hpp"
 #include "KokkosComm_traits.hpp"
