@@ -49,18 +49,6 @@ struct Traits<View> {
   static size_t extent(const View &v, const int i) { return v.extent(i); }
   static size_t stride(const View &v, const int i) { return v.stride(i); }
 
-  template <typename ExecSpace>
-  static void pack(const ExecSpace &space,
-                   const non_const_packed_view_type &dst, const View &src) {
-    Kokkos::deep_copy(space, dst, src);
-  }
-
-  template <typename ExecSpace>
-  static void unpack(const ExecSpace &space, const View &dst,
-                     const non_const_packed_view_type &src) {
-    Kokkos::deep_copy(space, dst, src);
-  }
-
   static constexpr bool is_reference_counted() { return true; }
 
   static constexpr size_t rank() { return View::rank; }
