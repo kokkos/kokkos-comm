@@ -10,7 +10,6 @@ A basic build:
 
     cmake -S /path/to/kokkos-comm \
       -B /path/to/build/directory \
-      -DCMAKE_CXX_COMPILER=mpicxx \
       -DKokkos_ROOT=/path/to/kokkos-install
 
     make -C /path/to/build/directory

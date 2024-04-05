@@ -30,6 +30,7 @@ if (NOT googletest_POPULATED)
   add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+# Standalone MPI smoke tests (do not use KokkosComm)
 add_executable(test-mpi test_mpi.cpp)
 add_test(NAME test-mpi-1
         COMMAND mpirun -np 1 ./test-mpi
@@ -37,7 +38,10 @@ add_test(NAME test-mpi-1
 add_test(NAME test-mpi-2
         COMMAND mpirun -np 2 ./test-mpi
 )
+# doesn't use KokkosComm, so explicitly link MPI
+target_link_libraries(test-mpi MPI::MPI_CXX)
 
+# Kokkos Comm tests
 add_executable(test-main test_main.cpp
   test_isendrecv.cpp
   test_reduce.cpp
@@ -49,7 +53,7 @@ if(KOKKOSCOMM_ENABLE_TESTS)
 endif()
 
 add_test(NAME test-main
-         COMMAND mpirun -np 2 ./test-main
+         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-main
 )
 
 
