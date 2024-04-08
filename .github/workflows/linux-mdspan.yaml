@@ -35,7 +35,7 @@ jobs:
           cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
       - name: Build KokkosComm
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wshadow -Wpedantic" -DKokkosComm_ENABLE_MDSPAN=ON -DKokkosComm_USE_KOKKOS_MDSPAN=ON
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_DIR="$KOKKOS_INSTALL/lib/cmake/Kokkos" -DCMAKE_BUILD_TYPE=Release -DKokkosComm_ENABLE_MDSPAN=ON -DKokkosComm_USE_KOKKOS_MDSPAN=ON
           VERBOSE=1 cmake --build "$COMM_BUILD"
       - name: Test KokkosComm
         run: |
