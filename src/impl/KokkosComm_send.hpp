@@ -24,7 +24,7 @@
 #include "KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm::Impl {
-template <KokkosExecutionSpace ExecSpace, ViewOrMdspan SendView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");

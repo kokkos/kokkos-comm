@@ -19,7 +19,6 @@
 #include "KokkosComm_traits.hpp"
 
 #include "KokkosComm_concepts.hpp"
-#include "KokkosComm_mdspan.hpp"
 #include "KokkosComm_packer.hpp"
 
 /*! \brief Defines a common interface for packing and unpacking
@@ -47,19 +46,4 @@ struct PackTraits<View> {
   }
 };
 
-#if KOKKOSCOMM_ENABLE_MDSPAN
-
-template <Mdspan Span>
-struct PackTraits<Span> {
-  using packer_type = Impl::Packer::MpiDatatype<Span>;
-
-  static bool needs_unpack(const Span &v) {
-    return !Traits<Span>::is_contiguous(v);
-  }
-  static bool needs_pack(const Span &v) {
-    return !Traits<Span>::is_contiguous(v);
-  }
-};
-
-#endif  // KOKKOSCOMM_ENABLE_MDSPAN
 }  // namespace KokkosComm

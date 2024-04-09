@@ -27,19 +27,19 @@
 
 namespace KokkosComm {
 
-template <KokkosExecutionSpace ExecSpace, ViewOrMdspan SendView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
 Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
   return Impl::isend(space, sv, dest, tag, comm);
 }
 
-template <KokkosExecutionSpace ExecSpace, ViewOrMdspan SendView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
   return Impl::send(space, sv, dest, tag, comm);
 }
 
-template <KokkosExecutionSpace ExecSpace, ViewOrMdspan RecvView>
+template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 void recv(const ExecSpace &space, RecvView &sv, int src, int tag,
           MPI_Comm comm) {
   return Impl::recv(space, sv, src, tag, comm);
