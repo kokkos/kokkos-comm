@@ -1,9 +1,7 @@
 @PACKAGE_INIT@
 
-GET_FILENAME_COMPONENT(KokkosComm_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-INCLUDE("${KokkosComm_CMAKE_DIR}/KokkosCommTargets.cmake")
-UNSET(KokkosComm_CMAKE_DIR)
-
 include(CMakeFindDependencyMacro)
 find_dependency(MPI)
 find_dependency(Kokkos)
+
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/KokkosCommTargets.cmake")

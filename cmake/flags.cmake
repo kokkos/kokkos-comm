@@ -22,6 +22,8 @@ check_and_add_flag(KokkosCommFlags -Wformat=2)
 check_and_add_flag(KokkosCommFlags -Wmissing-include-dirs)
 check_and_add_flag(KokkosCommFlags -Wno-gnu-zero-variadic-macro-arguments)
 
-    # choose cxx standard
-    set_target_properties(KokkosCommFlags PROPERTIES CXX_EXTENSIONS OFF)
-    target_compile_features(KokkosCommFlags INTERFACE cxx_std_20)
+# choose cxx standard
+set_target_properties(KokkosCommFlags PROPERTIES CXX_EXTENSIONS OFF)
+target_compile_features(KokkosCommFlags INTERFACE cxx_std_20)
+
+add_library(KokkosComm::KokkosCommFlags ALIAS KokkosCommFlags)

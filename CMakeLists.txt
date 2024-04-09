@@ -57,6 +57,7 @@ configure_package_config_file(
         NO_SET_AND_CHECK_MACRO
         NO_CHECK_REQUIRED_COMPONENTS_MACRO
 )
+
 write_basic_package_version_file(
         ${PROJECT_BINARY_DIR}/cmake/KokkosComm/${PROJECT_NAME}Version.cmake
         COMPATIBILITY SameMajorVersion
@@ -68,23 +69,25 @@ export(
         FILE ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommTargets.cmake
 )
 
-
 install(
         TARGETS KokkosComm KokkosCommFlags
         EXPORT KokkosCommTargets # does this do anything?
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
 install(
         DIRECTORY "${PROJECT_BINARY_DIR}/src/"
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN "*.hpp")
+
 install(
         FILES
         "${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake"
         "${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake"
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm/
 )
+
 install(
         EXPORT KokkosCommTargets
         NAMESPACE "${PROJECT_NAME}::"
