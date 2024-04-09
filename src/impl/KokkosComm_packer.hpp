@@ -23,7 +23,7 @@
 namespace KokkosComm::Impl {
 namespace Packer {
 
-template <ViewOrMdspan View>
+template <KokkosView View>
 struct MpiArgs {
   View view;
   MPI_Datatype datatype;
@@ -82,7 +82,7 @@ struct DeepCopy {
   }
 };
 
-template <ViewOrMdspan View>
+template <KokkosView View>
 struct MpiDatatype {
   using non_const_packed_view_type = View;
   using args_type                  = MpiArgs<non_const_packed_view_type>;

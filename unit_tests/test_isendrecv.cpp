@@ -14,21 +14,6 @@
 //
 //@HEADER
 
-#if KOKKOSCOMM_ENABLE_MDSPAN
-#if KOKKOSCOMM_MDSPAN_IN_EXPERIMENTAL
-#include <experimental/mdspan>
-#define MDSPAN_PREFIX() experimental::
-#else
-#include <mdspan>
-#define MDSPAN_PREFIX()
-#endif
-
-using std::MDSPAN_PREFIX() dextents;
-using std::MDSPAN_PREFIX() extents;
-using std::MDSPAN_PREFIX() layout_stride;
-using std::MDSPAN_PREFIX() mdspan;
-#endif  // KOKKOSCOMM_ENABLE_MDSPAN
-
 #include <gtest/gtest.h>
 
 #include "KokkosComm.hpp"
@@ -107,71 +92,3 @@ TYPED_TEST(IsendRecv, 1D_noncontig) {
     ASSERT_EQ(errs, 0);
   }
 }
-
-#if KOKKOSCOMM_ENABLE_MDSPAN
-
-TYPED_TEST(IsendRecv, 1D_mdspan_contig) {
-  using ScalarType = typename TestFixture::Scalar;
-
-  std::vector<ScalarType> v(100);
-  auto a = mdspan(&v[2], 13);  // 13 scalars starting at index 2
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  if (0 == rank) {
-    int dst = 1;
-    for (size_t i = 0; i < a.extent(0); ++i) {
-      a[i] = i;
-    }
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a,
-                                            dst, 0, MPI_COMM_WORLD);
-    req.wait();
-  } else if (1 == rank) {
-    int src = 0;
-    KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0,
-                     MPI_COMM_WORLD);
-    int errs = 0;
-    for (size_t i = 0; i < a.extent(0); ++i) {
-      errs += (a[i] != ScalarType(i));
-    }
-    ASSERT_EQ(errs, 0);
-  }
-}
-
-TYPED_TEST(IsendRecv, 1D_mdspan_noncontig) {
-  using ScalarType = typename TestFixture::Scalar;
-
-  std::vector<ScalarType> v(100);
-
-  using ExtentsType = dextents<std::size_t, 1>;
-  ExtentsType shape{10};
-  std::array<std::size_t, 1> strides{10};
-
-  mdspan<ScalarType, ExtentsType, layout_stride> a(
-      &v[2], layout_stride::mapping{shape, strides});
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  if (0 == rank) {
-    int dst = 1;
-    for (size_t i = 0; i < a.extent(0); ++i) {
-      a[i] = i;
-    }
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a,
-                                            dst, 0, MPI_COMM_WORLD);
-    req.wait();
-  } else if (1 == rank) {
-    int src = 0;
-    KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0,
-                     MPI_COMM_WORLD);
-    int errs = 0;
-    for (size_t i = 0; i < a.extent(0); ++i) {
-      errs += (a[i] != ScalarType(i));
-    }
-    ASSERT_EQ(errs, 0);
-  }
-}
-
-#endif  // KOKKOSCOMM_ENABLE_MDSPAN

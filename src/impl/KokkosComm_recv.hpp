@@ -25,11 +25,8 @@
 // impl
 #include "KokkosComm_include_mpi.hpp"
 
-/* FIXME: If RecvView is a Kokkos view, it can be a const ref
-   same is true for an mdspan?
-*/
 namespace KokkosComm::Impl {
-template <KokkosExecutionSpace ExecSpace, ViewOrMdspan RecvView>
+template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 void recv(const ExecSpace &space, RecvView &rv, int src, int tag,
           MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");

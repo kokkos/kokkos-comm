@@ -7,7 +7,7 @@ Basic Traits
 .. cpp:type:: template<typename View> \
               KokkosComm::Traits
 
-    A common interface to access Kokkos::View- and std::mdspan-like types.
+    A common interface to access Kokkos::View-like types.
 
     .. cpp:function:: static bool is_contiguous(const View &v)
 
@@ -41,7 +41,7 @@ Strategies for handling non-contiguous views
 .. cpp:type:: template<typename View> \
               KokkosComm::PackTraits
 
-    A common packing-related interface for Kokkos::View- and std::mdspan-like types.
+    A common packing-related interface for Kokkos::View-like types.
 
   .. cpp:type:: packer_type
 

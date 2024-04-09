@@ -23,7 +23,7 @@
 
 namespace KokkosComm {
 
-template <ViewOrMdspan SendView, ViewOrMdspan RecvView,
+template <KokkosView SendView, KokkosView RecvView,
           KokkosExecutionSpace ExecSpace>
 void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv,
             MPI_Op op, int root, MPI_Comm comm) {

@@ -59,24 +59,8 @@ function(kokkoscomm_add_cxx_flags)
         target_compile_options(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} $<BUILD_INTERFACE:-Wno-gnu-zero-variadic-macro-arguments>)
     endif()
 
-    # mdspan-related definitions
-    if (KOKKOSCOMM_ENABLE_MDSPAN)
-        target_compile_definitions(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} KOKKOSCOMM_ENABLE_MDSPAN)
-        if(KOKKOSCOMM_USE_STD_MDSPAN)
-            target_compile_definitions(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} KOKKOSCOMM_USE_STD_MDSPAN)
-        elseif(KOKKOSCOMM_USE_KOKKOS_MDSPAN)
-            target_compile_definitions(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} KOKKOSCOMM_USE_KOKKOS_MDSPAN)
-            target_compile_definitions(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_OPTIONS_KEYWORD} KOKKOSCOMM_MDSPAN_IN_EXPERIMENTAL)
-        endif()
-    endif()      
-
     # choose cxx standard
     set_target_properties(${ADD_CXX_FLAGS_TARGET} PROPERTIES CXX_EXTENSIONS OFF)
-    if (KOKKOSCOMM_ENABLE_MDSPAN AND KOKKOSCOMM_USE_STD_MDSPAN)
-        target_compile_features(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_FEATURES_KEYWORD} cxx_std_23)
-    else()
-        target_compile_features(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_FEATURES_KEYWORD} cxx_std_20)
-    endif()
-    
+    target_compile_features(${ADD_CXX_FLAGS_TARGET} ${TARGET_COMPILE_FEATURES_KEYWORD} cxx_std_20)
 
 endfunction()

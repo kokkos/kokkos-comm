@@ -6,18 +6,11 @@ project(KokkosComm VERSION 0.0.2)
 
 option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" ON)
 option(KokkosComm_ENABLE_TESTS "Build KokkosComm perf tests" ON)
-option(KokkosComm_ENABLE_MDSPAN "Build mdspan overloads" OFF)
-option(KokkosComm_MDSPAN_IMPL "mdspan implementation to use [std, kokkos]" "kokkos")
-option(KokkosComm_USE_STD_MDSPAN "Use std::mdspan (requires c++23)" OFF)
-option(KokkosComm_USE_KOKKOS_MDSPAN "Use Kokkos mdspan implementation" OFF)
 
 
 ## resolve options
 set(KOKKOSCOMM_ENABLE_PERFTESTS ${KokkosComm_ENABLE_PERFTESTS} CACHE BOOL "" FORCE)
 set(KOKKOSCOMM_ENABLE_TESTS ${KokkosComm_ENABLE_TESTS} CACHE BOOL "" FORCE)
-set(KOKKOSCOMM_ENABLE_MDSPAN ${KokkosComm_ENABLE_MDSPAN} CACHE BOOL "" FORCE)
-set(KOKKOSCOMM_USE_KOKKOS_MDSPAN ${KokkosComm_USE_KOKKOS_MDSPAN} CACHE BOOL "" FORCE)
-set(KOKKOSCOMM_USE_STD_MDSPAN ${KokkosComm_USE_STD_MDSPAN} CACHE BOOL "" FORCE)
 
 find_package(Kokkos REQUIRED)
 find_package(MPI REQUIRED)
@@ -29,26 +22,6 @@ message(STATUS "Kokkos MPI: MPI_CXX_COMPILE_DEFINITIONS = ${MPI_CXX_COMPILE_DEFI
 message(STATUS "Kokkos MPI: MPI_CXX_INCLUDE_DIRS =        ${MPI_CXX_INCLUDE_DIRS}")
 message(STATUS "Kokkos MPI: MPI_CXX_LINK_FLAGS =          ${MPI_CXX_LINK_FLAGS}")
 message(STATUS "Kokkos MPI: MPI_CXX_LIBRARIES =           ${MPI_CXX_LIBRARIES}")
-if (KOKKOSCOMM_ENABLE_MDSPAN)
-    if (KOKKOSCOMM_USE_STD_MDSPAN)
-        message(STATUS "Kokkos MPI: mdspan support enabled (std::mdspan)")
-    elseif(KOKKOSCOMM_USE_KOKKOS_MDSPAN)
-        message(STATUS "Kokkos MPI: mdspan support enabled (kokkos/mdspan)")
-    else()
-        message(FATAL_ERROR "Kokkos MPI: mdspan support enabled but no MDSPAN implementation enabled!")
-    endif()
-endif()
-
-include(FetchContent)
-if(KOKKOSCOMM_ENABLE_MDSPAN AND KOKKOSCOMM_USE_KOKKOS_MDSPAN)
-    message(STATUS "retrieving kokkos/mdspan...")
-    FetchContent_Declare(
-        kokkos_mdspan
-        GIT_REPOSITORY https://github.com/kokkos/mdspan.git
-        GIT_TAG        9ceface91483775a6c74d06ebf717bbb2768452f # mdspan-0.6.0
-        )
-    FetchContent_MakeAvailable(kokkos_mdspan)
-endif()
 
 
 include(cmake/flags.cmake)
