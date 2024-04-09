@@ -13,3 +13,7 @@ See [getting started](https://kokkos.org/kokkos-comm/usage/getting_started.html)
 ## Documentation
 
 [kokkos.org/kokkos-comm/](https://kokkos.org/kokkos-comm/)
+
+## License
+
+Kokkos Comm is licensed under the  Apache License v2.0 with LLVM Exceptions . See [LICENSE](LICENSE) for details.
