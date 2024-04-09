@@ -9,6 +9,9 @@ if (NOT TARGET KokkosComm::KokkosComm)
   find_package(KokkosComm REQUIRED)
 endif()
 
+# Find MPI, useful for standalone tests and for having MPI_EXEC macros
+find_package(MPI REQUIRED)
+
 include(FetchContent)
 
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
@@ -57,5 +60,3 @@ target_link_libraries(test-main KokkosComm::KokkosComm gtest)
 add_test(NAME test-main
          COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-main
 )
-
-
