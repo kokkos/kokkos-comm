@@ -36,9 +36,10 @@ set_target_properties(KokkosComm PROPERTIES PUBLIC_HEADER "${KOKKOSCOMM_PUBLIC_H
 set(KOKKOSCOMM_VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR} CACHE STRING "" FORCE)
 set(KOKKOSCOMM_VERSION_MINOR ${CMAKE_PROJECT_VERSION_MINOR} CACHE STRING "" FORCE)
 set(KOKKOSCOMM_VERSION_PATCH ${CMAKE_PROJECT_VERSION_PATCH} CACHE STRING "" FORCE)
+
 configure_file(
-        ${CMAKE_CURRENT_LIST_DIR}/cmake/KokkosComm_version.hpp.in
-        ${CMAKE_CURRENT_BINARY_DIR}/src/KokkosComm_version.hpp
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/KokkosComm_configuration.hpp.in
+        ${CMAKE_CURRENT_BINARY_DIR}/src/KokkosComm_configuration.hpp
         @ONLY
 )
 
