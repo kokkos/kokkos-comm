@@ -23,10 +23,12 @@ message(STATUS "Kokkos Comm: MPI_CXX_INCLUDE_DIRS =        ${MPI_CXX_INCLUDE_DIR
 message(STATUS "Kokkos Comm: MPI_CXX_LINK_FLAGS =          ${MPI_CXX_LINK_FLAGS}")
 message(STATUS "Kokkos Comm: MPI_CXX_LIBRARIES =           ${MPI_CXX_LIBRARIES}")
 
+# this sets CMAKE_INSTALL_[...]DIR
+include(GNUInstallDirs)
 
 include(cmake/flags.cmake)
 add_subdirectory(src)
-kokkoscomm_add_cxx_flags(TARGET KokkosComm INTERFACE)
+
 message(STATUS ${KOKKOSCOMM_PUBLIC_HEADERS})
 set_target_properties(KokkosComm PROPERTIES PUBLIC_HEADER "${KOKKOSCOMM_PUBLIC_HEADERS}")
 
@@ -35,68 +37,66 @@ set(KOKKOSCOMM_VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR} CACHE STRING "" FORC
 set(KOKKOSCOMM_VERSION_MINOR ${CMAKE_PROJECT_VERSION_MINOR} CACHE STRING "" FORCE)
 set(KOKKOSCOMM_VERSION_PATCH ${CMAKE_PROJECT_VERSION_PATCH} CACHE STRING "" FORCE)
 configure_file(
-    ${CMAKE_CURRENT_LIST_DIR}/cmake/KokkosComm_version.hpp.in
-    ${CMAKE_CURRENT_BINARY_DIR}/src/KokkosComm_version.hpp
-    @ONLY
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/KokkosComm_version.hpp.in
+        ${CMAKE_CURRENT_BINARY_DIR}/src/KokkosComm_version.hpp
+        @ONLY
 )
 
-# this sets CMAKE_INSTALL_[...]DIR
-include(GNUInstallDirs)
 
 target_include_directories(KokkosComm INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src/>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src/>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 ## Package config file
 include(CMakePackageConfigHelpers)
-configure_package_config_file (
-    ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
-    ${PROJECT_BINARY_DIR}/cmake/KokkosComm/${PROJECT_NAME}Config.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
-    NO_SET_AND_CHECK_MACRO
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO
+configure_package_config_file(
+        ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
+        ${PROJECT_BINARY_DIR}/cmake/KokkosComm/${PROJECT_NAME}Config.cmake
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+        NO_SET_AND_CHECK_MACRO
+        NO_CHECK_REQUIRED_COMPONENTS_MACRO
 )
 write_basic_package_version_file(
-    ${PROJECT_BINARY_DIR}/cmake/KokkosComm/${PROJECT_NAME}Version.cmake
-    COMPATIBILITY SameMajorVersion
+        ${PROJECT_BINARY_DIR}/cmake/KokkosComm/${PROJECT_NAME}Version.cmake
+        COMPATIBILITY SameMajorVersion
 )
 
-export (
-    TARGETS KokkosComm
-    NAMESPACE "${PROJECT_NAME}::"
-    FILE ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommTargets.cmake
+export(
+        TARGETS KokkosComm KokkosCommFlags
+        NAMESPACE "${PROJECT_NAME}::"
+        FILE ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommTargets.cmake
 )
 
 
 install(
-    TARGETS KokkosComm
-    EXPORT KokkosCommTargets # does this do anything?
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+        TARGETS KokkosComm KokkosCommFlags
+        EXPORT KokkosCommTargets # does this do anything?
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(
-    DIRECTORY "${PROJECT_BINARY_DIR}/src/"
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING PATTERN "*.hpp")
+        DIRECTORY "${PROJECT_BINARY_DIR}/src/"
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.hpp")
 install(
-    FILES 
-    "${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake"
-    "${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm/
+        FILES
+        "${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake"
+        "${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm/
 )
 install(
-    EXPORT KokkosCommTargets
-    NAMESPACE "${PROJECT_NAME}::"
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+        EXPORT KokkosCommTargets
+        NAMESPACE "${PROJECT_NAME}::"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )
 
 
-if(KOKKOSCOMM_ENABLE_TESTS)
+if (KOKKOSCOMM_ENABLE_TESTS)
     enable_testing()
     add_subdirectory(unit_tests)
-endif()
-if(KOKKOSCOMM_ENABLE_PERFTESTS)
+endif ()
+if (KOKKOSCOMM_ENABLE_PERFTESTS)
     enable_testing()
     add_subdirectory(perf_tests)
-endif()
+endif ()
