@@ -48,7 +48,7 @@ void recv(const ExecSpace &space, RecvView &sv, int src, int tag,
   return Impl::recv(space, sv, src, tag, comm);
 }
 
-template <KokkosExecutionSpace ExecSpace, ViewOrMdspan RecvView>
+template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 Req irecv(const ExecSpace &space, RecvView &rv, int src, int tag,
           MPI_Comm comm) {
   return Impl::irecv(space, rv, src, tag, comm);
