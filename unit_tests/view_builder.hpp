@@ -24,30 +24,25 @@ struct noncontig {};
 template <typename T, int RANK>
 struct ViewBuilder;
 
-
 template <typename T>
 struct ViewBuilder<T, 1> {
-    static auto view(noncontig, int e0) {
+  static auto view(noncontig, int e0) {
+    // this is C-style layout, i.e. v(0,0) is next to v(0,1)
+    Kokkos::View<T**, Kokkos::LayoutRight> v("", e0, 2);
+    return Kokkos::subview(v, Kokkos::ALL, 1);  // take column 1
+  }
 
-        // this is C-style layout, i.e. v(0,0) is next to v(0,1)
-        Kokkos::View<T**, Kokkos::LayoutRight> v("", e0, 2);
-        return Kokkos::subview(v, Kokkos::ALL, 1); // take column 1
-    }
-
-    static auto view(contig, int e0) {
-        return Kokkos::View<T*>("", e0);
-    }
+  static auto view(contig, int e0) { return Kokkos::View<T*>("", e0); }
 };
 
 template <typename T>
 struct ViewBuilder<T, 2> {
-    static auto view(noncontig, int e0, int e1) {
+  static auto view(noncontig, int e0, int e1) {
+    Kokkos::View<T***, Kokkos::LayoutRight> v("", e0, e1, 2);
+    return Kokkos::subview(v, Kokkos::ALL, Kokkos::ALL, 1);
+  }
 
-        Kokkos::View<T***, Kokkos::LayoutRight> v("", e0, e1, 2);
-        return Kokkos::subview(v, Kokkos::ALL, Kokkos::ALL, 1);
-    }
-
-    static auto view(contig, int e0, int e1) {
-        return Kokkos::View<T**>("", e0, e1);
-    }
+  static auto view(contig, int e0, int e1) {
+    return Kokkos::View<T**>("", e0, e1);
+  }
 };
