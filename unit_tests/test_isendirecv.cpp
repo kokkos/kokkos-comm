@@ -18,6 +18,8 @@
 
 #include "KokkosComm.hpp"
 
+#include "view_builder.hpp"
+
 template <typename T>
 class IsendIrecv : public testing::Test {
  public:
@@ -91,74 +93,6 @@ TYPED_TEST(IsendIrecv, 1D_noncontig) {
           lsum += a(i) != typename TestFixture::Scalar(i);
         },
         errs);
-    ASSERT_EQ(errs, 0);
-  }
-}
-
-#if KOKKOSCOMM_ENABLE_MDSPAN
-
-TYPED_TEST(IsendIrecv, 1D_mdspan_contig) {
-  using ScalarType = typename TestFixture::Scalar;
-
-  std::vector<ScalarType> v(100);
-  auto a = mdspan(&v[2], 13);  // 13 scalars starting at index 2
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  if (0 == rank) {
-    int dst = 1;
-    for (size_t i = 0; i < a.extent(0); ++i) {
-      a[i] = i;
-    }
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a,
-                                            dst, 0, MPI_COMM_WORLD);
-    req.wait();
-  } else if (1 == rank) {
-    int src             = 0;
-    KokkosComm::Req req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a,
-                                            src, 0, MPI_COMM_WORLD);
-    req.wait();
-    int errs = 0;
-    for (size_t i = 0; i < a.extent(0); ++i) {
-      errs += (a[i] != ScalarType(i));
-    }
-    ASSERT_EQ(errs, 0);
-  }
-}
-
-TYPED_TEST(IsendIrecv, 1D_mdspan_noncontig) {
-  using ScalarType = typename TestFixture::Scalar;
-
-  std::vector<ScalarType> v(100);
-
-  using ExtentsType = dextents<std::size_t, 1>;
-  ExtentsType shape{10};
-  std::array<std::size_t, 1> strides{10};
-
-  mdspan<ScalarType, ExtentsType, layout_stride> a(
-      &v[2], layout_stride::mapping{shape, strides});
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  if (0 == rank) {
-    int dst = 1;
-    for (size_t i = 0; i < a.extent(0); ++i) {
-      a[i] = i;
-    }
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a,
-                                            dst, 0, MPI_COMM_WORLD);
-    req.wait();
-  } else if (1 == rank) {
-    int src             = 0;
-    KokkosComm::Req req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a,
-                                            src, 0, MPI_COMM_WORLD);
-    req.wait();
-    int errs = 0;
-    for (size_t i = 0; i < a.extent(0); ++i) {
-      errs += (a[i] != ScalarType(i));
-    }
     ASSERT_EQ(errs, 0);
   }
 }
