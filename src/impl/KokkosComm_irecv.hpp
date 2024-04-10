@@ -26,7 +26,7 @@
 
 namespace KokkosComm::Impl {
 
-template <typename ExecSpace, typename RecvView, typename MpiArgs>
+template <KokkosExecutionSpace ExecSpace, KokkosView RecvView, typename MpiArgs>
 struct IrecvUnpacker {
   IrecvUnpacker(const ExecSpace &space, RecvView &rv, MpiArgs &args)
       : space_(space), rv_(rv), args_(args) {}
@@ -43,10 +43,7 @@ struct IrecvUnpacker {
   MpiArgs args_;
 };
 
-/* FIXME: If RecvView is a Kokkos view, it can be a const ref
-   same is true for an mdspan?
-*/
-template <typename RecvView, typename ExecSpace>
+template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 Req irecv(const ExecSpace &space, RecvView &rv, int src, int tag,
           MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::irecv");

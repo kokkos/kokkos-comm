@@ -14,21 +14,6 @@
 //
 //@HEADER
 
-#if KOKKOSCOMM_ENABLE_MDSPAN
-#if KOKKOSCOMM_MDSPAN_IN_EXPERIMENTAL
-#include <experimental/mdspan>
-#define MDSPAN_PREFIX() experimental::
-#else
-#include <mdspan>
-#define MDSPAN_PREFIX()
-#endif
-
-using std::MDSPAN_PREFIX() dextents;
-using std::MDSPAN_PREFIX() extents;
-using std::MDSPAN_PREFIX() layout_stride;
-using std::MDSPAN_PREFIX() mdspan;
-#endif  // KOKKOSCOMM_ENABLE_MDSPAN
-
 #include <gtest/gtest.h>
 
 #include "KokkosComm.hpp"
