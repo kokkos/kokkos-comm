@@ -28,7 +28,8 @@
 
 namespace KokkosComm {
 
-template <Mode CommMode = Mode::Default, KokkosExecutionSpace ExecSpace,
+template <KokkosExecutionSpace ExecSpace,KokkosView SendView,
+          Mode CommMode = Mode::Default>
           KokkosView SendView>
 Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
@@ -41,7 +42,8 @@ Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
   }
 }
 
-template <Mode CommMode = Mode::Default, KokkosExecutionSpace ExecSpace,
+template <KokkosExecutionSpace ExecSpace,KokkosView SendView,
+          Mode CommMode = Mode::Default>
           KokkosView SendView>
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
