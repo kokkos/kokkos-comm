@@ -36,7 +36,7 @@ TYPED_TEST(SendRecv, 1D_contig) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   if (size < 2) {
-    GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provieded)";
+    GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
   }
 
   if (0 == rank) {

@@ -63,4 +63,70 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest,
   return req;
 }
 
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
+KokkosComm::Req irsend(const ExecSpace &space, const SendView &sv, int dest,
+                       int tag, MPI_Comm comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::Impl::irsend");
+
+  KokkosComm::Req req;
+
+  using KCT  = KokkosComm::Traits<SendView>;
+  using KCPT = KokkosComm::PackTraits<SendView>;
+
+  if (KCPT::needs_pack(sv)) {
+    using Packer  = typename KCPT::packer_type;
+    using MpiArgs = typename Packer::args_type;
+
+    MpiArgs args = Packer::pack(space, sv);
+    space.fence();
+
+    MPI_Irsend(KCT::data_handle(args.view), args.count, args.datatype, dest,
+               tag, comm, &req.mpi_req());
+    req.keep_until_wait(args.view);
+  } else {
+    using SendScalar = typename SendView::value_type;
+    MPI_Irsend(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
+               dest, tag, comm, &req.mpi_req());
+    if (KCT::is_reference_counted()) {
+      req.keep_until_wait(sv);
+    }
+  }
+
+  Kokkos::Tools::popRegion();
+  return req;
+}
+
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
+KokkosComm::Req issend(const ExecSpace &space, const SendView &sv, int dest,
+                       int tag, MPI_Comm comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::Impl::issend");
+
+  KokkosComm::Req req;
+
+  using KCT  = KokkosComm::Traits<SendView>;
+  using KCPT = KokkosComm::PackTraits<SendView>;
+
+  if (KCPT::needs_pack(sv)) {
+    using Packer  = typename KCPT::packer_type;
+    using MpiArgs = typename Packer::args_type;
+
+    MpiArgs args = Packer::pack(space, sv);
+    space.fence();
+
+    MPI_Issend(KCT::data_handle(args.view), args.count, args.datatype, dest,
+               tag, comm, &req.mpi_req());
+    req.keep_until_wait(args.view);
+  } else {
+    using SendScalar = typename SendView::value_type;
+    MPI_Issend(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
+               dest, tag, comm, &req.mpi_req());
+    if (KCT::is_reference_counted()) {
+      req.keep_until_wait(sv);
+    }
+  }
+
+  Kokkos::Tools::popRegion();
+  return req;
+}
+
 }  // namespace KokkosComm::Impl
