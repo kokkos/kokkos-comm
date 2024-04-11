@@ -22,6 +22,7 @@
 #include "KokkosComm_recv.hpp"
 #include "KokkosComm_send.hpp"
 #include "KokkosComm_concepts.hpp"
+#include "KokkosComm_mode.hpp"
 
 #include <Kokkos_Core.hpp>
 
@@ -33,10 +34,19 @@ Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
   return Impl::isend(space, sv, dest, tag, comm);
 }
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
+template <Mode CommMode = Mode::Default, KokkosExecutionSpace ExecSpace,
+          KokkosView SendView>
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
-  return Impl::send(space, sv, dest, tag, comm);
+  if constexpr (CommMode == Mode::Default) {
+    return Impl::send(space, sv, dest, tag, comm);
+  } else if constexpr (CommMode == Mode::Ready) {
+    return Impl::rsend(space, sv, dest, tag, comm);
+  } else if constexpr (CommMode == Mode::Synchronous) {
+    return Impl::ssend(space, sv, dest, tag, comm);
+  } else {  // Is this needed? Do we remove the `else` altogether?
+    static_assert(false, "unreachable");
+  }
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
