@@ -22,7 +22,6 @@
 #include "KokkosComm_recv.hpp"
 #include "KokkosComm_send.hpp"
 #include "KokkosComm_concepts.hpp"
-#include "KokkosComm_mode.hpp"
 
 #include <Kokkos_Core.hpp>
 
@@ -31,6 +30,24 @@ namespace KokkosComm {
 template <KokkosExecutionSpace ExecSpace,KokkosView SendView,
           Mode CommMode = Mode::Default>
           KokkosView SendView>
+// Scoped enumeration to specify the communication mode of a sending operation.
+// See section 3.4 of the MPI standard for a complete specification.
+enum class CommMode : uint8_t {
+  // Standard mode: MPI implementation decides whether outgoing messages will
+  // be buffered. Send operations can be started whether or not a matching
+  // receive has been started. They may complete before a matching receive is
+  // started. Standard mode is non-local: successful completion of the send
+  // operation may depend on the occurrence of a matching receive.
+  Standard,
+  // Ready mode: Send operations may be started only if the matching receive is
+  // already started.
+  Ready,
+  // Synchronous mode: Send operations complete successfully only if a matching
+  // receive is started, and the receive operation has started to receive the
+  // message sent.
+  Synchronous,
+};
+
 Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
   if constexpr (CommMode == Mode::Default) {

@@ -18,7 +18,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "KokkosComm_mode.hpp"
 #include "KokkosComm_pack_traits.hpp"
 
 // impl
