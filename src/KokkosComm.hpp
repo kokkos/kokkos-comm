@@ -38,8 +38,6 @@ Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
     return Impl::irsend(space, sv, dest, tag, comm);
   } else if constexpr (CommMode == Mode::Synchronous) {
     return Impl::issend(space, sv, dest, tag, comm);
-  } else {  // Is this needed? Do we remove the `else` altogether?
-    static_assert(false, "unreachable");
   }
 }
 
@@ -53,8 +51,6 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
     return Impl::rsend(space, sv, dest, tag, comm);
   } else if constexpr (CommMode == Mode::Synchronous) {
     return Impl::ssend(space, sv, dest, tag, comm);
-  } else {  // Is this needed? Do we remove the `else` altogether?
-    static_assert(false, "unreachable");
   }
 }
 
