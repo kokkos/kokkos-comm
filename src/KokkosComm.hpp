@@ -27,9 +27,6 @@
 
 namespace KokkosComm {
 
-template <KokkosExecutionSpace ExecSpace,KokkosView SendView,
-          Mode CommMode = Mode::Default>
-          KokkosView SendView>
 // Scoped enumeration to specify the communication mode of a sending operation.
 // See section 3.4 of the MPI standard for a complete specification.
 enum class CommMode : uint8_t {
@@ -48,27 +45,28 @@ enum class CommMode : uint8_t {
   Synchronous,
 };
 
+template <CommMode SendMode = CommMode::Standard,
+          KokkosExecutionSpace ExecSpace, KokkosView SendView>
 Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
-  if constexpr (CommMode == Mode::Default) {
+  if constexpr (SendMode == CommMode::Standard) {
     return Impl::isend(space, sv, dest, tag, comm);
-  } else if constexpr (CommMode == Mode::Ready) {
+  } else if constexpr (SendMode == CommMode::Ready) {
     return Impl::irsend(space, sv, dest, tag, comm);
-  } else if constexpr (CommMode == Mode::Synchronous) {
+  } else if constexpr (SendMode == CommMode::Synchronous) {
     return Impl::issend(space, sv, dest, tag, comm);
   }
 }
 
-template <KokkosExecutionSpace ExecSpace,KokkosView SendView,
-          Mode CommMode = Mode::Default>
-          KokkosView SendView>
+template <CommMode SendMode = CommMode::Standard,
+          KokkosExecutionSpace ExecSpace, KokkosView SendView>
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
-  if constexpr (CommMode == Mode::Default) {
+  if constexpr (SendMode == CommMode::Standard) {
     return Impl::send(space, sv, dest, tag, comm);
-  } else if constexpr (CommMode == Mode::Ready) {
+  } else if constexpr (SendMode == CommMode::Ready) {
     return Impl::rsend(space, sv, dest, tag, comm);
-  } else if constexpr (CommMode == Mode::Synchronous) {
+  } else if constexpr (SendMode == CommMode::Synchronous) {
     return Impl::ssend(space, sv, dest, tag, comm);
   }
 }

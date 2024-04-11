@@ -43,7 +43,7 @@ TYPED_TEST(IrsendRecv, 1D_contig) {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::Req req = KokkosComm::isend<KokkosComm::Mode::Ready>(
+    KokkosComm::Req req = KokkosComm::isend<KokkosComm::CommMode::Ready>(
         Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
     req.wait();
   } else if (1 == rank) {
@@ -75,7 +75,7 @@ TYPED_TEST(IrsendRecv, 1D_noncontig) {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::Req req = KokkosComm::isend<KokkosComm::Mode::Ready>(
+    KokkosComm::Req req = KokkosComm::isend<KokkosComm::CommMode::Ready>(
         Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
     req.wait();
   } else if (1 == rank) {
