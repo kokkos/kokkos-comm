@@ -16,7 +16,7 @@ include(FetchContent)
 
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
-cmake_policy(SET CMP0135 NEW)
+  cmake_policy(SET CMP0135 NEW)
 endif()
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
@@ -41,4 +41,4 @@ add_executable(perf_test-main test_main.cpp
 
 target_link_libraries(perf_test-main KokkosComm::KokkosComm benchmark::benchmark)
 add_test(NAME perf_test-main
-         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./perf_test-main)
+  COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./perf_test-main)

@@ -16,7 +16,7 @@ include(FetchContent)
 
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
-cmake_policy(SET CMP0135 NEW)
+  cmake_policy(SET CMP0135 NEW)
 endif()
 
 FetchContent_Declare(
@@ -36,10 +36,10 @@ endif()
 # Standalone MPI smoke tests (do not use KokkosComm)
 add_executable(test-mpi test_mpi.cpp)
 add_test(NAME test-mpi-1
-        COMMAND ${MPIEXEC_EXECUTABLE}  ${MPIEXEC_NUMPROC_FLAG} 1 ./test-mpi
+  COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 1 ./test-mpi
 )
 add_test(NAME test-mpi-2
-        COMMAND ${MPIEXEC_EXECUTABLE}  ${MPIEXEC_NUMPROC_FLAG} 2 ./test-mpi
+  COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-mpi
 )
 # doesn't use KokkosComm, so explicitly link MPI
 target_link_libraries(test-mpi MPI::MPI_CXX)
@@ -58,5 +58,5 @@ add_executable(test-main test_main.cpp
 target_link_libraries(test-main KokkosComm::KokkosComm gtest)
 
 add_test(NAME test-main
-         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-main
+  COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-main
 )
