@@ -21,10 +21,9 @@
 namespace KokkosComm {
 
 enum class Mode : uint8_t {
-    Default,
-    Buffered,
-    Ready,
-    Synchronous,
+  Default,
+  Ready,
+  Synchronous,
 };
-    
-} // namespace KokkosComm
+
+}  // namespace KokkosComm

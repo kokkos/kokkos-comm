@@ -47,7 +47,7 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
 void rsend(const ExecSpace &space, const SendView &sv, int dest, int tag,
-          MPI_Comm comm) {
+           MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::rsend");
 
   using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
@@ -66,7 +66,7 @@ void rsend(const ExecSpace &space, const SendView &sv, int dest, int tag,
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
 void ssend(const ExecSpace &space, const SendView &sv, int dest, int tag,
-          MPI_Comm comm) {
+           MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::ssend");
 
   using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
