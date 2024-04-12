@@ -7,10 +7,10 @@ enable_testing()
 # find Kokkos Comm to do a standalone build
 if (NOT TARGET KokkosComm::KokkosComm)
   find_package(KokkosComm REQUIRED)
-endif()
 
-# Find MPI, useful for standalone tests and for having MPI_EXEC macros
-find_package(MPI REQUIRED)
+  # Find MPI, useful for standalone tests and for having MPI_EXEC macros
+  # find_package(MPI REQUIRED) # not needed, KokkosComm already does this
+endif()
 
 include(FetchContent)
 
