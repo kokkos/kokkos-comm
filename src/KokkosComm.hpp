@@ -29,7 +29,7 @@ namespace KokkosComm {
 
 // Scoped enumeration to specify the communication mode of a sending operation.
 // See section 3.4 of the MPI standard for a complete specification.
-enum class CommMode : uint8_t {
+enum class CommMode {
   // Standard mode: MPI implementation decides whether outgoing messages will
   // be buffered. Send operations can be started whether or not a matching
   // receive has been started. They may complete before a matching receive is
