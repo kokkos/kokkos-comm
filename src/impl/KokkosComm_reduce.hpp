@@ -18,6 +18,7 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "impl/KokkosComm_concepts.hpp"
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_traits.hpp"
 
@@ -26,7 +27,8 @@
 #include "KokkosComm_types.hpp"
 
 namespace KokkosComm::Impl {
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView,
+          NonContig SNC = DefaultNonContig<ExecSpace, SendView>, NonContig RNC = DefaultNonContig<ExecSpace, RecvView>>
 void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Op op, int root, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::reduce");
 
@@ -36,31 +38,32 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_
     return _r;
   }();
 
-  using SendPacker = typename KokkosComm::PackTraits<SendView>::packer_type;
-  using RecvPacker = typename KokkosComm::PackTraits<RecvView>::packer_type;
+  // This doesn't work directly with the datatype engine
 
-  if (KokkosComm::PackTraits<SendView>::needs_pack(sv)) {
-    auto sendArgs = SendPacker::pack(space, sv);
+  if (root == rank) {
+    Ctx sctx = SNC::pre_send(space, sv);  // FIXME: terrible name
+    Ctx rctx = RNC::pre_recv(space, rv);  // FIXME: terrible name
     space.fence();
-    if ((root == rank) && KokkosComm::PackTraits<RecvView>::needs_unpack(rv)) {
-      auto recvArgs = RecvPacker::allocate_packed_for(space, "reduce recv", rv);
-      space.fence();
-      MPI_Reduce(sendArgs.view.data(), recvArgs.view.data(), sendArgs.count, sendArgs.datatype, op, root, comm);
-      RecvPacker::unpack_into(space, rv, recvArgs.view);
-    } else {
-      space.fence();
-      MPI_Reduce(sendArgs.view.data(), rv.data(), sendArgs.count, sendArgs.datatype, op, root, comm);
+
+    if (sctx.mpi_args.size() != rctx.mpi_args.size()) {
+      throw std::logic_error("internal error");  // FIXME
     }
+
+    for (size_t ai = 0; ai < sctx.mpi_args.size(); ++ai) {
+      Ctx::MpiArgs &sargs = sctx.mpi_args[ai];
+      Ctx::MpiArgs &rargs = rctx.mpi_args[ai];
+      MPI_Reduce(sargs.buf, rargs.buf, sargs.count, sargs.datatype, op, root, comm);
+    }
+    RNC::post_recv(space, rv, rctx);
+    space.fence();
+
   } else {
-    using SendScalar = typename SendView::value_type;
-    if ((root == rank) && KokkosComm::PackTraits<RecvView>::needs_unpack(rv)) {
-      auto recvArgs = RecvPacker::allocate_packed_for(space, "reduce recv", rv);
-      space.fence();
-      MPI_Reduce(sv.data(), recvArgs.view.data(), sv.span(), mpi_type_v<SendScalar>, op, root, comm);
-      RecvPacker::unpack_into(space, rv, recvArgs.view);
-    } else {
-      space.fence();
-      MPI_Reduce(sv.data(), rv.data(), sv.span(), mpi_type_v<SendScalar>, op, root, comm);
+    Ctx sctx = SNC::pre_send(space, sv);  // FIXME: terrible name
+    space.fence();
+
+    for (size_t ai = 0; ai < sctx.mpi_args.size(); ++ai) {
+      Ctx::MpiArgs &sargs = sctx.mpi_args[ai];
+      MPI_Reduce(sargs.buf, rv.data() /*shouldn't matter*/, sargs.count, sargs.datatype, op, root, comm);
     }
   }
 

@@ -40,11 +40,13 @@ void send(const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::popRegion();
 }
 
-template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
+template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView,
+          NonContig NC      = DefaultNonContig<ExecSpace, SendView>>
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
+  Req req;
 
-  using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
+  space.fence("send fence before checking view properties");
 
   auto mpi_send_fn = [](void *mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
                         MPI_Comm mpi_comm) {
@@ -63,13 +65,12 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
     }
   };
 
-  if (KokkosComm::PackTraits<SendView>::needs_pack(sv)) {
-    auto args = Packer::pack(space, sv);
-    space.fence();
-    mpi_send_fn(args.view.data(), args.count, args.datatype, dest, tag, comm);
-  } else {
-    using SendScalar = typename SendView::value_type;
-    mpi_send_fn(sv.data(), sv.span(), mpi_type_v<SendScalar>, dest, tag, comm);
+  // I think it's okay to use the same tag for all messages here due to
+  // non-overtaking of messages that match the same recv
+  const Ctx ctx = NC::pre_send(space, sv);  // FIXME: terrible name
+  space.fence();
+  for (const Ctx::MpiArgs &args : ctx.mpi_args) {
+    mpi_send_fn(args.buf, args.count, args.datatype, dest, tag, comm);
   }
 
   Kokkos::Tools::popRegion();

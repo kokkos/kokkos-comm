@@ -26,25 +26,45 @@
 #include "KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm::Impl {
-template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, KokkosView RecvView, NonContig NC = DefaultNonContig<ExecSpace, RecvView>>
 void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
+  using KCT = KokkosComm::Traits<RecvView>;
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
 
-  using KCT  = KokkosComm::Traits<RecvView>;
-  using KCPT = KokkosComm::PackTraits<RecvView>;
+  space.fence("recv fence before checking view properties");
 
-  if (KCPT::needs_unpack(rv)) {
-    using Packer = typename KCPT::packer_type;
-    using Args   = typename Packer::args_type;
-
-    Args args = Packer::allocate_packed_for(space, "packed", rv);
-    space.fence();
-    MPI_Recv(KCT::data_handle(args.view), args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
-    Packer::unpack_into(space, rv, args.view);
-  } else {
-    using RecvScalar = typename RecvView::value_type;
-    MPI_Recv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<RecvScalar>, src, tag, comm, MPI_STATUS_IGNORE);
+  // I think it's okay to use the same tag for all messages here due to
+  // non-overtaking of messages that match the same recv
+  Ctx ctx = NC::pre_recv(space, rv);  // FIXME: terrible name
+  space.fence();
+  for (const Ctx::MpiArgs &args : ctx.mpi_args) {
+    MPI_Recv(args.buf, args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
+#if 0
+    {
+      std::stringstream ss;
+      ss << __FILE__ << ":" << __LINE__ << ": MPI_Recv: @" << args.buf << " count=" << args.count;
+      for (int i = 0; i < args.count; ++i) {
+        ss << " " << reinterpret_cast<float*>(args.buf)[i];
+      }
+      ss << "\n";
+      std::cerr << ss.str();
+    }
+#endif
   }
+  NC::post_recv(space, rv, ctx);  // FIXME: terrible name
+  space.fence();
+
+#if 0
+  if constexpr (RecvView::rank == 1) {
+      std::stringstream ss;
+      ss << __FILE__ << ":" << __LINE__ << ": MPI_Recv: @" << rv.data() << " rv.extent(0)=" << rv.extent(0);
+      for (size_t i = 0; i < rv.extent(0); ++i) {
+        ss << " " << rv[i];
+      }
+      ss << "\n";
+      std::cerr << ss.str();
+    }
+#endif
 
   Kokkos::Tools::popRegion();
 }

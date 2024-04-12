@@ -14,15 +14,25 @@
 //
 //@HEADER
 
-#include <mpi.h>
+#pragma once
 
-int main(int argc, char *argv[]) {
-  MPI_Init(&argc, &argv);
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  std::cerr << "Hello from rank " << rank << "/" << size << "\n";
-  MPI_Barrier(MPI_COMM_WORLD);
-  MPI_Finalize();
-  return 0;
-}
+#include <memory>
+
+#include "impl/KokkosComm_concepts.hpp"
+
+namespace KokkosComm::Impl {
+
+struct InvokableHolderBase {
+  virtual ~InvokableHolderBase() {}
+
+  virtual void operator()() = 0;
+};
+template <Invokable Fn>
+struct InvokableHolder : public InvokableHolderBase {
+  InvokableHolder(const Fn &fn) : fn_(fn) {}
+  Fn fn_;
+
+  virtual void operator()() override { fn_(); }
+};
+
+}  // namespace KokkosComm::Impl

@@ -6,6 +6,7 @@ project(KokkosComm VERSION 0.0.2)
 
 option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" ON)
 option(KokkosComm_ENABLE_TESTS "Build KokkosComm perf tests" ON)
+# FIXME: could set a default non-contiguous method here?
 
 
 ## resolve options

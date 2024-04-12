@@ -16,6 +16,10 @@
 
 #pragma once
 
+#include "KokkosComm_traits.hpp"
+#include "KokkosComm_defaults.hpp"
+#include "KokkosComm_request.hpp"
+
 #include "KokkosComm_collective.hpp"
 #include "KokkosComm_version.hpp"
 #include "KokkosComm_isend.hpp"

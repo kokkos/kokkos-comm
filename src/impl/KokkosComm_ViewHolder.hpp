@@ -14,15 +14,26 @@
 //
 //@HEADER
 
-#include <mpi.h>
+#pragma once
 
-int main(int argc, char *argv[]) {
-  MPI_Init(&argc, &argv);
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  std::cerr << "Hello from rank " << rank << "/" << size << "\n";
-  MPI_Barrier(MPI_COMM_WORLD);
-  MPI_Finalize();
-  return 0;
-}
+#include <memory>
+
+#include "impl/KokkosComm_concepts.hpp"
+
+namespace KokkosComm::Impl {
+
+// a type-erased view. Request uses these to keep temporary views alive for
+// the lifetime of "Immediate" MPI operations
+struct ViewHolderBase {
+  virtual ~ViewHolderBase() {}
+};
+template <KokkosView V>
+struct ViewHolder : public ViewHolderBase, InvokableHolderBase {
+  ViewHolder(const V &v) : v_(v) {}
+  V v_;
+
+  virtual void operator()() override { /* do nothing*/
+  }
+};
+
+}  // namespace KokkosComm::Impl

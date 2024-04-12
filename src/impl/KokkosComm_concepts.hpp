@@ -18,7 +18,7 @@
 
 #include <Kokkos_Core.hpp>
 
-namespace KokkosComm {
+namespace KokkosComm::Impl {
 
 template <typename T>
 concept KokkosView = Kokkos::is_view_v<T>;
@@ -26,4 +26,10 @@ concept KokkosView = Kokkos::is_view_v<T>;
 template <typename T>
 concept KokkosExecutionSpace = Kokkos::is_execution_space_v<T>;
 
-}  // namespace KokkosComm
+template <typename Fn>
+concept Invokable = std::is_invocable_v<Fn>;
+
+template <typename T>
+concept NonContig = !std::is_void_v<T>;  // placeholder
+
+}  // namespace KokkosComm::Impl

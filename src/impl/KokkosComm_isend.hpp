@@ -16,29 +16,22 @@
 
 #pragma once
 
-#include <iostream>
-
 #include <Kokkos_Core.hpp>
 
 #include "KokkosComm_concepts.hpp"
-#include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_request.hpp"
 #include "KokkosComm_traits.hpp"
 #include "KokkosComm_comm_mode.hpp"
 
-// impl
-#include "KokkosComm_include_mpi.hpp"
+#include "impl/KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm::Impl {
 
-template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
-KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
+template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView,
+          NonContig NC      = DefaultNonContig<ExecSpace, SendView>>
+Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
-
-  KokkosComm::Req req;
-
-  using KCT  = KokkosComm::Traits<SendView>;
-  using KCPT = KokkosComm::PackTraits<SendView>;
+  Req req;
 
   auto mpi_isend_fn = [](void *mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
                          MPI_Comm mpi_comm, MPI_Request *mpi_req) {
@@ -57,20 +50,15 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest, int 
     }
   };
 
-  if (KCPT::needs_pack(sv)) {
-    using Packer  = typename KCPT::packer_type;
-    using MpiArgs = typename Packer::args_type;
-
-    MpiArgs args = Packer::pack(space, sv);
-    space.fence();
-    mpi_isend_fn(KCT::data_handle(args.view), args.count, args.datatype, dest, tag, comm, &req.mpi_req());
-    req.keep_until_wait(args.view);
-  } else {
-    using SendScalar = typename SendView::value_type;
-    mpi_isend_fn(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>, dest, tag, comm, &req.mpi_req());
-    if (KCT::is_reference_counted()) {
-      req.keep_until_wait(sv);
-    }
+  // I think it's okay to use the same tag for all messages here due to
+  // non-overtaking of messages that match the same recv
+  Ctx ctx = NC::pre_send(space, sv);  // FIXME: terrible name
+  space.fence();
+  for (Ctx::MpiArgs &args : ctx.mpi_args) {
+    mpi_isend_fn(args.buf, args.count, args.datatype, dest, tag, comm, &args.req);
+  }
+  for (auto v : ctx.wait_callbacks) {
+    req.call_and_drop_at_wait(v);
   }
 
   Kokkos::Tools::popRegion();

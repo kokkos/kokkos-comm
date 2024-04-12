@@ -1,3 +1,4 @@
+#if 0
 //@HEADER
 // ************************************************************************
 //
@@ -42,3 +43,5 @@ struct PackTraits<View> {
 };
 
 }  // namespace KokkosComm
+
+#endif
