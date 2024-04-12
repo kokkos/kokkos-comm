@@ -18,6 +18,8 @@
 
 #include "KokkosComm.hpp"
 
+namespace {
+
 template <typename T>
 class SendRecv : public testing::Test {
  public:
@@ -84,3 +86,5 @@ TYPED_TEST(SendRecv, 1D_noncontig) {
     ASSERT_EQ(errs, 0);
   }
 }
+
+}  // namespace
