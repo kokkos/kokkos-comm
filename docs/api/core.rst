@@ -50,6 +50,7 @@ Point-to-point
     :tparam ExecSpace: A Kokkos execution space to operate in
     :returns: A KokkosComm::Req representing the asynchronous communication and any lifetime-extended views.
     :tparam SendMode: A communication mode to use. If unspecified, defaults to a standard ``MPI_Isend``.
+    :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a standard ``MPI_Isend``.
 
 .. cpp:function:: template <KokkosComm::CommMode SendMode = CommMode::Standard, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
                   void KokkosComm::send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
@@ -64,6 +65,7 @@ Point-to-point
     :tparam SendView: A Kokkos::View to send
     :tparam ExecSpace: A Kokkos execution space to operate in
     :tparam SendMode: A communication mode to use. If unspecified, defaults to a standard ``MPI_Send``.
+    :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a standard ``MPI_Send``.
 
 .. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView RecvView> \
                   void KokkosComm::recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
@@ -100,8 +102,9 @@ Collective
 Related Types
 -------------
 
-.. cpp:enum-class:: KokkosComm::CommMode : uint8_t
+.. _CommMode:
 
+.. cpp:enum-class:: KokkosComm::CommMode
     A scoped enum to specify the mode of an operation. Buffered mode is not supported.
 
     .. cpp:enumerator:: KokkosComm::CommMode::Standard
