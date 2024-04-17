@@ -105,6 +105,7 @@ Related Types
 .. _CommMode:
 
 .. cpp:enum-class:: KokkosComm::CommMode
+
     A scoped enum to specify the mode of an operation. Buffered mode is not supported.
 
     .. cpp:enumerator:: KokkosComm::CommMode::Standard
@@ -118,6 +119,11 @@ Related Types
     .. cpp:enumerator:: KokkosComm::CommMode::Synchronous
 
       Synchronous mode: Send operations complete successfully only if a matching receive is started, and the receive operation has started to receive themessage sent.
+
+    .. cpp:enumerator:: KokkosComm::CommMode::Default
+
+    Default mode is an alias for ``Standard`` mode, but lets users override the behavior of send operations at compile-time using the ``KOKKOSCOMM_FORCE_SYNCHRONOUS_SEND_MODE`` environment variable. This forces ``Synchronous`` mode for all "default-mode" send operations, which can be useful for debugging purposes, e.g., for asserting that the communication scheme is correct.
+
 
 .. cpp:class:: KokkosComm::Req
 
