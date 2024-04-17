@@ -28,31 +28,18 @@
 
 namespace KokkosComm {
 
-
-template <CommMode SendMode = CommMode::Standard,
-          KokkosExecutionSpace ExecSpace, KokkosView SendView>
+template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace,
+          KokkosView SendView>
 Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
-  if constexpr (SendMode == CommMode::Standard) {
-    return Impl::isend(space, sv, dest, tag, comm);
-  } else if constexpr (SendMode == CommMode::Ready) {
-    return Impl::irsend(space, sv, dest, tag, comm);
-  } else if constexpr (SendMode == CommMode::Synchronous) {
-    return Impl::issend(space, sv, dest, tag, comm);
-  }
+  return Impl::isend<SendMode>(space, sv, dest, tag, comm);
 }
 
-template <CommMode SendMode = CommMode::Standard,
-          KokkosExecutionSpace ExecSpace, KokkosView SendView>
+template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace,
+          KokkosView SendView>
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
-  if constexpr (SendMode == CommMode::Standard) {
-    return Impl::send(space, sv, dest, tag, comm);
-  } else if constexpr (SendMode == CommMode::Ready) {
-    return Impl::rsend(space, sv, dest, tag, comm);
-  } else if constexpr (SendMode == CommMode::Synchronous) {
-    return Impl::ssend(space, sv, dest, tag, comm);
-  }
+  return Impl::send<SendMode>(space, sv, dest, tag, comm);
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
