@@ -14,7 +14,7 @@ Core
     * - ``MPI_Rsend``
       - ``send<CommMode::Ready>``
       - ✓
-    * - MPI_Recv
+    * - ``MPI_Recv``
       - recv
     * - ``MPI_Ssend``
       - ``send<CommMode::Synchronous>``
@@ -116,7 +116,7 @@ Related Types
 
     .. cpp:enumerator:: KokkosComm::CommMode::Synchronous
 
-      Synchronous mode: Send operations complete successfully only if a matching receive is started, and the receive operation has started to receive themessage sent.
+      Synchronous mode: Send operations complete successfully only if a matching receive is started, and the receive operation has started to receive the message sent.
 
     .. cpp:enumerator:: KokkosComm::CommMode::Default
 

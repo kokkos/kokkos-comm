@@ -23,7 +23,7 @@ namespace KokkosComm {
 enum class CommMode {
   // Default mode: lets the user override the send operations behavior at
   // compile-time. E.g., this can be set to mode "Synchronous" for debug
-  // builds.
+  // builds by defining KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE.
   Default,
   // Standard mode: MPI implementation decides whether outgoing messages will
   // be buffered. Send operations can be started whether or not a matching
