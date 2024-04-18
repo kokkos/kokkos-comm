@@ -34,37 +34,29 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
 
   using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
 
+  auto send_fn = [&](auto &&view, auto count, auto datatype) {
+    if constexpr (SendMode == CommMode::Standard) {
+      MPI_Send(view, count, datatype, dest, tag, comm);
+    } else if constexpr (SendMode == CommMode::Ready) {
+      MPI_Rsend(view, count, datatype, dest, tag, comm);
+    } else if constexpr (SendMode == CommMode::Synchronous) {
+      MPI_Ssend(view, count, datatype, dest, tag, comm);
+    } else if constexpr (SendMode == CommMode::Default) {
+#ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
+      MPI_Ssend(view, count, datatype, dest, tag, comm);
+#else
+      MPI_Send(view, count, datatype, dest, tag, comm);
+#endif
+    }
+  };
+
   if (KokkosComm::PackTraits<SendView>::needs_pack(sv)) {
     auto args = Packer::pack(space, sv);
     space.fence();
-    if constexpr (SendMode == CommMode::Standard) {
-      MPI_Send(args.view.data(), args.count, args.datatype, dest, tag, comm);
-    } else if constexpr (SendMode == CommMode::Ready) {
-      MPI_Rsend(args.view.data(), args.count, args.datatype, dest, tag, comm);
-    } else if constexpr (SendMode == CommMode::Synchronous) {
-      MPI_Ssend(args.view.data(), args.count, args.datatype, dest, tag, comm);
-    } else if constexpr (SendMode == CommMode::Default) {
-#ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
-      MPI_Ssend(args.view.data(), args.count, args.datatype, dest, tag, comm);
-#else
-      MPI_Send(args.view.data(), args.count, args.datatype, dest, tag, comm);
-#endif
-    }
+    send_fn(args.view.data(), args.count, args.datatype);
   } else {
     using SendScalar = typename SendView::value_type;
-    if constexpr (SendMode == CommMode::Standard) {
-      MPI_Send(sv.data(), sv.span(), mpi_type_v<SendScalar>, dest, tag, comm);
-    } else if constexpr (SendMode == CommMode::Ready) {
-      MPI_Rsend(sv.data(), sv.span(), mpi_type_v<SendScalar>, dest, tag, comm);
-    } else if constexpr (SendMode == CommMode::Synchronous) {
-      MPI_Ssend(sv.data(), sv.span(), mpi_type_v<SendScalar>, dest, tag, comm);
-    } else if constexpr (SendMode == CommMode::Default) {
-#ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
-      MPI_Ssend(sv.data(), sv.span(), mpi_type_v<SendScalar>, dest, tag, comm);
-#else
-      MPI_Send(sv.data(), sv.span(), mpi_type_v<SendScalar>, dest, tag, comm);
-#endif
-    }
+    send_fn(sv.data(), sv.span(), mpi_type_v<SendScalar>);
   }
 
   Kokkos::Tools::popRegion();

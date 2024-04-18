@@ -42,52 +42,35 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest,
   using KCT  = KokkosComm::Traits<SendView>;
   using KCPT = KokkosComm::PackTraits<SendView>;
 
+  auto isend_fn = [&](auto &&view, auto count, auto datatype, auto &&request) {
+    if constexpr (SendMode == CommMode::Standard) {
+      MPI_Isend(view, count, datatype, dest, tag, comm, request);
+    } else if constexpr (SendMode == CommMode::Ready) {
+      MPI_Irsend(view, count, datatype, dest, tag, comm, request);
+    } else if constexpr (SendMode == CommMode::Synchronous) {
+      MPI_Issend(view, count, datatype, dest, tag, comm, request);
+    } else if constexpr (SendMode == CommMode::Default) {
+#ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
+      MPI_Issend(view, count, datatype, dest, tag, comm, request);
+#else
+      MPI_Isend(view, count, datatype, dest, tag, comm, request);
+#endif
+    }
+  };
+
   if (KCPT::needs_pack(sv)) {
     using Packer  = typename KCPT::packer_type;
     using MpiArgs = typename Packer::args_type;
 
     MpiArgs args = Packer::pack(space, sv);
     space.fence();
-
-    if constexpr (SendMode == CommMode::Standard) {
-      MPI_Isend(KCT::data_handle(args.view), args.count, args.datatype, dest,
-                tag, comm, &req.mpi_req());
-    } else if constexpr (SendMode == CommMode::Ready) {
-      MPI_Irsend(KCT::data_handle(args.view), args.count, args.datatype, dest,
-                 tag, comm, &req.mpi_req());
-    } else if constexpr (SendMode == CommMode::Synchronous) {
-      MPI_Issend(KCT::data_handle(args.view), args.count, args.datatype, dest,
-                 tag, comm, &req.mpi_req());
-    } else if constexpr (SendMode == CommMode::Default) {
-#ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
-      MPI_Issend(KCT::data_handle(args.view), args.count, args.datatype, dest,
-                 tag, comm, &req.mpi_req());
-#else
-      MPI_Isend(KCT::data_handle(args.view), args.count, args.datatype, dest,
-                tag, comm, &req.mpi_req());
-#endif
-    }
+    isend_fn(KCT::data_handle(args.view), args.count, args.datatype,
+             &req.mpi_req());
     req.keep_until_wait(args.view);
   } else {
     using SendScalar = typename SendView::value_type;
-    if constexpr (SendMode == CommMode::Standard) {
-      MPI_Isend(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
-                dest, tag, comm, &req.mpi_req());
-    } else if constexpr (SendMode == CommMode::Ready) {
-      MPI_Irsend(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
-                 dest, tag, comm, &req.mpi_req());
-    } else if constexpr (SendMode == CommMode::Synchronous) {
-      MPI_Issend(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
-                 dest, tag, comm, &req.mpi_req());
-    } else if constexpr (SendMode == CommMode::Default) {
-#ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
-      MPI_Issend(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
-                 dest, tag, comm, &req.mpi_req());
-#else
-      MPI_Isend(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
-                dest, tag, comm, &req.mpi_req());
-#endif
-    }
+    isend_fn(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
+             &req.mpi_req());
     if (KCT::is_reference_counted()) {
       req.keep_until_wait(sv);
     }
