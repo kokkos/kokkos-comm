@@ -58,8 +58,8 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest,
     } else if constexpr (SendMode == CommMode::Synchronous) {
       MPI_Issend(KCT::data_handle(args.view), args.count, args.datatype, dest,
                  tag, comm, &req.mpi_req());
-    } else {
-#ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_SEND_MODE
+    } else if constexpr (SendMode == CommMode::Default) {
+#ifdef KokkosComm_FORCE_SYNCHRONOUS_MODE
       MPI_Issend(KCT::data_handle(args.view), args.count, args.datatype, dest,
                  tag, comm, &req.mpi_req());
 #else
@@ -79,8 +79,8 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest,
     } else if constexpr (SendMode == CommMode::Synchronous) {
       MPI_Issend(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
                  dest, tag, comm, &req.mpi_req());
-    } else {
-#ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_SEND_MODE
+    } else if constexpr (SendMode == CommMode::Default) {
+#ifdef KokkosComm_FORCE_SYNCHRONOUS_MODE
       MPI_Issend(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
                  dest, tag, comm, &req.mpi_req());
 #else

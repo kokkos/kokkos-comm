@@ -43,8 +43,8 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
       MPI_Rsend(args.view.data(), args.count, args.datatype, dest, tag, comm);
     } else if constexpr (SendMode == CommMode::Synchronous) {
       MPI_Ssend(args.view.data(), args.count, args.datatype, dest, tag, comm);
-    } else {
-#ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_SEND_MODE
+    } else if constexpr (SendMode == CommMode::Default) {
+#ifdef KokkosComm_FORCE_SYNCHRONOUS_MODE
       MPI_Ssend(args.view.data(), args.count, args.datatype, dest, tag, comm);
 #else
       MPI_Send(args.view.data(), args.count, args.datatype, dest, tag, comm);
@@ -58,8 +58,8 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
       MPI_Rsend(sv.data(), sv.span(), mpi_type_v<SendScalar>, dest, tag, comm);
     } else if constexpr (SendMode == CommMode::Synchronous) {
       MPI_Ssend(sv.data(), sv.span(), mpi_type_v<SendScalar>, dest, tag, comm);
-    } else {
-#ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_SEND_MODE
+    } else if constexpr (SendMode == CommMode::Default) {
+#ifdef KokkosComm_FORCE_SYNCHRONOUS_MODE
       MPI_Ssend(sv.data(), sv.span(), mpi_type_v<SendScalar>, dest, tag, comm);
 #else
       MPI_Send(sv.data(), sv.span(), mpi_type_v<SendScalar>, dest, tag, comm);
