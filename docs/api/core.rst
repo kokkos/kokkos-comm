@@ -36,7 +36,7 @@ Core
 Point-to-point
 --------------
 
-.. cpp:function:: template <KokkosComm::CommMode SendMode = CommMode::Standard, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
+.. cpp:function:: template <KokkosComm::CommMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
                   Req KokkosComm::isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
 
     Wrapper for ``MPI_Isend``, ``MPI_Irsend`` and ``MPI_Issend``.
@@ -52,8 +52,8 @@ Point-to-point
     :tparam SendMode: A communication mode to use. If unspecified, defaults to a standard ``MPI_Isend``.
     :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a standard ``MPI_Isend``.
 
-.. cpp:function:: template <KokkosComm::CommMode SendMode = CommMode::Standard, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
     :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a synchronous ``MPI_Issend`` if ``KokkosComm_FORCE_SYNCHRONOUS_MODE`` is enabled, otherwise defaults to a standard ``MPI_Isend``.
+.. cpp:function:: template <KokkosComm::CommMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
                   void KokkosComm::send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
 
     Wrapper for ``MPI_Send``, ``MPI_Rsend`` and ``MPI_Ssend``.
