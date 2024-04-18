@@ -46,13 +46,11 @@ Point-to-point
     :param dest: the destination rank
     :param tag: the MPI tag
     :param comm: the MPI communicator
+    :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a synchronous ``MPI_Issend`` if ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` is defined, otherwise defaults to a standard ``MPI_Isend``.
     :tparam SendView: A Kokkos::View to send
     :tparam ExecSpace: A Kokkos execution space to operate in
     :returns: A KokkosComm::Req representing the asynchronous communication and any lifetime-extended views.
-    :tparam SendMode: A communication mode to use. If unspecified, defaults to a standard ``MPI_Isend``.
-    :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a standard ``MPI_Isend``.
 
-    :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a synchronous ``MPI_Issend`` if ``KokkosComm_FORCE_SYNCHRONOUS_MODE`` is enabled, otherwise defaults to a standard ``MPI_Isend``.
 .. cpp:function:: template <KokkosComm::CommMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
                   void KokkosComm::send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
 
@@ -63,11 +61,9 @@ Point-to-point
     :param dest: the destination rank
     :param tag: the MPI tag
     :param comm: the MPI communicator
+    :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a synchronous ``MPI_Ssend`` if ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` is defined, otherwise defaults to a standard ``MPI_Send``.
     :tparam SendView: A Kokkos::View to send
     :tparam ExecSpace: A Kokkos execution space to operate in
-    :tparam SendMode: A communication mode to use. If unspecified, defaults to a standard ``MPI_Send``.
-    :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a standard ``MPI_Send``.
-    :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a synchronous ``MPI_Ssend`` if ``KokkosComm_FORCE_SYNCHRONOUS_MODE`` is enabled, otherwise defaults to a standard ``MPI_Send``.
 
 .. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView RecvView> \
                   void KokkosComm::recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
@@ -124,7 +120,7 @@ Related Types
 
     .. cpp:enumerator:: KokkosComm::CommMode::Default
 
-    Default mode is an alias for ``Standard`` mode, but lets users override the behavior of send operations at compile-time using the ``KOKKOSCOMM_FORCE_SYNCHRONOUS_SEND_MODE`` environment variable (pre-processor defined). This forces ``Synchronous`` mode for all "default-mode" send operations, which can be useful for debugging purposes, e.g., for asserting that the communication scheme is correct.
+      Default mode is an alias for ``Standard`` mode, but lets users override the behavior of operations at compile-time using the ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` pre-processor define. This forces ``Synchronous`` mode for all "default-mode" operations, which can be useful for debugging purposes, e.g., for asserting that the communication scheme is correct.
 
 
 .. cpp:class:: KokkosComm::Req
