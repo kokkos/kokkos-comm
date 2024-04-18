@@ -124,7 +124,7 @@ Related Types
 
     .. cpp:enumerator:: KokkosComm::CommMode::Default
 
-    Default mode is an alias for ``Standard`` mode, but lets users override the behavior of send operations at compile-time using the ``KOKKOSCOMM_FORCE_SYNCHRONOUS_SEND_MODE`` environment variable. This forces ``Synchronous`` mode for all "default-mode" send operations, which can be useful for debugging purposes, e.g., for asserting that the communication scheme is correct.
+    Default mode is an alias for ``Standard`` mode, but lets users override the behavior of send operations at compile-time using the ``KOKKOSCOMM_FORCE_SYNCHRONOUS_SEND_MODE`` environment variable (pre-processor defined). This forces ``Synchronous`` mode for all "default-mode" send operations, which can be useful for debugging purposes, e.g., for asserting that the communication scheme is correct.
 
 
 .. cpp:class:: KokkosComm::Req
