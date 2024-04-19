@@ -34,18 +34,20 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
 
   using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
 
-  auto send_fn = [&](auto &&view, auto count, auto datatype) {
+  auto mpi_send_fn = [](void *mpi_view, int mpi_count,
+                        MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
+                        MPI_Comm mpi_comm) {
     if constexpr (SendMode == CommMode::Standard) {
-      MPI_Send(view, count, datatype, dest, tag, comm);
+      MPI_Send(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
     } else if constexpr (SendMode == CommMode::Ready) {
-      MPI_Rsend(view, count, datatype, dest, tag, comm);
+      MPI_Rsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
     } else if constexpr (SendMode == CommMode::Synchronous) {
-      MPI_Ssend(view, count, datatype, dest, tag, comm);
+      MPI_Ssend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
     } else if constexpr (SendMode == CommMode::Default) {
 #ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
-      MPI_Ssend(view, count, datatype, dest, tag, comm);
+      MPI_Ssend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
 #else
-      MPI_Send(view, count, datatype, dest, tag, comm);
+      MPI_Send(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
 #endif
     }
   };
@@ -53,10 +55,10 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
   if (KokkosComm::PackTraits<SendView>::needs_pack(sv)) {
     auto args = Packer::pack(space, sv);
     space.fence();
-    send_fn(args.view.data(), args.count, args.datatype);
+    mpi_send_fn(args.view.data(), args.count, args.datatype, dest, tag, comm);
   } else {
     using SendScalar = typename SendView::value_type;
-    send_fn(sv.data(), sv.span(), mpi_type_v<SendScalar>);
+    mpi_send_fn(sv.data(), sv.span(), mpi_type_v<SendScalar>, dest, tag, comm);
   }
 
   Kokkos::Tools::popRegion();

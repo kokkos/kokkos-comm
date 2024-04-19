@@ -42,18 +42,25 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest,
   using KCT  = KokkosComm::Traits<SendView>;
   using KCPT = KokkosComm::PackTraits<SendView>;
 
-  auto isend_fn = [&](auto &&view, auto count, auto datatype, auto &&request) {
+  auto mpi_isend_fn = [](void *mpi_view, int mpi_count,
+                         MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
+                         MPI_Comm mpi_comm, MPI_Request *mpi_req) {
     if constexpr (SendMode == CommMode::Standard) {
-      MPI_Isend(view, count, datatype, dest, tag, comm, request);
+      MPI_Isend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm,
+                mpi_req);
     } else if constexpr (SendMode == CommMode::Ready) {
-      MPI_Irsend(view, count, datatype, dest, tag, comm, request);
+      MPI_Irsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm,
+                 mpi_req);
     } else if constexpr (SendMode == CommMode::Synchronous) {
-      MPI_Issend(view, count, datatype, dest, tag, comm, request);
+      MPI_Issend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm,
+                 mpi_req);
     } else if constexpr (SendMode == CommMode::Default) {
 #ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
-      MPI_Issend(view, count, datatype, dest, tag, comm, request);
+      MPI_Issend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm,
+                 mpi_req);
 #else
-      MPI_Isend(view, count, datatype, dest, tag, comm, request);
+      MPI_Isend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm,
+                mpi_req);
 #endif
     }
   };
@@ -64,13 +71,13 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest,
 
     MpiArgs args = Packer::pack(space, sv);
     space.fence();
-    isend_fn(KCT::data_handle(args.view), args.count, args.datatype,
-             &req.mpi_req());
+    mpi_isend_fn(KCT::data_handle(args.view), args.count, args.datatype, dest,
+                 tag, comm, &req.mpi_req());
     req.keep_until_wait(args.view);
   } else {
     using SendScalar = typename SendView::value_type;
-    isend_fn(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
-             &req.mpi_req());
+    mpi_isend_fn(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>,
+                 dest, tag, comm, &req.mpi_req());
     if (KCT::is_reference_counted()) {
       req.keep_until_wait(sv);
     }
