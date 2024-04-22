@@ -2,7 +2,7 @@ Core
 ====
 
 .. list-table:: MPI API Support
-    :widths: 20 30 15
+    :widths: 40 30 15
     :header-rows: 1
 
     * - MPI
@@ -30,7 +30,6 @@ Core
       - ✓
     * - MPI_Reduce
       - reduce
-      - ✓
       - ✓
 
 Point-to-point
