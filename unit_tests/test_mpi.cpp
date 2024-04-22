@@ -19,7 +19,6 @@
 #include <mpi.h>
 
 int main(int argc, char *argv[]) {
-  // Initialize MPI before any call to gtest_mpi
   MPI_Init(&argc, &argv);
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
