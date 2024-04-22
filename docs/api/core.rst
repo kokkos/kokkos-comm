@@ -2,7 +2,7 @@ Core
 ====
 
 .. list-table:: MPI API Support
-    :widths: 40 30 15 15
+    :widths: 40 30 15
     :header-rows: 1
 
     * - MPI
@@ -11,18 +11,14 @@ Core
     * - MPI_Send
       - send
       - ✓
-      - ✓
     * - MPI_Recv
       - recv
-      - ✓
       - ✓
     * - MPI_Isend
       - isend
       - ✓
-      - ✓
     * - MPI_Reduce
       - reduce
-      - ✓
       - ✓
 
 Point-to-point
