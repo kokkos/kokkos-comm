@@ -16,7 +16,7 @@
 
 #include <gtest/gtest.h>
 
-#include "impl/KokkosComm_barrier.hpp"
+#include "KokkosComm_barrier.hpp"
 
 namespace {
 TEST(Barrier, 0) {
