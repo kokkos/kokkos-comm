@@ -46,6 +46,7 @@ add_executable(test-main test_main.cpp
   test_isendrecv.cpp
   test_reduce.cpp
   test_sendrecv.cpp
+  test_barrier.cpp
 )
 target_link_libraries(test-main KokkosComm::KokkosComm gtest)
 if(KOKKOSCOMM_ENABLE_TESTS)
