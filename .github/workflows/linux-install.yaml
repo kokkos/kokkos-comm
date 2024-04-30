@@ -61,6 +61,6 @@ jobs:
       - name: Build KokkosComm Perf Tests
         run: |
           VERBOSE=1 cmake --build "$COMM_PERF_TESTS_BUILD"
-      - name: Run KokkosComm Unit Tests against Install
+      - name: Run KokkosComm Perf Tests against Install
         run: |
           ctest -V --test-dir "$COMM_PERF_TESTS_BUILD"
