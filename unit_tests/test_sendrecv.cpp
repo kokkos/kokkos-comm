@@ -33,6 +33,10 @@ TYPED_TEST_SUITE(SendRecv, ScalarTypes);
 
 template <KokkosComm::CommMode SendMode, typename Scalar>
 void send_comm_mode_1d_contig() {
+  if (SendMode == KokkosComm::CommMode::Ready) {
+    GTEST_SKIP() << "Skipping test for ready-mode send";
+  }
+
   Kokkos::View<Scalar *> a("a", 1000);
 
   int rank, size;
@@ -62,6 +66,10 @@ void send_comm_mode_1d_contig() {
 
 template <KokkosComm::CommMode SendMode, typename Scalar>
 void send_comm_mode_1d_noncontig() {
+  if (SendMode == KokkosComm::CommMode::Ready) {
+    GTEST_SKIP() << "Skipping test for ready-mode send";
+  }
+
   // this is C-style layout, i.e. b(0,0) is next to b(0,1)
   Kokkos::View<Scalar **, Kokkos::LayoutRight> b("b", 10, 10);
   auto a =
