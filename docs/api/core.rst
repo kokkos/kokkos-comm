@@ -28,8 +28,8 @@ Core
     * - ``MPI_Issend``
       - ``isend<CommMode::Synchronous>``
       - ✓
-    * - MPI_Reduce
-      - reduce
+    * - ``MPI_Reduce``
+      - ``reduce``
       - ✓
 
 Point-to-point
