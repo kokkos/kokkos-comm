@@ -15,7 +15,8 @@ Core
       - ``send<CommMode::Ready>``
       - ✓
     * - ``MPI_Recv``
-      - recv
+      - ``recv``
+      - ✓
     * - ``MPI_Ssend``
       - ``send<CommMode::Synchronous>``
       - ✓
