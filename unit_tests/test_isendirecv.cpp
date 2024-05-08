@@ -20,6 +20,8 @@
 
 #include "view_builder.hpp"
 
+namespace {
+
 template <typename T>
 class IsendIrecv : public testing::Test {
  public:
@@ -31,8 +33,10 @@ using ScalarTypes =
                      Kokkos::complex<double>, int, unsigned, int64_t, size_t>;
 TYPED_TEST_SUITE(IsendIrecv, ScalarTypes);
 
-TYPED_TEST(IsendIrecv, 1D_contig) {
-  auto a = ViewBuilder<typename TestFixture::Scalar, 1>::view(contig{}, 1013);
+template <KokkosComm::KokkosView View1D>
+void test_1d(const View1D &a) {
+  static_assert(View1D::rank == 1, "");
+  using Scalar = typename View1D::non_const_value_type;
 
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -56,118 +60,71 @@ TYPED_TEST(IsendIrecv, 1D_contig) {
     int errs;
     Kokkos::parallel_reduce(
         a.extent(0),
-        KOKKOS_LAMBDA(const int &i, int &lsum) {
-          lsum += a(i) != typename TestFixture::Scalar(i);
+        KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); },
+        errs);
+    ASSERT_EQ(errs, 0);
+  }
+}
+
+template <KokkosComm::KokkosView View2D>
+void test_2d(const View2D &a) {
+  static_assert(View2D::rank == 2, "");
+  using Scalar = typename View2D::non_const_value_type;
+
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  if (size < 2) {
+    GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
+  }
+
+  using Policy = Kokkos::MDRangePolicy<Kokkos::Rank<2>>;
+  Policy policy({0, 0}, {a.extent(0), a.extent(1)});
+
+  if (0 == rank) {
+    int dst = 1;
+    Kokkos::parallel_for(
+        policy, KOKKOS_LAMBDA(int i, int j) { a(i, j) = i * a.extent(0) + j; });
+    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a,
+                                            dst, 0, MPI_COMM_WORLD);
+    req.wait();
+  } else if (1 == rank) {
+    int src             = 0;
+    KokkosComm::Req req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a,
+                                            src, 0, MPI_COMM_WORLD);
+    req.wait();
+    int errs;
+    Kokkos::parallel_reduce(
+        policy,
+        KOKKOS_LAMBDA(int i, int j, int &lsum) {
+          lsum += a(i, j) != Scalar(i * a.extent(0) + j);
         },
         errs);
     ASSERT_EQ(errs, 0);
   }
+}
+
+TYPED_TEST(IsendIrecv, 1D_contig) {
+  auto a = ViewBuilder<typename TestFixture::Scalar, 1>::view(contig{}, 1013);
+  test_1d(a);
 }
 
 TYPED_TEST(IsendIrecv, 1D_noncontig) {
   auto a =
       ViewBuilder<typename TestFixture::Scalar, 1>::view(noncontig{}, 1013);
-
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  if (size < 2) {
-    GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
-  }
-
-  if (0 == rank) {
-    int dst = 1;
-    Kokkos::parallel_for(
-        a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a,
-                                            dst, 0, MPI_COMM_WORLD);
-    req.wait();
-  } else if (1 == rank) {
-    int src             = 0;
-    KokkosComm::Req req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a,
-                                            src, 0, MPI_COMM_WORLD);
-    req.wait();
-    int errs;
-    Kokkos::parallel_reduce(
-        a.extent(0),
-        KOKKOS_LAMBDA(const int &i, int &lsum) {
-          lsum += a(i) != typename TestFixture::Scalar(i);
-        },
-        errs);
-    ASSERT_EQ(errs, 0);
-  }
+  test_1d(a);
 }
 
 TYPED_TEST(IsendIrecv, 2D_contig) {
   auto a =
       ViewBuilder<typename TestFixture::Scalar, 2>::view(contig{}, 137, 17);
-
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  if (size < 2) {
-    GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
-  }
-
-  using Policy = Kokkos::MDRangePolicy<Kokkos::Rank<2>>;
-  Policy policy({0, 0}, {a.extent(0), a.extent(1)});
-
-  if (0 == rank) {
-    int dst = 1;
-    Kokkos::parallel_for(
-        policy, KOKKOS_LAMBDA(int i, int j) { a(i, j) = i * a.extent(0) + j; });
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a,
-                                            dst, 0, MPI_COMM_WORLD);
-    req.wait();
-  } else if (1 == rank) {
-    int src             = 0;
-    KokkosComm::Req req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a,
-                                            src, 0, MPI_COMM_WORLD);
-    req.wait();
-    int errs;
-    Kokkos::parallel_reduce(
-        policy,
-        KOKKOS_LAMBDA(int i, int j, int &lsum) {
-          lsum += a(i, j) != typename TestFixture::Scalar(i * a.extent(0) + j);
-        },
-        errs);
-    ASSERT_EQ(errs, 0);
-  }
+  test_2d(a);
 }
 
 TYPED_TEST(IsendIrecv, 2D_noncontig) {
   auto a =
       ViewBuilder<typename TestFixture::Scalar, 2>::view(noncontig{}, 137, 17);
-
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  if (size < 2) {
-    GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
-  }
-
-  using Policy = Kokkos::MDRangePolicy<Kokkos::Rank<2>>;
-  Policy policy({0, 0}, {a.extent(0), a.extent(1)});
-
-  if (0 == rank) {
-    int dst = 1;
-    Kokkos::parallel_for(
-        policy, KOKKOS_LAMBDA(int i, int j) { a(i, j) = i * a.extent(0) + j; });
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a,
-                                            dst, 0, MPI_COMM_WORLD);
-    req.wait();
-  } else if (1 == rank) {
-    int src             = 0;
-    KokkosComm::Req req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a,
-                                            src, 0, MPI_COMM_WORLD);
-    req.wait();
-    int errs;
-    Kokkos::parallel_reduce(
-        policy,
-        KOKKOS_LAMBDA(int i, int j, int &lsum) {
-          lsum += a(i, j) != typename TestFixture::Scalar(i * a.extent(0) + j);
-        },
-        errs);
-    ASSERT_EQ(errs, 0);
-  }
+  test_2d(a);
 }
+
+}  // namespace
