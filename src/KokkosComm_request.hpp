@@ -18,74 +18,19 @@
 
 #include <memory>
 
-#include "KokkosComm_include_mpi.hpp"
+#include "KokkosComm_request_impl.hpp"
 
 namespace KokkosComm {
 
 class Req {
-  // a type-erased callable. Req uses these to attach callbacks to be executed
-  // at wait
-  struct InvokableHolderBase {
-    virtual ~InvokableHolderBase() = default;
-
-    virtual void operator()() = 0;
-  };
-  template <Invokable Fn>
-  struct InvokableHolder : InvokableHolderBase {
-    InvokableHolder(const Fn &f) : f_(f) {}
-
-    virtual void operator()() override { f_(); }
-
-    Fn f_;
-  };
-
-  // a type-erased view. Request uses these to keep temporary views alive for
-  // the lifetime of "Immediate" MPI operations
-  struct ViewHolderBase {
-    virtual ~ViewHolderBase() {}
-  };
-  template <typename V>
-  struct ViewHolder : ViewHolderBase {
-    ViewHolder(const V &v) : v_(v) {}
-    V v_;
-  };
-
-  struct Record {
-    Record() : req_(MPI_REQUEST_NULL) {}
-    MPI_Request req_;
-    std::vector<std::shared_ptr<ViewHolderBase>> wait_drops_;
-    std::vector<std::shared_ptr<InvokableHolderBase>> wait_callbacks_;
-  };
-
  public:
-  Req() : record_(std::make_shared<Record>()) {}
-
-  MPI_Request &mpi_req() { return record_->req_; }
-
-  void wait() {
-    MPI_Wait(&(record_->req_), MPI_STATUS_IGNORE);
-    record_->wait_drops_
-        .clear();  // drop any views we're keeping alive until wait()
-    for (auto &c : record_->wait_callbacks_) {
-      (*c)();
-    }
-    record_->wait_callbacks_.clear();
-  }
-
-  // keep a reference to this view around until wait() is called
-  template <typename View>
-  void keep_until_wait(const View &v) {
-    record_->wait_drops_.push_back(std::make_shared<ViewHolder<View>>(v));
-  }
-
-  template <Invokable Fn>
-  void call_and_drop_at_wait(const Fn &f) {
-    record_->wait_callbacks_.push_back(
-        std::make_shared<InvokableHolder<Fn>>(f));
-  }
+  Req() : impl_(std::make_shared<Impl::Req>()) {}
+  Req(const std::shared_ptr<Impl::Req> &impl) : impl_(impl) {}
+  MPI_Request &mpi_req() { return impl_->mpi_req(); }
+  void wait() { impl_->wait(); }
 
  private:
-  std::shared_ptr<Record> record_;
+  std::shared_ptr<Impl::Req> impl_;
 };
 
 }  // namespace KokkosComm
