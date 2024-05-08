@@ -125,7 +125,7 @@ Related Types
 
 .. cpp:class:: KokkosComm::Req
 
-    A wrapper around an MPI_Request that can also extend the lifetime of Views.
+    A communication handle representing an asychronous communication. The communication is not complete until ``wait`` is called.
 
     .. cpp:function:: MPI_Request &KokkosComm::Req::mpi_req()
 
@@ -133,16 +133,5 @@ Related Types
 
     .. cpp:function:: void KokkosComm::Req::wait()
 
-        Call MPI_Wait on the held MPI_Request and drop copies of any previous arguments to Req::keep_until_wait().
+        Call MPI_Wait on the held MPI_Request and complete any internal communication-related operations.
 
-    .. cpp:function:: template<typename View> \
-                      void KokkosComm::Req::keep_until_wait(const View &v)
-
-        Extend the lifetime of v at least until Req::wait() is called.
-        This is useful to prevent a View from being destroyed during an asynchronous MPI operation.
-
-    .. cpp:function:: template<typename Callable> \
-                    void KokkosComm::Req::call_and_drop_at_wait(const Callable &c)
-
-      Store a copy of ``c``, and invoke ``c()`` when ``wait`` is called.
-      Destroy the copy of ``c`` afterwards.
