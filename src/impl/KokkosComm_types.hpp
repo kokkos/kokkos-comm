@@ -49,7 +49,7 @@ inline MPI_Datatype mpi_type<unsigned long>() {
   return MPI_UNSIGNED_LONG;
 }
 template <>
-inline MPI_Datatype mpi_type<unsigned long>() {
+inline MPI_Datatype mpi_type<unsigned long long>() {
   return MPI_UNSIGNED_LONG_LONG;
 }
 
