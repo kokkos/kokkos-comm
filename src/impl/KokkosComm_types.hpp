@@ -28,6 +28,10 @@ MPI_Datatype mpi_type() {
 }
 
 template <>
+inline MPI_Datatype mpi_type<short>() {
+  return MPI_SHORT;
+}
+template <>
 inline MPI_Datatype mpi_type<int>() {
   return MPI_INT;
 }
@@ -40,6 +44,10 @@ inline MPI_Datatype mpi_type<long long>() {
   return MPI_LONG_LONG;
 }
 
+template <>
+inline MPI_Datatype mpi_type<unsigned short>() {
+  return MPI_UNSIGNED_SHORT;
+}
 template <>
 inline MPI_Datatype mpi_type<unsigned int>() {
   return MPI_UNSIGNED;
