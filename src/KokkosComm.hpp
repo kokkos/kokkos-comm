@@ -22,21 +22,24 @@
 #include "KokkosComm_recv.hpp"
 #include "KokkosComm_send.hpp"
 #include "KokkosComm_concepts.hpp"
+#include "KokkosComm_comm_mode.hpp"
 
 #include <Kokkos_Core.hpp>
 
 namespace KokkosComm {
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
+template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace,
+          KokkosView SendView>
 Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
-  return Impl::isend(space, sv, dest, tag, comm);
+  return Impl::isend<SendMode>(space, sv, dest, tag, comm);
 }
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
+template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace,
+          KokkosView SendView>
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
           MPI_Comm comm) {
-  return Impl::send(space, sv, dest, tag, comm);
+  return Impl::send<SendMode>(space, sv, dest, tag, comm);
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
