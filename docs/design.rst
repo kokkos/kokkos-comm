@@ -18,7 +18,7 @@ There are three consequences
 Non-contiguous Data
 -------------------
 
-* Packer::DeepCopy uses `Kokkos::deep_copy` to handle packing and unpacking of non-contiguous `Kokkos::View`. This requires an intermediate allocation, which only works for Kokkos Views, see `Device Data`_.
+* Packer::DeepCopy uses `Kokkos::deep_copy` to handle packing and unpacking of non-contiguous `Kokkos::View`. This requires an intermediate allocation.
 
 Device Data
 -----------
