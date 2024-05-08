@@ -22,6 +22,14 @@ Configuration Options
 * ``KokkosComm_ENABLE_PERFTESTS``: (default=ON) build performance tests
 * ``KokkosComm_ENABLE_TESTS``: (default=ON) build unit tests
 
+Requirements
+------------
+
+KokkosComm will attempt to support the `same systems and toolchains as Kokkos <https://kokkos.org/kokkos-core-wiki/requirements.html>`_, with the following exception:
+
+.. note::
+    KokkosComm requires C++20
+
 Known Quirks
 ------------
 
