@@ -40,6 +40,11 @@ Point-to-point
                   Req KokkosComm::isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
 
     Wrapper for ``MPI_Isend``, ``MPI_Irsend`` and ``MPI_Issend``.
+    The communication operation will be inserted into ``space``.
+    The caller may safely call this function on data previously produced by operations in ``space`` without first fencing ```space```.
+
+    .. warning::
+        Even if ``space`` is fenced after the call to this function, the communication operation is not complete until the ``wait`` operation on the returned ``Req`` is called.
 
     :param space: The execution space to operate in
     :param sv: The data to send
