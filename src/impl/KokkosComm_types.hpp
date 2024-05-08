@@ -28,6 +28,19 @@ MPI_Datatype mpi_type() {
 }
 
 template <>
+inline MPI_Datatype mpi_type<char>() {
+  return MPI_CHAR;
+}
+template <>
+inline MPI_Datatype mpi_type<unsigned char>() {
+  return MPI_UNSIGNED_CHAR;
+}
+template <>
+inline MPI_Datatype mpi_type<std::byte>() {
+  return MPI_BYTE;
+}
+
+template <>
 inline MPI_Datatype mpi_type<short>() {
   return MPI_SHORT;
 }
