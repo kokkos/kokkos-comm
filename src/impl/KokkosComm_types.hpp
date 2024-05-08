@@ -25,7 +25,7 @@ template <typename Scalar>
 MPI_Datatype mpi_type() {
   static_assert(std::is_void_v<Scalar>, "mpi_type not implemented");
   return MPI_CHAR;  // unreachable
-};
+}
 
 template <>
 inline MPI_Datatype mpi_type<int>() {
@@ -112,16 +112,16 @@ inline MPI_Datatype mpi_type<uint64_t>() {
 template <>
 inline MPI_Datatype mpi_type<size_t>() {
   if constexpr ( sizeof(size_t) == 1 ) return MPI_UINT8_T;
-	if constexpr ( sizeof(size_t) == 2 ) return MPI_UINT16_T;
-	if constexpr ( sizeof(size_t) == 4 ) return MPI_UINT32_T;
-	if constexpr ( sizeof(size_t) == 8 ) return MPI_UINT64_T;
+  if constexpr ( sizeof(size_t) == 2 ) return MPI_UINT16_T;
+  if constexpr ( sizeof(size_t) == 4 ) return MPI_UINT32_T;
+  if constexpr ( sizeof(size_t) == 8 ) return MPI_UINT64_T;
 }
 template <>
 inline MPI_Datatype mpi_type<ssize_t>() {
   if constexpr ( sizeof(ssize_t) == 1 ) return MPI_INT8_T;
-	if constexpr ( sizeof(ssize_t) == 2 ) return MPI_INT16_T;
-	if constexpr ( sizeof(ssize_t) == 4 ) return MPI_INT32_T;
-	if constexpr ( sizeof(ssize_t) == 8 ) return MPI_INT64_T;
+  if constexpr ( sizeof(ssize_t) == 2 ) return MPI_INT16_T;
+  if constexpr ( sizeof(ssize_t) == 4 ) return MPI_INT32_T;
+  if constexpr ( sizeof(ssize_t) == 8 ) return MPI_INT64_T;
 }
 
 template <typename Scalar>
