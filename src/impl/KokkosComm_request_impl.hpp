@@ -64,12 +64,20 @@ class Req {
     wait_callbacks_.clear();
   }
 
-  // keep a reference to this view around until wait() is called
+  // Keep a reference to this view around until wait() is called.
+  // This is used when a managed Kokkos::View is provided to an
+  // asychronous communication routine, to ensure that view is
+  // still alive for the entire duration of the routine.
   template <typename View>
   void keep_until_wait(const View &v) {
     wait_drops_.push_back(std::make_shared<ViewHolder<View>>(v));
   }
 
+  // When wait() is called: execute f() and then let f go out of scope.
+  // Every stored f is called before any stored f is dropped.
+  // This function can be used by an unpacking routine to attach some
+  // unpacking logic to a communication that needs to be executed
+  // after the underlying MPI operation is done.
   template <Invokable Fn>
   void call_and_drop_at_wait(const Fn &f) {
     wait_callbacks_.push_back(std::make_shared<InvokableHolder<Fn>>(f));
