@@ -36,7 +36,6 @@ struct IrecvUnpacker {
   void operator()() {
     Kokkos::Tools::pushRegion("KokkosComm::Impl::IrecvUnpacker::operator()");
     MpiArgs::packer_type::unpack_into(space_, rv_, args_.view);
-    space_.fence();
     Kokkos::Tools::popRegion();
   }
 
@@ -64,6 +63,7 @@ std::shared_ptr<Req> irecv(const ExecSpace &space, RecvView &rv, int src,
     MPI_Irecv(KCT::data_handle(args.view), args.count, args.datatype, src, tag,
               comm, &req->mpi_req());
     req->call_and_drop_at_wait(IrecvUnpacker{space, rv, args});
+    req->fence_at_wait(space);
 
   } else {
     using RecvScalar = typename RecvView::value_type;

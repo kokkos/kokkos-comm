@@ -50,18 +50,44 @@ class Req {
     V v_;
   };
 
+  // a type-erased view. Request uses these to keep temporary views alive for
+  // the lifetime of "Immediate" MPI operations
+  struct SpaceHolderBase {
+    virtual ~SpaceHolderBase() {}
+
+    virtual void fence() = 0;
+  };
+  template <typename ES>
+  struct SpaceHolder : SpaceHolderBase {
+    SpaceHolder(const ES &es) : es_(es) {}
+
+    virtual void fence() override { es_.fence("KokkosComm::Req::wait()"); }
+
+    ES es_;
+  };
+
  public:
   Req() : req_(MPI_REQUEST_NULL) {}
 
   MPI_Request &mpi_req() { return req_; }
 
-  void wait() {
+  void wait_async() {
     MPI_Wait(&req_, MPI_STATUS_IGNORE);
-    wait_drops_.clear();  // drop any views we're keeping alive until wait()
     for (auto &c : wait_callbacks_) {
       (*c)();
     }
+
+    // drop the references to anything that was kept alive until wait
+    wait_drops_.clear();
     wait_callbacks_.clear();
+  }
+
+  void wait() {
+    wait_async();
+    if (wait_fence_) {
+      wait_fence_->fence();
+    }
+    wait_fence_ = nullptr;
   }
 
   // Keep a reference to this view around until wait() is called.
@@ -83,10 +109,21 @@ class Req {
     wait_callbacks_.push_back(std::make_shared<InvokableHolder<Fn>>(f));
   }
 
+  template <typename ExecSpace>
+  void fence_at_wait(const ExecSpace &space) {
+    // TODO: only fence once if the same space is provided multiple times
+    if (wait_fence_) {
+      Kokkos::abort("Req is already fencing a space!");
+    }
+
+    wait_fence_ = std::make_shared<SpaceHolder<ExecSpace>>(space);
+  }
+
  private:
   MPI_Request req_;
   std::vector<std::shared_ptr<ViewHolderBase>> wait_drops_;
   std::vector<std::shared_ptr<InvokableHolderBase>> wait_callbacks_;
+  std::shared_ptr<SpaceHolderBase> wait_fence_;
 };
 
 }  // namespace KokkosComm::Impl
