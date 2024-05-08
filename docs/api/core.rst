@@ -32,10 +32,6 @@ Core
     * - ``MPI_Reduce``
       - ``reduce``
       - ✓
-    * - MPI_Send
-      - send
-      - ✓
-      - ✓
 
 Point-to-point
 --------------
