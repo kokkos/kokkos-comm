@@ -98,4 +98,11 @@ namespace KokkosComm {
       return KokkosComm::Request{ req };
     }
   };
+
+  template< typename T >
+  concept CommScheme = requires ( T cs, Communicator comm ){
+    cs = T{ comm };
+    cs.launch();
+    cs.wait();
+  };
 }
