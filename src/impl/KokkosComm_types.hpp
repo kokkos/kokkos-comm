@@ -96,53 +96,53 @@ inline MPI_Datatype mpi_type<Kokkos::complex<double>>() {
   return MPI_DOUBLE_COMPLEX;
 }
 
-template <>
-inline MPI_Datatype mpi_type<int8_t>() {
-  return MPI_INT8_T;
-}
-template <>
-inline MPI_Datatype mpi_type<int16_t>() {
-  return MPI_INT16_T;
-}
-template <>
-inline MPI_Datatype mpi_type<int32_t>() {
-  return MPI_INT32_T;
-}
-template <>
-inline MPI_Datatype mpi_type<int64_t>() {
-  return MPI_INT64_T;
-}
+// template <>
+// inline MPI_Datatype mpi_type<int8_t>() {
+//   return MPI_INT8_T;
+// }
+// template <>
+// inline MPI_Datatype mpi_type<int16_t>() {
+//   return MPI_INT16_T;
+// }
+// template <>
+// inline MPI_Datatype mpi_type<int32_t>() {
+//   return MPI_INT32_T;
+// }
+// template <>
+// inline MPI_Datatype mpi_type<int64_t>() {
+//   return MPI_INT64_T;
+// }
 
-template <>
-inline MPI_Datatype mpi_type<uint8_t>() {
-  return MPI_UINT8_T;
-}
-template <>
-inline MPI_Datatype mpi_type<uint16_t>() {
-  return MPI_UINT16_T;
-}
-template <>
-inline MPI_Datatype mpi_type<uint32_t>() {
-  return MPI_UINT32_T;
-}
-template <>
-inline MPI_Datatype mpi_type<uint64_t>() {
-  return MPI_UINT64_T;
-}
+// template <>
+// inline MPI_Datatype mpi_type<uint8_t>() {
+//   return MPI_UINT8_T;
+// }
+// template <>
+// inline MPI_Datatype mpi_type<uint16_t>() {
+//   return MPI_UINT16_T;
+// }
+// template <>
+// inline MPI_Datatype mpi_type<uint32_t>() {
+//   return MPI_UINT32_T;
+// }
+// template <>
+// inline MPI_Datatype mpi_type<uint64_t>() {
+//   return MPI_UINT64_T;
+// }
 
 template <>
 inline MPI_Datatype mpi_type<size_t>() {
-  if constexpr ( sizeof(size_t) == 1 ) return MPI_UINT8_T;
-  if constexpr ( sizeof(size_t) == 2 ) return MPI_UINT16_T;
-  if constexpr ( sizeof(size_t) == 4 ) return MPI_UINT32_T;
-  if constexpr ( sizeof(size_t) == 8 ) return MPI_UINT64_T;
+  if constexpr (sizeof(size_t) == 1) return MPI_UINT8_T;
+  if constexpr (sizeof(size_t) == 2) return MPI_UINT16_T;
+  if constexpr (sizeof(size_t) == 4) return MPI_UINT32_T;
+  if constexpr (sizeof(size_t) == 8) return MPI_UINT64_T;
 }
 template <>
 inline MPI_Datatype mpi_type<ssize_t>() {
-  if constexpr ( sizeof(ssize_t) == 1 ) return MPI_INT8_T;
-  if constexpr ( sizeof(ssize_t) == 2 ) return MPI_INT16_T;
-  if constexpr ( sizeof(ssize_t) == 4 ) return MPI_INT32_T;
-  if constexpr ( sizeof(ssize_t) == 8 ) return MPI_INT64_T;
+  if constexpr (sizeof(ssize_t) == 1) return MPI_INT8_T;
+  if constexpr (sizeof(ssize_t) == 2) return MPI_INT16_T;
+  if constexpr (sizeof(ssize_t) == 4) return MPI_INT32_T;
+  if constexpr (sizeof(ssize_t) == 8) return MPI_INT64_T;
 }
 
 template <typename Scalar>
