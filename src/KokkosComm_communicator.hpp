@@ -98,23 +98,103 @@ namespace KokkosComm {
 
 
     template< typename T, class... ARGS >
-    void sendrecv( Kokkos::View< T const*, ARGS... > send_view, Kokkos::View< T*, ARGS... > recv_view, int rank, int tag = 0 ) const {
-      MPI_Sendrecv( send_view.data(), send_view.size(), mpi_type<T>(), rank, tag, _raw_comm,
-                    recv_view.data(), recv_view.size(), mpi_type<T>(), rank, tag, _raw_comm, MPI_STATUS_IGNORE );
+    KokkosComm::Request irecv( Kokkos::View< T*, ARGS... > recv_view, int src_rank, int tag = 0 ) const {
+      MPI_Request req;
+      MPI_Irecv( recv_view.data(), recv_view.size(), mpi_type<T>(), src_rank, tag, _raw_comm, &req );
+      return { req };
     }
   };
 
 
-  // Abstraction layer for handling complex communication patterns with async semantics
-  template< typename T >
-  concept CommScheme = requires ( T cs, Communicator comm ){
-    cs = T{ comm };
-    cs.launch();
-    cs.wait();
+  // A dynamic scheme similar to what is currently implemented, with packing and unpacking on the fly
+  class TypeErasedScheme
+  {
+   private:
+    struct ViewConcept {
+      virtual ~ViewConcept() = 0;
+    };
+
+    template< typename View >
+    struct ViewModel : public ViewConcept {
+      View _view;
+    };
+    
+    struct SendRecord {
+      Request request;
+      std::unique_ptr<ViewConcept> view;
+    };
+
+    struct RecvRecord {
+      Request request;
+      std::unique_ptr<ViewConcept> view;
+      std::optional< std::unique_ptr<ViewConcept> > unpack_view;
+    };
+
+    std::shared_ptr< std::vector<SendRecord> > _send_records;
+    std::shared_ptr< std::vector<RecvRecord> > _recv_records;
+    Communicator _comm;
+
+   public:
+    template< typename ExecSpace, typename View >
+    void isend( ExecSpace space, View view, int dest_rank, int tag = 0 ){
+      using T = typename View::value_type;
+      using ViewTraits = KokkosComm::Traits<View>;
+
+      if ( KokkosComm::PackTraits<View>::needs_pack(view) ) {
+        using Packer  = typename KokkosComm::PackTraits<View>::packer_type;
+        using MpiArgs = typename Packer::args_type;
+
+        MpiArgs args = Packer::pack(space, view);
+        space.fence();
+        auto req = comm.isend( KokkosComm::Traits<View>::data_handle(args.view), args.count, args.datatype, dest_rank, tag );
+        _send_records->push_back({ req, std::make_unique< ViewModel<decltype(args.view)> >(args.view) });
+      } 
+      else {
+        auto req = comm.isend( ViewTraits::data_handle(view), ViewTraits::span(view), mpi_type<T>(), dest_rank, tag );
+        _send_records->push_back({ req, std::make_unique< ViewModel<View> >(view) });
+      }
+    }
+
+    template< typename ExecSpace, typename View >
+    void irecv( ExecSpace space, View view, int src_rank, int tag = 0 ){
+      using T = typename View::value_type;
+      using ViewTraits = KokkosComm::Traits<View>;
+
+      if ( KokkosComm::PackTraits<View>::needs_pack(view) ) {
+        using Packer  = typename KokkosComm::PackTraits<View>::packer_type;
+        using MpiArgs = typename Packer::args_type;
+
+        auto args = Packer::allocate_packed_for( space, "", view );
+        auto req = comm.irecv( KokkosComm::Traits<View>::data_handle(args.view), args.count, args.datatype, src_rank, tag );
+        _recv_records->push_back({ req, std::make_unique< ViewModel<decltype(args.view)> >(args.view), std::make_unique< ViewModel<View> >(view) });
+      } 
+      else {
+        auto req = comm.irecv( ViewTraits::data_handle(view), ViewTraits::span(view), mpi_type<T>(), src_rank, tag );
+        _recv_records->push_back({ req, std::make_unique< ViewModel<View> >(view), std::nullopt });
+      }
+    }
+
+    void wait(){
+      while( _recv_records->size() > 0 ){
+        _recv_records->back().request.wait(); // it looks like more TE is needed to make this work...
+        // if ( _recv_records->back().unpack_view ){
+        //   Packer::unpack_into( space, _recv_records->back().unpack_view, _recv_records->back().view );
+        //   space.fence();
+        // }
+        _recv_records->pop_back();
+      }
+      while( _send_records->size() > 0 ){
+        _send_records->back().request.wait();
+        _send_records->pop_back();
+      }
+    }
   };
 
-  // Example of a simple CommScheme: gathers inputs with a callback fcn into a single send buffer,
-  // then sends and receives asynchronously, and directly exposes the values from the receive buffer
+
+
+  // Another example: a simple static communication scheme which gathers inputs with a callback fcn into 
+  // a single send buffer, then sends and receives asynchronously, and directly exposes the values from 
+  // the receive buffer to minimize allocations and copies
   template< typename T, typename ExecSpace >
   class BufferedScheme
   {
@@ -167,6 +247,4 @@ namespace KokkosComm {
 
     T operator()( int src, int idx ) const { return _recv_buffer( _recv_offsets( src ) + idx ); }
   };
-
-  static_assert( CommScheme< BufferedScheme > );
 }
