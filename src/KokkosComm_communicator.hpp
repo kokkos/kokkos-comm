@@ -5,6 +5,7 @@
 #include "KokkosComm_concepts.hpp"
 
 namespace KokkosComm {
+  // Basic encapsultation type for MPI_Request (prevents implicit conversions + more user-friendly API)
   class Request {
    private:
     MPI_Request _raw_req;
@@ -17,6 +18,7 @@ namespace KokkosComm {
 		void free(){ MPI_Request_free( &_raw_req ); }
   };
 
+  // Simple encapsultation type for MPI_Comm (same as above)
   class Communicator
   {
    private:
@@ -102,6 +104,8 @@ namespace KokkosComm {
     }
   };
 
+
+  // Abstraction layer for handling complex communication patterns with async semantics
   template< typename T >
   concept CommScheme = requires ( T cs, Communicator comm ){
     cs = T{ comm };
@@ -109,7 +113,9 @@ namespace KokkosComm {
     cs.wait();
   };
 
-  template< typename T >
+  // Example of a simple CommScheme: gathers inputs with a callback fcn into a single send buffer,
+  // then sends and receives asynchronously, and directly exposes the values from the receive buffer
+  template< typename T, typename ExecSpace >
   class BufferedScheme
   {
    private:
@@ -118,51 +124,49 @@ namespace KokkosComm {
 
     Communicator _comm;
 
-    std::vector< int > _src_ranks;
-    std::vector< RecvView > _recv_views;
-    bool _recv_updated;
-   
+    // Send config
     std::vector< int > _dest_ranks;
-    std::vector< SendView > _send_views;
-    bool _send_updated;
- 
-    Kokkos::View< T* > _recv_buffer;
+    std::vector< int > _send_offsets;
     Kokkos::View< T* > _send_buffer;
+
+    // Recv config
+    std::vector< int > _src_ranks;
+    std::vector< int > _recv_offsets;
+    Kokkos::View< T* > _recv_buffer;
  
     std::vector< Request > _recv_requests;
-    std::future< void > _wait_handle;
 
    public:
-    void launch(){
-      _wait_handle = std::async( std::launch::async, [&]{
-        if ( _recv_updated )
-          Kokkos::resize( _recv_buffer, std::accumulate( ... ) );
-        
-        int offset = 0;
-        for ( auto& [ src, view, req ] : std::ranges::views::zip( _src_ranks, _recv_views, _recv_requests ) ){
-          req = comm.irecv( Kokkos::subview( _recv_buffer, Kokkos::pair{ offset, offset+view.size } ), src );
-          offset += view.size();
+    template< typename Callable >
+    void launch( Callable pack_fcn ){
+      int offset = 0;
+      Kokkos::parallel_for(
+        "KokkosComm::BufferedScheme::launch"
+        Kokkos::RangePolicy<ExecSpace>{ 0, _dest_ranks.size() },
+          KOKKOS_LAMBDA( int dest ){
+          for ( int i = _send_offsets(dest); i < _send_offsets(dest+1); ++i ){
+            _send_buffer(i) = pack_fcn(dest, i-_send_offsets(dest));
+          }
         }
+      );
+      
+      offset = 0;
+      for ( auto& [ src, view, req ] : std::ranges::views::zip( _src_ranks, _recv_views, _recv_requests ) ){
+        req = comm.irecv( Kokkos::subview( _recv_buffer, Kokkos::pair{ offset, offset+view.size } ), src );
+        offset += view.size();
+      }
 
-
-        if ( _send_updated )
-          Kokkos::resize( _send_buffer, std::accumulate( ... ) );
-
-        // pack
-
-        offset = 0;
-        for ( auto& [ dest, view ] : std::ranges::views::zip( _dest_ranks, _send_views ) ){
-          comm.isend( Kokkos::subview( _send_buffer, Kokkos::pair{ offset, offset+view.size } ), dest ).free();
-          offset += view.size();
-        }
-
-
-        MPI_Waitall( _recv_requests.size(), _recv_requests.data(), MPI_STATUSES_IGNORE ); 
-        
-        // unpack
-      });
+      offset = 0;
+      for ( auto& [ dest, view ] : std::ranges::views::zip( _dest_ranks, _send_views ) ){
+        comm.isend( Kokkos::subview( _send_buffer, Kokkos::pair{ offset, offset+view.size } ), dest ).free();
+        offset += view.size();
+      }
     }
 
-    void wait(){ _wait_handle.wait(); }
+    void wait(){ MPI_Waitall( _recv_requests.size(), _recv_requests.data(), MPI_STATUSES_IGNORE ); }
+
+    T operator()( int src, int idx ) const { return _recv_buffer( _recv_offsets( src ) + idx ); }
   };
+
+  static_assert( CommScheme< BufferedScheme > );
 }
