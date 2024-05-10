@@ -30,8 +30,7 @@ namespace KokkosComm::Impl {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView, typename MpiArgs>
 struct IrecvUnpacker {
-  IrecvUnpacker(const ExecSpace &space, RecvView &rv, MpiArgs &args)
-      : space_(space), rv_(rv), args_(args) {}
+  IrecvUnpacker(const ExecSpace &space, RecvView &rv, MpiArgs &args) : space_(space), rv_(rv), args_(args) {}
 
   void operator()() {
     Kokkos::Tools::pushRegion("KokkosComm::Impl::IrecvUnpacker::operator()");
@@ -45,8 +44,7 @@ struct IrecvUnpacker {
 };
 
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-std::shared_ptr<Req> irecv(const ExecSpace &space, RecvView &rv, int src,
-                           int tag, MPI_Comm comm) {
+std::shared_ptr<Req> irecv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::irecv");
 
   using KCT  = KokkosComm::Traits<RecvView>;
@@ -60,13 +58,11 @@ std::shared_ptr<Req> irecv(const ExecSpace &space, RecvView &rv, int src,
 
     Args args = Packer::allocate_packed_for(space, "packed", rv);
     space.fence();
-    MPI_Irecv(KCT::data_handle(args.view), args.count, args.datatype, src, tag,
-              comm, &req->mpi_req());
+    MPI_Irecv(KCT::data_handle(args.view), args.count, args.datatype, src, tag, comm, &req->mpi_req());
     req->call_and_drop_at_wait(IrecvUnpacker{space, rv, args});
   } else {
     using RecvScalar = typename RecvView::value_type;
-    MPI_Irecv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<RecvScalar>, src,
-              tag, comm, &req->mpi_req());
+    MPI_Irecv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<RecvScalar>, src, tag, comm, &req->mpi_req());
     req->keep_until_wait(rv);
   }
   return req;

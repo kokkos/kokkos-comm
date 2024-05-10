@@ -42,7 +42,5 @@ struct ViewBuilder<T, 2> {
     return Kokkos::subview(v, Kokkos::ALL, Kokkos::ALL, 1);
   }
 
-  static auto view(contig, int e0, int e1) {
-    return Kokkos::View<T**>("", e0, e1);
-  }
+  static auto view(contig, int e0, int e1) { return Kokkos::View<T**>("", e0, e1); }
 };

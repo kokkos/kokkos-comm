@@ -29,8 +29,7 @@ class IsendIrecv : public testing::Test {
 };
 
 using ScalarTypes =
-    ::testing::Types<float, double, Kokkos::complex<float>,
-                     Kokkos::complex<double>, int, unsigned, int64_t, size_t>;
+    ::testing::Types<float, double, Kokkos::complex<float>, Kokkos::complex<double>, int, unsigned, int64_t, size_t>;
 TYPED_TEST_SUITE(IsendIrecv, ScalarTypes);
 
 template <KokkosComm::KokkosView View1D>
@@ -49,19 +48,15 @@ void test_1d(const View1D &a) {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a,
-                                            dst, 0, MPI_COMM_WORLD);
+    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
     req.wait();
   } else if (1 == rank) {
     int src             = 0;
-    KokkosComm::Req req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a,
-                                            src, 0, MPI_COMM_WORLD);
+    KokkosComm::Req req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
     req.wait();
     int errs;
     Kokkos::parallel_reduce(
-        a.extent(0),
-        KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); },
-        errs);
+        a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
     ASSERT_EQ(errs, 0);
   }
 }
@@ -85,21 +80,15 @@ void test_2d(const View2D &a) {
     int dst = 1;
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(int i, int j) { a(i, j) = i * a.extent(0) + j; });
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a,
-                                            dst, 0, MPI_COMM_WORLD);
+    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
     req.wait();
   } else if (1 == rank) {
     int src             = 0;
-    KokkosComm::Req req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a,
-                                            src, 0, MPI_COMM_WORLD);
+    KokkosComm::Req req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
     req.wait();
     int errs;
     Kokkos::parallel_reduce(
-        policy,
-        KOKKOS_LAMBDA(int i, int j, int &lsum) {
-          lsum += a(i, j) != Scalar(i * a.extent(0) + j);
-        },
-        errs);
+        policy, KOKKOS_LAMBDA(int i, int j, int &lsum) { lsum += a(i, j) != Scalar(i * a.extent(0) + j); }, errs);
     ASSERT_EQ(errs, 0);
   }
 }
@@ -110,20 +99,17 @@ TYPED_TEST(IsendIrecv, 1D_contig) {
 }
 
 TYPED_TEST(IsendIrecv, 1D_noncontig) {
-  auto a =
-      ViewBuilder<typename TestFixture::Scalar, 1>::view(noncontig{}, 1013);
+  auto a = ViewBuilder<typename TestFixture::Scalar, 1>::view(noncontig{}, 1013);
   test_1d(a);
 }
 
 TYPED_TEST(IsendIrecv, 2D_contig) {
-  auto a =
-      ViewBuilder<typename TestFixture::Scalar, 2>::view(contig{}, 137, 17);
+  auto a = ViewBuilder<typename TestFixture::Scalar, 2>::view(contig{}, 137, 17);
   test_2d(a);
 }
 
 TYPED_TEST(IsendIrecv, 2D_noncontig) {
-  auto a =
-      ViewBuilder<typename TestFixture::Scalar, 2>::view(noncontig{}, 137, 17);
+  auto a = ViewBuilder<typename TestFixture::Scalar, 2>::view(noncontig{}, 137, 17);
   test_2d(a);
 }
 

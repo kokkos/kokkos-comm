@@ -34,7 +34,7 @@ namespace KokkosComm {
 
 template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
 Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
-  return Impl::isend<SendMode>(space, sv, dest, tag, comm);
+  return Req(Impl::isend<SendMode>(space, sv, dest, tag, comm));
 }
 
 template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
@@ -48,8 +48,7 @@ void recv(const ExecSpace &space, RecvView &sv, int src, int tag, MPI_Comm comm)
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-Req irecv(const ExecSpace &space, RecvView &rv, int src, int tag,
-          MPI_Comm comm) {
+Req irecv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
   return Req(Impl::irecv(space, rv, src, tag, comm));
 }
 
