@@ -19,6 +19,7 @@
 #include <Kokkos_Core.hpp>
 
 #include "KokkosComm_concepts.hpp"
+#include "KokkosComm_alltoall.hpp"
 #include "KokkosComm_reduce.hpp"
 
 namespace KokkosComm {
