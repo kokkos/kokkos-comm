@@ -40,17 +40,17 @@ namespace KokkosComm::Impl {
     else if constexpr (std::is_same_v<T, long long>) return MPI_LONG_LONG;
     else if constexpr (std::is_same_v<T, unsigned long>) return MPI_UNSIGNED_LONG_LONG;
   
-    else if constexpr (std::is_same_v<T, std::int8_t> return MPI_INT8_T;
-    else if constexpr (std::is_same_v<T, std::uint8_t> return MPI_UINT8_T;
+    else if constexpr (std::is_same_v<T, std::int8_t>) return MPI_INT8_T;
+    else if constexpr (std::is_same_v<T, std::uint8_t>) return MPI_UINT8_T;
       
-    else if constexpr (std::is_same_v<T, std::int16_t> return MPI_INT16_T;
-    else if constexpr (std::is_same_v<T, std::uint16_t> return MPI_UINT16_T;
+    else if constexpr (std::is_same_v<T, std::int16_t>) return MPI_INT16_T;
+    else if constexpr (std::is_same_v<T, std::uint16_t>) return MPI_UINT16_T;
       
-    else if constexpr (std::is_same_v<T, std::int32_t> return MPI_INT32_T;
-    else if constexpr (std::is_same_v<T, std::uint32_t> return MPI_UINT32_T;
+    else if constexpr (std::is_same_v<T, std::int32_t>) return MPI_INT32_T;
+    else if constexpr (std::is_same_v<T, std::uint32_t>) return MPI_UINT32_T;
       
-    else if constexpr (std::is_same_v<T, std::int64_t> return MPI_INT64_T;
-    else if constexpr (std::is_same_v<T, std::uint64_t> return MPI_UINT64_T;
+    else if constexpr (std::is_same_v<T, std::int64_t>) return MPI_INT64_T;
+    else if constexpr (std::is_same_v<T, std::uint64_t>) return MPI_UINT64_T;
   
     else if constexpr (std::is_same_v<T, std::ssize_t>) {
       if constexpr (sizeof(std::ssize_t) == 1) return MPI_INT8_T;
