@@ -36,6 +36,25 @@ Core
 Point-to-point
 --------------
 
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView RecvView> \
+                  Req KokkosComm::irecv(const ExecSpace &space, const RecvView &rv, int src, int tag, MPI_Comm comm)
+
+    Wrapper for ``MPI_Irecv``.
+    The communication operation will be inserted into ``space``.
+    The caller may safely call this function on data previously produced by operations in ``space`` without first fencing ```space```.
+
+    .. warning::
+        Even if ``space`` is fenced after the call to this function, the communication operation is not complete until the ``wait`` operation on the returned ``Req`` is called.
+
+    :param space: The execution space to operate in
+    :param rv: The view to recveive data into
+    :param src: the source rank
+    :param tag: the MPI tag
+    :param comm: the MPI communicator
+    :tparam RecvView: The type of the received-to Kokkos::View
+    :tparam ExecSpace: A Kokkos execution space to operate in
+    :returns: A KokkosComm::Req representing the asynchronous communication and any lifetime-extended views, associated with the provided execution space instance.
+
 .. cpp:function:: template <KokkosComm::CommMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
                   Req KokkosComm::isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
 
@@ -54,7 +73,7 @@ Point-to-point
     :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a synchronous ``MPI_Issend`` if ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` is defined, otherwise defaults to a standard ``MPI_Isend``.
     :tparam SendView: A Kokkos::View to send
     :tparam ExecSpace: A Kokkos execution space to operate in
-    :returns: A KokkosComm::Req representing the asynchronous communication and any lifetime-extended views.
+    :returns: A KokkosComm::Req representing the asynchronous communication and any lifetime-extended views, associated with the provided execution space instance.
 
 .. cpp:function:: template <KokkosComm::CommMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
                   void KokkosComm::send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
