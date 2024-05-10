@@ -21,131 +21,61 @@
 #include <Kokkos_Core.hpp>
 
 namespace KokkosComm::Impl {
-template <typename Scalar>
-MPI_Datatype mpi_type() {
-  static_assert(std::is_void_v<Scalar>, "mpi_type not implemented");
-  return MPI_CHAR;  // unreachable
-}
-
-template <>
-inline MPI_Datatype mpi_type<char>() {
-  return MPI_CHAR;
-}
-template <>
-inline MPI_Datatype mpi_type<unsigned char>() {
-  return MPI_UNSIGNED_CHAR;
-}
-template <>
-inline MPI_Datatype mpi_type<std::byte>() {
-  return MPI_BYTE;
-}
-
-template <>
-inline MPI_Datatype mpi_type<short>() {
-  return MPI_SHORT;
-}
-template <>
-inline MPI_Datatype mpi_type<int>() {
-  return MPI_INT;
-}
-template <>
-inline MPI_Datatype mpi_type<long int>() {
-  return MPI_LONG;
-}
-template <>
-inline MPI_Datatype mpi_type<long long>() {
-  return MPI_LONG_LONG;
-}
-
-template <>
-inline MPI_Datatype mpi_type<unsigned short>() {
-  return MPI_UNSIGNED_SHORT;
-}
-template <>
-inline MPI_Datatype mpi_type<unsigned int>() {
-  return MPI_UNSIGNED;
-}
-template <>
-inline MPI_Datatype mpi_type<unsigned long>() {
-  return MPI_UNSIGNED_LONG;
-}
-template <>
-inline MPI_Datatype mpi_type<unsigned long long>() {
-  return MPI_UNSIGNED_LONG_LONG;
-}
-
-template <>
-inline MPI_Datatype mpi_type<float>() {
-  return MPI_FLOAT;
-}
-template <>
-inline MPI_Datatype mpi_type<double>() {
-  return MPI_DOUBLE;
-}
-template <>
-inline MPI_Datatype mpi_type<long double>() {
-  return MPI_LONG_DOUBLE;
-}
-
-template <>
-inline MPI_Datatype mpi_type<Kokkos::complex<float>>() {
-  return MPI_COMPLEX;
-}
-template <>
-inline MPI_Datatype mpi_type<Kokkos::complex<double>>() {
-  return MPI_DOUBLE_COMPLEX;
-}
-
-// template <>
-// inline MPI_Datatype mpi_type<int8_t>() {
-//   return MPI_INT8_T;
-// }
-// template <>
-// inline MPI_Datatype mpi_type<int16_t>() {
-//   return MPI_INT16_T;
-// }
-// template <>
-// inline MPI_Datatype mpi_type<int32_t>() {
-//   return MPI_INT32_T;
-// }
-// template <>
-// inline MPI_Datatype mpi_type<int64_t>() {
-//   return MPI_INT64_T;
-// }
-
-// template <>
-// inline MPI_Datatype mpi_type<uint8_t>() {
-//   return MPI_UINT8_T;
-// }
-// template <>
-// inline MPI_Datatype mpi_type<uint16_t>() {
-//   return MPI_UINT16_T;
-// }
-// template <>
-// inline MPI_Datatype mpi_type<uint32_t>() {
-//   return MPI_UINT32_T;
-// }
-// template <>
-// inline MPI_Datatype mpi_type<uint64_t>() {
-//   return MPI_UINT64_T;
-// }
-
-template <>
-inline MPI_Datatype mpi_type<size_t>() {
-  if constexpr (sizeof(size_t) == 1) return MPI_UINT8_T;
-  if constexpr (sizeof(size_t) == 2) return MPI_UINT16_T;
-  if constexpr (sizeof(size_t) == 4) return MPI_UINT32_T;
-  if constexpr (sizeof(size_t) == 8) return MPI_UINT64_T;
-}
-template <>
-inline MPI_Datatype mpi_type<ssize_t>() {
-  if constexpr (sizeof(ssize_t) == 1) return MPI_INT8_T;
-  if constexpr (sizeof(ssize_t) == 2) return MPI_INT16_T;
-  if constexpr (sizeof(ssize_t) == 4) return MPI_INT32_T;
-  if constexpr (sizeof(ssize_t) == 8) return MPI_INT64_T;
-}
-
-template <typename Scalar>
-inline MPI_Datatype mpi_type_v = mpi_type<Scalar>();
-
+  template <typename T>
+  MPI_Datatype mpi_type() {
+    if constexpr (std::is_same_v<T, std::byte>) return MPI_BYTE;
+    
+    else if constexpr (std::is_same_v<T, char>) return MPI_CHAR;
+    else if constexpr (std::is_same_v<T, unsigned char>) return MPI_UNSIGNED_CHAR;
+  
+    else if constexpr (std::is_same_v<T, short>) return MPI_SHORT;
+    else if constexpr (std::is_same_v<T, unsigned short>) return MPI_UNSIGNED_SHORT;
+  
+    else if constexpr (std::is_same_v<T, int>) return MPI_INT;
+    else if constexpr (std::is_same_v<T, unsigned>) return MPI_UNSIGNED;
+  
+    else if constexpr (std::is_same_v<T, long>) return MPI_LONG;
+    else if constexpr (std::is_same_v<T, unsigned long>) return MPI_UNSIGNED_LONG;
+  
+    else if constexpr (std::is_same_v<T, long long>) return MPI_LONG_LONG;
+    else if constexpr (std::is_same_v<T, unsigned long>) return MPI_UNSIGNED_LONG_LONG;
+  
+    else if constexpr (std::is_same_v<T, std::int8_t> return MPI_INT8_T;
+    else if constexpr (std::is_same_v<T, std::uint8_t> return MPI_UINT8_T;
+      
+    else if constexpr (std::is_same_v<T, std::int16_t> return MPI_INT16_T;
+    else if constexpr (std::is_same_v<T, std::uint16_t> return MPI_UINT16_T;
+      
+    else if constexpr (std::is_same_v<T, std::int32_t> return MPI_INT32_T;
+    else if constexpr (std::is_same_v<T, std::uint32_t> return MPI_UINT32_T;
+      
+    else if constexpr (std::is_same_v<T, std::int64_t> return MPI_INT64_T;
+    else if constexpr (std::is_same_v<T, std::uint64_t> return MPI_UINT64_T;
+  
+    else if constexpr (std::is_same_v<T, std::ssize_t>) {
+      if constexpr (sizeof(std::ssize_t) == 1) return MPI_INT8_T;
+      if constexpr (sizeof(std::ssize_t) == 2) return MPI_INT16_T;
+      if constexpr (sizeof(std::ssize_t) == 4) return MPI_INT32_T;
+      if constexpr (sizeof(std::ssize_t) == 8) return MPI_INT64_T;
+    }
+    else if constexpr (std::is_same_v<T, std::size_t>) {
+      if constexpr (sizeof(std::size_t) == 1) return MPI_UINT8_T;
+      if constexpr (sizeof(std::size_t) == 2) return MPI_UINT16_T;
+      if constexpr (sizeof(std::size_t) == 4) return MPI_UINT32_T;
+      if constexpr (sizeof(std::size_t) == 8) return MPI_UINT64_T;
+    }
+    
+    else if constexpr (std::is_same_v<T, float>) return MPI_FLOAT;
+    else if constexpr (std::is_same_v<T, double>) return MPI_DOUBLE;
+    else if constexpr (std::is_same_v<T, long double>) return MPI_LONG_DOUBLE;
+  
+    else if constexpr (std::is_same_v<T, Kokkos::complex<float>>) return MPI_COMPLEX;
+    else if constexpr (std::is_same_v<T, Kokkos::complex<double>>) return MPI_DOUBLE_COMPLEX;
+    
+    static_assert(std::is_void_v<T>, "mpi_type not implemented");
+    return MPI_CHAR;  // unreachable
+  }
+  
+  template <typename Scalar>
+  inline MPI_Datatype mpi_type_v = mpi_type<Scalar>();
 };  // namespace KokkosComm::Impl
