@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <optional>
+#include <memory>
 #include <Kokkos_Core.hpp>
 #include "KokkosComm_concepts.hpp"
 
@@ -15,7 +17,7 @@ namespace KokkosComm {
     operator MPI_Request() const { return _raw_req; }
 
     void wait(){ MPI_Wait( &_raw_req, MPI_STATUS_IGNORE ); }
-		void free(){ MPI_Request_free( &_raw_req ); }
+    void free(){ MPI_Request_free( &_raw_req ); }
   };
 
   // Simple encapsultation type for MPI_Comm (same as above)
@@ -23,6 +25,8 @@ namespace KokkosComm {
   {
    private:
     MPI_Comm _raw_comm = MPI_COMM_WORLD;
+    bool _blocking_semantics = false;
+    CommMode _default_mode = CommMode::Default;
 
    public:
     Communicator(MPI_Comm mpi_communicator): _raw_comm{ mpi_communicator } {}
@@ -43,65 +47,62 @@ namespace KokkosComm {
     void barrier() const { MPI_Barrier( _raw_comm ); }
 
     template< typename T, class... ARGS >
-    void send( Kokkos::View< T const*, ARGS... > send_view, int dest_rank, int tag = 0 ) const {
-      switch ( mode ){
-        case CommMode::Standard:
-          MPI_Send( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm );
-          break;
-        case CommMode::Ready:
-          MPI_Rsend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm );
-          break;
-        case CommMode::Synchronous:
-          MPI_Ssend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm );
-          break;
-        case CommMode::Default:
-          #ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
-          MPI_Ssend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm );
-          #else
-          MPI_Send( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm );
-          #endif
-        default:
-          throw std::runtime_error{ "Unknown communication mode" };
+    std::optional<Request> send( Kokkos::View< T const*, ARGS... > send_view, int dest_rank, int tag = 0 ) const {
+      if( _blocking_semantics ){
+        switch ( mode ){
+          case CommMode::Standard:
+            MPI_Send( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm );
+	    return std::nullopt;
+          case CommMode::Ready:
+            MPI_Rsend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm );
+	    return std::nullopt;
+          case CommMode::Synchronous:
+            MPI_Ssend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm );
+	    return std::nullopt;
+          case CommMode::Default:
+            #ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
+            MPI_Ssend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm );
+            #else
+            MPI_Send( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm );
+            #endif
+	    return std::nullopt;
+        }
       }
-    }
-
-    template< typename T, class... ARGS >
-    KokkosComm::Request isend( Kokkos::View< T const*, ARGS... > const& send_view, int dest_rank, int tag = 0, CommMode mode = CommMode::Default ){
-      MPI_Request req;
-      switch ( mode ){
-        case CommMode::Standard:
-          MPI_Isend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm, &req );
-          break;
-        case CommMode::Ready:
-          MPI_Irsend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm, &req );
-          break;
-        case CommMode::Synchronous:
-          MPI_Issend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm, &req);
-          break;
-        case CommMode::Default:
-          #ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
-          MPI_Issend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm, &req );
-          #else
-          MPI_Isend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm, &req );
-          #endif
-        default:
-          throw std::runtime_error{ "Unknown communication mode" };
+      else {
+	MPI_Request req;
+        switch ( mode ){
+          case CommMode::Standard:
+            MPI_Isend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm, &req ); 
+	    return { req };
+          case CommMode::Ready:
+            MPI_Irsend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm, &req ); 
+	    return { req };
+          case CommMode::Synchronous:
+            MPI_Issend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm, &req );
+	    return { req };
+          case CommMode::Default:
+            #ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
+            MPI_Issend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm, &req );
+            #else
+            MPI_Isend( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm, &req ); 
+            #endif
+	    return { req };
+        }
       }
-      return KokkosComm::Request{ req };
+      throw std::runtime_error{ "Unknown communication mode" };
     }
 
 
     template< typename T, class... ARGS >
-    void recv( Kokkos::View< T*, ARGS... > recv_view, int src_rank, int tag = 0 ) const {
-      MPI_Recv( recv_view.data(), recv_view.size(), mpi_type<T>(), src_rank, tag, _raw_comm, MPI_STATUS_IGNORE );
-    }
-
-
-    template< typename T, class... ARGS >
-    KokkosComm::Request irecv( Kokkos::View< T*, ARGS... > recv_view, int src_rank, int tag = 0 ) const {
-      MPI_Request req;
-      MPI_Irecv( recv_view.data(), recv_view.size(), mpi_type<T>(), src_rank, tag, _raw_comm, &req );
-      return { req };
+    std::optional<Request> recv( Kokkos::View< T*, ARGS... > recv_view, int src_rank, int tag = 0 ) const {
+      if( _blocking_semantics ){
+        MPI_Recv( recv_view.data(), recv_view.size(), mpi_type<T>(), src_rank, tag, _raw_comm, MPI_STATUS_IGNORE );
+	return std::nullopt;
+      else {
+        MPI_Request req;
+        MPI_Irecv( recv_view.data(), recv_view.size(), mpi_type<T>(), src_rank, tag, _raw_comm, &req );
+        return { req };
+      }
     }
   };
 
@@ -136,7 +137,7 @@ namespace KokkosComm {
 
    public:
     template< typename ExecSpace, typename View >
-    void isend( ExecSpace space, View view, int dest_rank, int tag = 0 ){
+    void send( ExecSpace space, View view, int dest_rank, int tag = 0 ){
       using T = typename View::value_type;
       using ViewTraits = KokkosComm::Traits<View>;
 
@@ -146,17 +147,17 @@ namespace KokkosComm {
 
         MpiArgs args = Packer::pack(space, view);
         space.fence();
-        auto req = comm.isend( KokkosComm::Traits<View>::data_handle(args.view), args.count, args.datatype, dest_rank, tag );
+        auto req = comm.send( KokkosComm::Traits<View>::data_handle(args.view), args.count, args.datatype, dest_rank, tag );
         _send_records->push_back({ req, std::make_unique< ViewModel<decltype(args.view)> >(args.view) });
       } 
       else {
-        auto req = comm.isend( ViewTraits::data_handle(view), ViewTraits::span(view), mpi_type<T>(), dest_rank, tag );
+        auto req = comm.send( ViewTraits::data_handle(view), ViewTraits::span(view), mpi_type<T>(), dest_rank, tag );
         _send_records->push_back({ req, std::make_unique< ViewModel<View> >(view) });
       }
     }
 
     template< typename ExecSpace, typename View >
-    void irecv( ExecSpace space, View view, int src_rank, int tag = 0 ){
+    void recv( ExecSpace space, View view, int src_rank, int tag = 0 ){
       using T = typename View::value_type;
       using ViewTraits = KokkosComm::Traits<View>;
 
@@ -165,11 +166,11 @@ namespace KokkosComm {
         using MpiArgs = typename Packer::args_type;
 
         auto args = Packer::allocate_packed_for( space, "", view );
-        auto req = comm.irecv( KokkosComm::Traits<View>::data_handle(args.view), args.count, args.datatype, src_rank, tag );
+        auto req = comm.recv( KokkosComm::Traits<View>::data_handle(args.view), args.count, args.datatype, src_rank, tag );
         _recv_records->push_back({ req, std::make_unique< ViewModel<decltype(args.view)> >(args.view), std::make_unique< ViewModel<View> >(view) });
       } 
       else {
-        auto req = comm.irecv( ViewTraits::data_handle(view), ViewTraits::span(view), mpi_type<T>(), src_rank, tag );
+        auto req = comm.recv( ViewTraits::data_handle(view), ViewTraits::span(view), mpi_type<T>(), src_rank, tag );
         _recv_records->push_back({ req, std::make_unique< ViewModel<View> >(view), std::nullopt });
       }
     }
@@ -232,13 +233,13 @@ namespace KokkosComm {
       
       offset = 0;
       for ( auto& [ src, view, req ] : std::ranges::views::zip( _src_ranks, _recv_views, _recv_requests ) ){
-        req = comm.irecv( Kokkos::subview( _recv_buffer, Kokkos::pair{ offset, offset+view.size } ), src );
+        req = comm.recv( Kokkos::subview( _recv_buffer, Kokkos::pair{ offset, offset+view.size } ), src );
         offset += view.size();
       }
 
       offset = 0;
       for ( auto& [ dest, view ] : std::ranges::views::zip( _dest_ranks, _send_views ) ){
-        comm.isend( Kokkos::subview( _send_buffer, Kokkos::pair{ offset, offset+view.size } ), dest ).free();
+        comm.send( Kokkos::subview( _send_buffer, Kokkos::pair{ offset, offset+view.size } ), dest ).free();
         offset += view.size();
       }
     }
