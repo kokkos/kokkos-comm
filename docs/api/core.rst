@@ -130,7 +130,9 @@ Related Types
 
 .. cpp:class:: KokkosComm::Req
 
-    A communication handle representing an asychronous communication. The communication is not complete until ``wait`` is called.
+    A communication handle representing an asychronous communication and an associated Kokkos execution space instance. The handle is scoped to the space instance used in the communication call that produced it. 
+
+
 
     .. cpp:function:: MPI_Request &KokkosComm::Req::mpi_req()
 
@@ -138,5 +140,17 @@ Related Types
 
     .. cpp:function:: void KokkosComm::Req::wait()
 
-        Call MPI_Wait on the held MPI_Request and complete any internal communication-related operations.
+        Require that the communication be completed before any further work can be exected in the associated execution space instance. May or may not fence. Consider the following example.
 
+        .. code-block:: c++
+          :linenos:
+
+          using KC = KokkosComm;
+          Kokkos::parallel_for(space, ...);
+          auto req = KC::isend(space, ...); // isend 1
+          Kokkos::parallel_for(space, ...); // runs concurrently with isend 1, does not touch send view
+          req.wait();                       // blocks space until isend 1 is complete. May or may not fence.
+          Kokkos::parallel_for(space, ...); // safe to overwrite the send buffer
+          space.fence(); // wait for all to complete
+
+        Here, ``parallel_for`` on line 6 can overwrite the send buffer because ``req.wait()`` means that isend 1 must be done before additional work can be done in ``space``. This MAY be achieved by an internal call to ``space.fence()``, but some other mechanism may be used. If the host thread wants to be sure that the communication is done, it must separately call ``space.fence()``.

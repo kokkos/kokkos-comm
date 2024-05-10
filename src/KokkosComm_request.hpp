@@ -27,6 +27,9 @@ class Req {
   Req() : impl_(std::make_shared<Impl::Req>()) {}
   Req(const std::shared_ptr<Impl::Req> &impl) : impl_(impl) {}
   MPI_Request &mpi_req() { return impl_->mpi_req(); }
+
+  // The communication must be done before the associated Kokkos execution space
+  // can do any further work. The host may or may not be fenced.
   void wait() { impl_->wait(); }
 
  private:

@@ -71,7 +71,10 @@ class Req {
 
   MPI_Request &mpi_req() { return req_; }
 
-  void wait_async() {
+  // The communication must be done before the held execution space can do any
+  // further work. For MPI, this is achieved by blocking the host thread and
+  // fencing the execution space.
+  void wait() {
     MPI_Wait(&req_, MPI_STATUS_IGNORE);
     for (auto &c : wait_callbacks_) {
       (*c)();
@@ -80,14 +83,11 @@ class Req {
     // drop the references to anything that was kept alive until wait
     wait_drops_.clear();
     wait_callbacks_.clear();
-  }
 
-  void wait() {
-    wait_async();
-    if (wait_fence_) {
-      wait_fence_->fence();
+    if (exec_space_) {
+      exec_space_->fence();
     }
-    wait_fence_ = nullptr;
+    exec_space_ = nullptr;
   }
 
   // Keep a reference to this view around until wait() is called.
@@ -111,19 +111,17 @@ class Req {
 
   template <typename ExecSpace>
   void fence_at_wait(const ExecSpace &space) {
-    // TODO: only fence once if the same space is provided multiple times
-    if (wait_fence_) {
+    if (exec_space_) {
       Kokkos::abort("Req is already fencing a space!");
     }
-
-    wait_fence_ = std::make_shared<SpaceHolder<ExecSpace>>(space);
+    exec_space_ = std::make_shared<SpaceHolder<ExecSpace>>(space);
   }
 
  private:
   MPI_Request req_;
   std::vector<std::shared_ptr<ViewHolderBase>> wait_drops_;
   std::vector<std::shared_ptr<InvokableHolderBase>> wait_callbacks_;
-  std::shared_ptr<SpaceHolderBase> wait_fence_;
+  std::shared_ptr<SpaceHolderBase> exec_space_;
 };
 
 }  // namespace KokkosComm::Impl

@@ -63,8 +63,6 @@ std::shared_ptr<Req> irecv(const ExecSpace &space, RecvView &rv, int src,
     MPI_Irecv(KCT::data_handle(args.view), args.count, args.datatype, src, tag,
               comm, &req->mpi_req());
     req->call_and_drop_at_wait(IrecvUnpacker{space, rv, args});
-    req->fence_at_wait(space);
-
   } else {
     using RecvScalar = typename RecvView::value_type;
     MPI_Irecv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<RecvScalar>, src,
