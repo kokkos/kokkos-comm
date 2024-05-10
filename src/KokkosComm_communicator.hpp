@@ -25,7 +25,7 @@ namespace KokkosComm {
   {
    private:
     MPI_Comm _raw_comm = MPI_COMM_WORLD;
-    bool _blocking_semantics = false;
+    bool _default_blocking_semantics = false;
     CommMode _default_mode = CommMode::Default;
 
    public:
@@ -47,8 +47,10 @@ namespace KokkosComm {
     void barrier() const { MPI_Barrier( _raw_comm ); }
 
     template< typename T, class... ARGS >
-    std::optional<Request> send( Kokkos::View< T const*, ARGS... > send_view, int dest_rank, int tag = 0 ) const {
-      if( _blocking_semantics ){
+    std::optional<Request> send( Kokkos::View< T const*, ARGS... > send_view, int dest_rank, 
+                                 int tag = 0, bool block = _default_blocking_semantics, CommMode mode = _default_mode ) const 
+    {
+      if( block ){
         switch ( mode ){
           case CommMode::Standard:
             MPI_Send( send_view.data(), send_view.size(), mpi_type<T>(), dest_rank, tag, _raw_comm );
@@ -94,8 +96,10 @@ namespace KokkosComm {
 
 
     template< typename T, class... ARGS >
-    std::optional<Request> recv( Kokkos::View< T*, ARGS... > recv_view, int src_rank, int tag = 0 ) const {
-      if( _blocking_semantics ){
+    std::optional<Request> recv( Kokkos::View< T*, ARGS... > recv_view, int src_rank,
+                                 int tag = 0, bool block = _default_blocking_semantics, CommMode mode = _default_mode ) const 
+    {
+      if( block ){
         MPI_Recv( recv_view.data(), recv_view.size(), mpi_type<T>(), src_rank, tag, _raw_comm, MPI_STATUS_IGNORE );
 	return std::nullopt;
       else {
