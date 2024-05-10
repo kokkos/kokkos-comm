@@ -57,9 +57,12 @@ std::shared_ptr<Req> irecv(const ExecSpace &space, RecvView &rv, int src, int ta
     using Args   = typename Packer::args_type;
 
     Args args = Packer::allocate_packed_for(space, "packed", rv);
-    space.fence();
+    space.fence();  // make sure allocation is done
     MPI_Irecv(KCT::data_handle(args.view), args.count, args.datatype, src, tag, comm, &req->mpi_req());
     req->call_and_drop_at_wait(IrecvUnpacker{space, rv, args});
+    // req.wait() promises that communication is done before any future work put into space after wait can proceed.
+    // For MPI, wait uses MPI_Wait to make sure the communication is done, which blocks the host, thereby preventing
+    // later work from being submitted to space, so no space fence is needed at wait.
   } else {
     using RecvScalar = typename RecvView::value_type;
     MPI_Irecv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<RecvScalar>, src, tag, comm, &req->mpi_req());

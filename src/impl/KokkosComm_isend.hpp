@@ -63,11 +63,11 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest, int 
 
     MpiArgs args = Packer::pack(space, sv);
     space.fence();
-    mpi_isend_fn(KCT::data_handle(args.view), args.count, args.datatype, dest, tag, comm, &req.mpi_req());
-    req.keep_until_wait(args.view);
+    mpi_isend_fn(KCT::data_handle(args.view), args.count, args.datatype, dest, tag, comm, &req->mpi_req());
+    req->keep_until_wait(args.view);
   } else {
     using SendScalar = typename SendView::value_type;
-    mpi_isend_fn(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>, dest, tag, comm, &req.mpi_req());
+    mpi_isend_fn(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>, dest, tag, comm, &req->mpi_req());
     if (KCT::is_reference_counted()) {
       req->keep_until_wait(sv);
     }
