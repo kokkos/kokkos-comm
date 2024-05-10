@@ -1,7 +1,6 @@
 #pragma once
 
-#define KOKKOSCOMM_GCC_VERSION \
-  (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#define KOKKOSCOMM_GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
 #if KOKKOSCOMM_GCC_VERSION >= 11400
 #pragma GCC diagnostic push

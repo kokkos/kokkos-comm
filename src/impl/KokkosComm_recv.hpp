@@ -27,8 +27,7 @@
 
 namespace KokkosComm::Impl {
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-void recv(const ExecSpace &space, RecvView &rv, int src, int tag,
-          MPI_Comm comm) {
+void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
 
   using KCT  = KokkosComm::Traits<RecvView>;
@@ -40,13 +39,11 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag,
 
     Args args = Packer::allocate_packed_for(space, "packed", rv);
     space.fence();
-    MPI_Recv(KCT::data_handle(args.view), args.count, args.datatype, src, tag,
-             comm, MPI_STATUS_IGNORE);
+    MPI_Recv(KCT::data_handle(args.view), args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
     Packer::unpack_into(space, rv, args.view);
   } else {
     using RecvScalar = typename RecvView::value_type;
-    MPI_Recv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<RecvScalar>, src,
-             tag, comm, MPI_STATUS_IGNORE);
+    MPI_Recv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<RecvScalar>, src, tag, comm, MPI_STATUS_IGNORE);
   }
 
   Kokkos::Tools::popRegion();

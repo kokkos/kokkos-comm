@@ -47,8 +47,7 @@ class Req {
 
   void wait() {
     MPI_Wait(&(record_->req_), MPI_STATUS_IGNORE);
-    record_->until_waits_
-        .clear();  // drop any views we're keeping alive until wait()
+    record_->until_waits_.clear();  // drop any views we're keeping alive until wait()
   }
 
   // keep a reference to this view around until wait() is called

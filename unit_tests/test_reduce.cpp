@@ -24,9 +24,7 @@ class Reduce : public testing::Test {
   using Scalar = T;
 };
 
-using ScalarTypes =
-    ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>,
-                     Kokkos::complex<double>>;
+using ScalarTypes = ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>, Kokkos::complex<double>>;
 TYPED_TEST_SUITE(Reduce, ScalarTypes);
 
 /*!
@@ -52,8 +50,7 @@ TYPED_TEST(Reduce, 1D_contig) {
   Kokkos::parallel_for(
       sendv.extent(0), KOKKOS_LAMBDA(const int i) { sendv(i) = rank + i; });
 
-  KokkosComm::reduce(Kokkos::DefaultExecutionSpace(), sendv, recvv, MPI_SUM, 0,
-                     MPI_COMM_WORLD);
+  KokkosComm::reduce(Kokkos::DefaultExecutionSpace(), sendv, recvv, MPI_SUM, 0, MPI_COMM_WORLD);
 
   if (0 == rank) {
     int errs;

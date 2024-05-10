@@ -26,8 +26,7 @@ namespace KokkosComm {
 
 template <typename T>
 struct Traits {
-  static_assert(std::is_void_v<T>,
-                "KokkosComm::Traits not specialized for type");
+  static_assert(std::is_void_v<T>, "KokkosComm::Traits not specialized for type");
 };
 
 /*! \brief This can be specialized to do custom behavior for a particular view*/
@@ -38,11 +37,9 @@ struct Traits<View> {
   static auto data_handle(const View &v) { return v.data(); }
 
   using non_const_packed_view_type =
-      Kokkos::View<typename View::non_const_data_type,
-                   typename View::array_layout, typename View::memory_space>;
+      Kokkos::View<typename View::non_const_data_type, typename View::array_layout, typename View::memory_space>;
   using packed_view_type =
-      Kokkos::View<typename View::data_type, typename View::array_layout,
-                   typename View::memory_space>;
+      Kokkos::View<typename View::data_type, typename View::array_layout, typename View::memory_space>;
 
   static size_t span(const View &v) { return v.span(); }
 
