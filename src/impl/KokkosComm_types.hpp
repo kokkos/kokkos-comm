@@ -97,8 +97,10 @@ MPI_Datatype mpi_type() {
   else if constexpr (std::is_same_v<T, Kokkos::complex<double>>)
     return MPI_DOUBLE_COMPLEX;
 
-  static_assert(std::is_void_v<T>, "mpi_type not implemented");
-  return MPI_CHAR;  // unreachable
+  else {
+    static_assert(std::is_void_v<T>, "mpi_type not implemented");
+    return MPI_CHAR;  // unreachable
+  }
 }
 
 template <typename Scalar>
