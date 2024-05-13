@@ -26,6 +26,9 @@
 #include "KokkosComm_types.hpp"
 
 namespace KokkosComm::Impl {
+
+void barrier(MPI_Comm comm) { MPI_Barrier(comm); }
+
 template <KokkosExecutionSpace ExecSpace>
 void barrier(const ExecSpace &space, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::barrier");
