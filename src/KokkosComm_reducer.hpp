@@ -17,18 +17,17 @@
 #pragma once
 
 #include <Kokkos_Core.hpp>
-
-#include "KokkosComm_concepts.hpp"
-#include "KokkosComm_reduce.hpp"
-#include "KokkosComm_reducer.hpp"
+#include "impl/KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm {
 
-template <KokkosView SendView, KokkosView RecvView,
-          KokkosExecutionSpace ExecSpace>
-void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv,
-            Reducer op, int root, Communicator comm) {
-  return Impl::reduce(space, sv, rv, op, root, comm);
-}
+class Reducer {
+ private:
+  MPI_Op _op;
+
+ public:
+  Reducer(MPI_Op op) : _op{op} {}
+  operator MPI_Op() const { return _op; }
+};
 
 }  // namespace KokkosComm

@@ -27,9 +27,9 @@
 
 namespace KokkosComm::Impl {
 template <KokkosExecutionSpace ExecSpace>
-void barrier(const ExecSpace &space, MPI_Comm comm) {
+void barrier(const ExecSpace &space, KokkosComm::Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::barrier");
-  MPI_Barrier(comm);
+  comm.barrier();
   Kokkos::Tools::popRegion();
 }
 }  // namespace KokkosComm::Impl

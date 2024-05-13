@@ -29,14 +29,8 @@ namespace KokkosComm::Impl {
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView,
           KokkosView RecvView>
 void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv,
-            MPI_Op op, int root, MPI_Comm comm) {
+            MPI_Op op, int root, KokkosComm::Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::reduce");
-
-  const int rank = [=]() -> int {
-    int _r;
-    MPI_Comm_rank(comm, &_r);
-    return _r;
-  }();
 
   using SendPacker = typename KokkosComm::PackTraits<SendView>::packer_type;
   using RecvPacker = typename KokkosComm::PackTraits<RecvView>::packer_type;
@@ -44,29 +38,26 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv,
   if (KokkosComm::PackTraits<SendView>::needs_pack(sv)) {
     auto sendArgs = SendPacker::pack(space, sv);
     space.fence();
-    if ((root == rank) && KokkosComm::PackTraits<RecvView>::needs_unpack(rv)) {
+    if ((root == comm.rank()) &&
+        KokkosComm::PackTraits<RecvView>::needs_unpack(rv)) {
       auto recvArgs = RecvPacker::allocate_packed_for(space, "reduce recv", rv);
       space.fence();
-      MPI_Reduce(sendArgs.view.data(), recvArgs.view.data(), sendArgs.count,
-                 sendArgs.datatype, op, root, comm);
+      comm.reduce(sendArgs.view, recvArgs.view, op, root);
       RecvPacker::unpack_into(space, rv, recvArgs.view);
     } else {
       space.fence();
-      MPI_Reduce(sendArgs.view.data(), rv.data(), sendArgs.count,
-                 sendArgs.datatype, op, root, comm);
+      comm.reduce(sendArgs.view, rv, op, root);
     }
   } else {
-    using SendScalar = typename SendView::value_type;
-    if ((root == rank) && KokkosComm::PackTraits<RecvView>::needs_unpack(rv)) {
+    if ((root == comm.rank()) &&
+        KokkosComm::PackTraits<RecvView>::needs_unpack(rv)) {
       auto recvArgs = RecvPacker::allocate_packed_for(space, "reduce recv", rv);
       space.fence();
-      MPI_Reduce(sv.data(), recvArgs.view.data(), sv.span(),
-                 mpi_type_v<SendScalar>, op, root, comm);
+      comm.reduce(sv, recvArgs.view, op, root);
       RecvPacker::unpack_into(space, rv, recvArgs.view);
     } else {
       space.fence();
-      MPI_Reduce(sv.data(), rv.data(), sv.span(), mpi_type_v<SendScalar>, op,
-                 root, comm);
+      comm.reduce(sv, rv, op, root);
     }
   }
 
