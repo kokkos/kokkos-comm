@@ -26,6 +26,19 @@
 #include "KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm::Impl {
+
+template <KokkosView RecvView>
+void recv(RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *status) {
+  using KCT = KokkosComm::Traits<RecvView>;
+
+  if (typename KCT::is_contiguous(rv)) {
+    using ScalarType = typename RecvView::non_const_value_type;
+    MPI_Recv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<ScalarType>, src, tag, comm, status);
+  } else {
+    throw std::runtime_error("only contiguous views supported for low-level recv");
+  }
+}
+
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
