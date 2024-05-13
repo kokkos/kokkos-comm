@@ -26,6 +26,18 @@
 
 namespace KokkosComm::Impl {
 
+template <KokkosView SendView>
+void send(const SendView &sv, int dest, int tag, MPI_Comm comm) {
+  using KCT = typename KokkosComm::Traits<SendView>;
+
+  if (KCT::is_contiguous(sv)) {
+    using SendScalar = typename SendView::non_const_value_type;
+    MPI_Send(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>, dest, tag, comm);
+  } else {
+    throw std::runtime_error("only contiguous views supported for low-level send");
+  }
+}
+
 template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
