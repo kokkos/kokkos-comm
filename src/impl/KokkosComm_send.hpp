@@ -32,9 +32,8 @@ template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace,
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
           KokkosComm::Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
-
   using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
-
+            
   if (KokkosComm::PackTraits<SendView>::needs_pack(sv)) {
     auto args = Packer::pack(space, sv);
     space.fence();

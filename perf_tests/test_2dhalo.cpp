@@ -23,8 +23,8 @@
 void noop(benchmark::State, MPI_Comm) {}
 
 template <typename Space, typename View>
-void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx,
-               int ny, int rx, int ry, int rs, const View &v) {
+void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, int ny, int rx, int ry, int rs,
+               const View &v) {
   // 2D index of nbrs in minus and plus direction (periodic)
   const int xm1 = (rx + rs - 1) % rs;
   const int ym1 = (ry + rs - 1) % rs;
@@ -34,21 +34,15 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx,
   // convert 2D rank into 1D rank
   auto get_rank = [=](const int x, const int y) -> int { return y * rs + x; };
 
-  auto make_pair = [](int a, int b) -> Kokkos::pair<int, int> {
-    return Kokkos::pair{a, b};
-  };
+  auto make_pair = [](int a, int b) -> Kokkos::pair<int, int> { return Kokkos::pair{a, b}; };
 
   // send/recv subviews
-  auto xp1_s =
-      Kokkos::subview(v, v.extent(0) - 2, make_pair(1, ny + 1), Kokkos::ALL);
-  auto xp1_r =
-      Kokkos::subview(v, v.extent(0) - 1, make_pair(1, ny + 1), Kokkos::ALL);
+  auto xp1_s = Kokkos::subview(v, v.extent(0) - 2, make_pair(1, ny + 1), Kokkos::ALL);
+  auto xp1_r = Kokkos::subview(v, v.extent(0) - 1, make_pair(1, ny + 1), Kokkos::ALL);
   auto xm1_s = Kokkos::subview(v, 1, make_pair(1, ny + 1), Kokkos::ALL);
   auto xm1_r = Kokkos::subview(v, 0, make_pair(1, ny + 1), Kokkos::ALL);
-  auto yp1_s =
-      Kokkos::subview(v, make_pair(1, nx + 1), v.extent(1) - 2, Kokkos::ALL);
-  auto yp1_r =
-      Kokkos::subview(v, make_pair(1, nx + 1), v.extent(1) - 1, Kokkos::ALL);
+  auto yp1_s = Kokkos::subview(v, make_pair(1, nx + 1), v.extent(1) - 2, Kokkos::ALL);
+  auto yp1_r = Kokkos::subview(v, make_pair(1, nx + 1), v.extent(1) - 1, Kokkos::ALL);
   auto ym1_s = Kokkos::subview(v, make_pair(1, nx + 1), 1, Kokkos::ALL);
   auto ym1_r = Kokkos::subview(v, make_pair(1, nx + 1), 0, Kokkos::ALL);
 
@@ -92,9 +86,8 @@ void benchmark_2dhalo(benchmark::State &state) {
     // grid of elements, each with 3 properties, and a radius-1 halo
     grid_type grid("", nx + 2, ny + 2, nprops);
     while (state.KeepRunning()) {
-      do_iteration(state, MPI_COMM_WORLD,
-                   send_recv<Kokkos::DefaultExecutionSpace, grid_type>, space,
-                   nx, ny, rx, ry, rs, grid);
+      do_iteration(state, MPI_COMM_WORLD, send_recv<Kokkos::DefaultExecutionSpace, grid_type>, space, nx, ny, rx, ry,
+                   rs, grid);
     }
   } else {
     while (state.KeepRunning()) {

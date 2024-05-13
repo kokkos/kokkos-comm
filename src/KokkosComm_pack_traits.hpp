@@ -29,8 +29,7 @@ namespace KokkosComm {
 
 template <typename T>
 struct PackTraits {
-  static_assert(std::is_void_v<T>,
-                "KokkosComm::PackTraits not specialized for type");
+  static_assert(std::is_void_v<T>, "KokkosComm::PackTraits not specialized for type");
 };
 
 /*! \brief This can be specialized to do custom behavior for a particular view*/
@@ -38,12 +37,8 @@ template <KokkosView View>
 struct PackTraits<View> {
   using packer_type = Impl::Packer::DeepCopy<View>;
 
-  static bool needs_unpack(const View &v) {
-    return !Traits<View>::is_contiguous(v);
-  }
-  static bool needs_pack(const View &v) {
-    return !Traits<View>::is_contiguous(v);
-  }
+  static bool needs_unpack(const View &v) { return !Traits<View>::is_contiguous(v); }
+  static bool needs_pack(const View &v) { return !Traits<View>::is_contiguous(v); }
 };
 
 }  // namespace KokkosComm
