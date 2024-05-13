@@ -32,6 +32,7 @@ struct Traits {
 /*! \brief This can be specialized to do custom behavior for a particular view*/
 template <KokkosView View>
 struct Traits<View> {
+  // product of extents is span
   static bool is_contiguous(const View &v) { return v.span_is_contiguous(); }
 
   static auto data_handle(const View &v) { return v.data(); }
