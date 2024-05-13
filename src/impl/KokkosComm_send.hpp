@@ -26,16 +26,13 @@
 
 namespace KokkosComm::Impl {
 
-template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace,
-          KokkosView SendView>
-void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
-          MPI_Comm comm) {
+template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
+void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
 
   using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
 
-  auto mpi_send_fn = [](void *mpi_view, int mpi_count,
-                        MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
+  auto mpi_send_fn = [](void *mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
                         MPI_Comm mpi_comm) {
     if constexpr (SendMode == CommMode::Standard) {
       MPI_Send(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);

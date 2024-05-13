@@ -19,7 +19,7 @@ All code shall be formatted by clang-format 8:
 .. code-block:: bash
 
   shopt -s globstar
-  clang-format-8 -i {src,unit_tests,perf_tests}/**/*.[ch]pp
+  clang-format-14 -i {src,unit_tests,perf_tests}/**/*.[ch]pp
 
 
 Behavioral Expectations
