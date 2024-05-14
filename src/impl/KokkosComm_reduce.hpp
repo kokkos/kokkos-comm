@@ -20,6 +20,7 @@
 
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_traits.hpp"
+#include "KokkosComm_communicator.hpp"
 
 // impl
 #include "KokkosComm_include_mpi.hpp"

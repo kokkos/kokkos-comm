@@ -54,7 +54,7 @@ class Req {
 
  public:
   Req() : record_(std::make_shared<Record>()) {}
-  Req(Request request) : record_(std::make_shared<Record>({request, {}})) {}
+  Req(Request request) : Req{} { mpi_req() = request; }
 
   MPI_Request &mpi_req() { return record_->req_; }
 

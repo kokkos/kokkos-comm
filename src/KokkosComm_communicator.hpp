@@ -19,6 +19,8 @@
 #include <Kokkos_Core.hpp>
 #include "KokkosComm_request.hpp"
 #include "KokkosComm_concepts.hpp"
+#include "KokkosComm_comm_mode.hpp"
+#include "KokkosComm_reducer.hpp"
 
 namespace KokkosComm {
 
@@ -50,104 +52,74 @@ class Communicator {
 
   void barrier() const { MPI_Barrier(_raw_comm); }
 
-  template <KokkosView SendView>
-  void send(SendView send_view, int dest_rank, int tag = 0,
-            CommMode mode = _default_mode) const {
+  template <CommMode mode = CommMode::Default, KokkosView SendView>
+  void send(SendView send_view, int dest_rank, int tag = 0) const {
     KOKKOS_ASSERT(send_view.span_is_contiguous());
+    using T = typename SendView::value_type;
 
-    switch (mode) {
-      case CommMode::Standard:
-        MPI_Send(send_view.data(), send_view.size(), mpi_type<T>(), dest_rank,
-                 tag, _raw_comm);
-        break;
-      case CommMode::Ready:
-        MPI_Rsend(send_view.data(), send_view.size(), mpi_type<T>(), dest_rank,
-                  tag, _raw_comm);
-        break;
-      case CommMode::Synchronous:
-        MPI_Ssend(send_view.data(), send_view.size(), mpi_type<T>(), dest_rank,
-                  tag, _raw_comm);
-        break;
-      case CommMode::Default:
+    if constexpr (mode == CommMode::Standard)
+      MPI_Send(send_view.data(), send_view.size(), Impl::mpi_type<T>(), dest_rank, tag, _raw_comm);
+    else if constexpr (mode == CommMode::Ready)
+      MPI_Rsend(send_view.data(), send_view.size(), Impl::mpi_type<T>(), dest_rank, tag, _raw_comm);
+    else if constexpr (mode == CommMode::Synchronous)
+      MPI_Ssend(send_view.data(), send_view.size(), Impl::mpi_type<T>(), dest_rank, tag, _raw_comm);
+    else if constexpr (mode == CommMode::Default)
 #ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
-        MPI_Ssend(send_view.data(), send_view.size(), mpi_type<T>(), dest_rank,
-                  tag, _raw_comm);
+      MPI_Ssend(send_view.data(), send_view.size(), Impl::mpi_type<T>(), dest_rank, tag, _raw_comm);
 #else
-        MPI_Send(send_view.data(), send_view.size(), mpi_type<T>(), dest_rank,
-                 tag, _raw_comm);
+      MPI_Send(send_view.data(), send_view.size(), Impl::mpi_type<T>(), dest_rank, tag, _raw_comm);
 #endif
-        break;
-      default: throw std::runtime_error{"Unknown communication mode"};
-    }
+    else
+      static_assert(std::is_void_v<SendView>, "Unknown communication mode");
   }
 
-  template <KokkosView SendView>
-  KokkosComm::Request isend(SendView send_view, int dest_rank, int tag = 0,
-                            CommMode mode = _default_mode) const {
+  template <CommMode mode = CommMode::Default, KokkosView SendView>
+  KokkosComm::Request isend(SendView send_view, int dest_rank, int tag = 0) const {
     KOKKOS_ASSERT(send_view.span_is_contiguous());
+    using T = typename SendView::value_type;
     MPI_Request req;
 
-    switch (mode) {
-      case CommMode::Standard:
-        MPI_Isend(send_view.data(), send_view.size(), mpi_type<T>(), dest_rank,
-                  tag, _raw_comm, &req);
-        break;
-      case CommMode::Ready:
-        MPI_Irsend(send_view.data(), send_view.size(), mpi_type<T>(), dest_rank,
-                   tag, _raw_comm, &req);
-        break;
-      case CommMode::Synchronous:
-        MPI_Issend(send_view.data(), send_view.size(), mpi_type<T>(), dest_rank,
-                   tag, _raw_comm, &req);
-        break;
-      case CommMode::Default:
+    if constexpr (mode == CommMode::Standard)
+      MPI_Isend(send_view.data(), send_view.size(), Impl::mpi_type<T>(), dest_rank, tag, _raw_comm, &req);
+    else if constexpr (mode == CommMode::Ready)
+      MPI_Irsend(send_view.data(), send_view.size(), Impl::mpi_type<T>(), dest_rank, tag, _raw_comm, &req);
+    else if constexpr (mode == CommMode::Synchronous)
+      MPI_Issend(send_view.data(), send_view.size(), Impl::mpi_type<T>(), dest_rank, tag, _raw_comm, &req);
+    else if constexpr (mode == CommMode::Default)
 #ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
-        MPI_Issend(send_view.data(), send_view.size(), mpi_type<T>(), dest_rank,
-                   tag, _raw_comm, &req);
+      MPI_Issend(send_view.data(), send_view.size(), Impl::mpi_type<T>(), dest_rank, tag, _raw_comm, &req);
 #else
-        MPI_Isend(send_view.data(), send_view.size(), mpi_type<T>(), dest_rank,
-                  tag, _raw_comm, &req);
+      MPI_Isend(send_view.data(), send_view.size(), Impl::mpi_type<T>(), dest_rank, tag, _raw_comm, &req);
 #endif
-        break;
-      default: throw std::runtime_error{"Unknown communication mode"};
-    }
+    else
+      static_assert(std::is_void_v<SendView>, "Unknown communication mode");
 
     return KokkosComm::Request{req};
   }
 
-  template <KokkosView RecvView>
-  void recv(RecvView recv_view, int src_rank, int tag = 0,
-            CommMode mode = _default_mode) const {
+  template <CommMode mode = CommMode::Default, KokkosView RecvView>
+  void recv(RecvView recv_view, int src_rank, int tag = 0) const {
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
-
-    MPI_Recv(recv_view.data(), recv_view.size(),
-             mpi_type<typename RecvView::value_type>(), src_rank, tag,
-             _raw_comm, MPI_STATUS_IGNORE);
+    using T = typename RecvView::value_type;
+    MPI_Recv(recv_view.data(), recv_view.size(), mpi_type<T>(), src_rank, tag, _raw_comm, MPI_STATUS_IGNORE);
   }
 
-  template <KokkosView RecvView>
-  KokkosComm::Request irecv(RecvView recv_view, int src_rank, int tag = 0,
-                            CommMode mode = _default_mode) const {
+  template <CommMode mode = CommMode::Default, KokkosView RecvView>
+  KokkosComm::Request irecv(RecvView recv_view, int src_rank, int tag = 0) const {
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
+    using T = typename RecvView::value_type;
     MPI_Request req;
-
-    MPI_Irecv(recv_view.data(), recv_view.size(),
-              mpi_type<typename RecvView::value_type>(), src_rank, tag,
-              _raw_comm, &req);
-
+    MPI_Irecv(recv_view.data(), recv_view.size(), Impl::mpi_type<T>(), src_rank, tag, _raw_comm, &req);
     return KokkosComm::Request{req};
   }
 
-  template <KokkosView SendView, KokkosView RecvView>
-  void reduce(SendView send_view, RecvView recv_view, Reducer op,
-              int root) const {
-    static_assert(std::is_same_v<typename SendView::value_type,
-                                 typename RecvView::value_type>);
+  template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
+  void reduce(SendView send_view, RecvView recv_view, Reducer op, int root) const {
+    static_assert(std::is_same_v<typename SendView::value_type, typename RecvView::value_type>);
+    using T = typename SendView::value_type;
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
-
-    MPI_Reduce(send_view.data(), recv_view.data(), send_view.size(),
-               mpi_type<typename SendView::value_type>, op, root, _raw_comm);
+    MPI_Reduce(send_view.data(), recv_view.data(), send_view.size(), Impl::mpi_type<T>, op, root, _raw_comm);
   }
 };
 
