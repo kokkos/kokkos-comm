@@ -101,7 +101,7 @@ class Communicator {
   void recv(RecvView recv_view, int src_rank, int tag = 0) const {
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
     using T = typename RecvView::value_type;
-    MPI_Recv(recv_view.data(), recv_view.size(), mpi_type<T>(), src_rank, tag, _raw_comm, MPI_STATUS_IGNORE);
+    MPI_Recv(recv_view.data(), recv_view.size(), Impl::mpi_type<T>(), src_rank, tag, _raw_comm, MPI_STATUS_IGNORE);
   }
 
   template <CommMode mode = CommMode::Default, KokkosView RecvView>
@@ -119,7 +119,7 @@ class Communicator {
     using T = typename SendView::value_type;
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
-    MPI_Reduce(send_view.data(), recv_view.data(), send_view.size(), Impl::mpi_type<T>, op, root, _raw_comm);
+    MPI_Reduce(send_view.data(), recv_view.data(), send_view.size(), Impl::mpi_type<T>(), op, root, _raw_comm);
   }
 };
 

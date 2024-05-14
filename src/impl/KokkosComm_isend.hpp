@@ -37,7 +37,7 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest,
                       int tag, KokkosComm::Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
 
-  KokkosComm::Request req;
+  KokkosComm::Req req;
 
   using KCT  = KokkosComm::Traits<SendView>;
   using KCPT = KokkosComm::PackTraits<SendView>;
