@@ -32,6 +32,7 @@ class Request {
 
   void wait() { MPI_Wait(&_raw_req, MPI_STATUS_IGNORE); }
   void free() { MPI_Request_free(&_raw_req); }
+  int test() { int flag; MPI_Wait(&_raw_req, &flag, MPI_STATUS_IGNORE); return flag; }
 };
 
 class Req {
