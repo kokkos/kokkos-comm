@@ -149,4 +149,44 @@ class Communicator {
   }
 };
 
+// Free function equivalents
+inline int size(Communicator comm) { return comm.size(); }
+inline int rank(Communicator comm) { return comm.rank(); }
+inline void barrier(Communicator comm) { comm.barrier(); }
+
+template <CommMode mode = CommMode::Default>
+inline void send(KokkosView auto send_view, int dest_rank, int tag, Communicator comm) {
+  comm.send<mode>(send_view, dest_rank, tag);
+}
+template <CommMode mode = CommMode::Default>
+inline void recv(KokkosView auto recv_view, int src_rank, int tag, Communicator comm) {
+  comm.recv<mode>(recv_view, src_rank, tag);
+}
+template <CommMode mode = CommMode::Default>
+inline void sendrecv(KokkosView auto send_view, KokkosView auto recv_view, int rank, int tag, Communicator comm) {
+  comm.sendrecv<mode>(send_view, recv_view, rank, tag);
+}
+
+template <CommMode mode = CommMode::Default>
+inline Request isend(KokkosView auto send_view, int dest_rank, int tag, Communicator comm) {
+  return comm.isend<mode>(send_view, dest_rank, tag);
+}
+template <CommMode mode = CommMode::Default>
+inline Request irecv(KokkosView auto recv_view, int src_rank, int tag, Communicator comm) {
+  return comm.irecv<mode>(recv_view, src_rank, tag);
+}
+template <CommMode mode = CommMode::Default>
+inline Request isendrecv(KokkosView auto send_view, KokkosView auto recv_view, int rank, int tag, Communicator comm) {
+  return comm.isendrecv<mode>(send_view, recv_view, rank, tag);
+}
+
+template <CommMode mode = CommMode::Default>
+inline void reduce(KokkosView auto send_view, KokkosView auto recv_view, Reducer op, int root, Communicator comm) {
+  comm.reduce<mode>(send_view, recv_view, op, root);
+}
+template <CommMode mode = CommMode::Default>
+inline void allreduce(KokkosView auto send_view, KokkosView auto recv_view, Reducer op, Communicator comm) {
+  comm.allreduce<mode>(send_view, recv_view, op);
+}
+
 }  // namespace KokkosComm
