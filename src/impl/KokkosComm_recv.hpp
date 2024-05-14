@@ -28,8 +28,7 @@
 
 namespace KokkosComm::Impl {
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-void recv(const ExecSpace &space, RecvView &rv, int src, int tag,
-          KokkosComm::Communicator comm) {
+void recv(const ExecSpace &space, RecvView &rv, int src, int tag, KokkosComm::Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
 
   using KCT  = KokkosComm::Traits<RecvView>;

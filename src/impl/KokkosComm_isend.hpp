@@ -31,10 +31,8 @@
 
 namespace KokkosComm::Impl {
 
-template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace,
-          KokkosView SendView>
-KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest,
-                      int tag, KokkosComm::Communicator comm) {
+template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
+KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, KokkosComm::Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
 
   KokkosComm::Req req;

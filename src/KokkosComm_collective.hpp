@@ -24,10 +24,8 @@
 
 namespace KokkosComm {
 
-template <KokkosView SendView, KokkosView RecvView,
-          KokkosExecutionSpace ExecSpace>
-void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv,
-            Reducer op, int root, Communicator comm) {
+template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace>
+void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, Reducer op, int root, Communicator comm) {
   return Impl::reduce(space, sv, rv, op, root, comm);
 }
 
