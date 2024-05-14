@@ -29,23 +29,18 @@
 
 namespace KokkosComm {
 
-template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace,
-          KokkosView SendView>
-Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag,
-          Communicator comm) {
+template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
+Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, Communicator comm) {
   return Impl::isend<SendMode>(space, sv, dest, tag, comm);
 }
 
-template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace,
-          KokkosView SendView>
-void send(const ExecSpace &space, const SendView &sv, int dest, int tag,
-          Communicator comm) {
+template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
+void send(const ExecSpace &space, const SendView &sv, int dest, int tag, Communicator comm) {
   return Impl::send<SendMode>(space, sv, dest, tag, comm);
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-void recv(const ExecSpace &space, RecvView &sv, int src, int tag,
-          Communicator comm) {
+void recv(const ExecSpace &space, RecvView &sv, int src, int tag, Communicator comm) {
   return Impl::recv(space, sv, src, tag, comm);
 }
 
