@@ -44,8 +44,6 @@ class Communicator {
     return rank;
   }
 
-  void barrier() const { MPI_Barrier(_raw_comm); }
-
   // Blocking point to point
   template <CommMode mode = CommMode::Default, KokkosView SendView>
   void send(SendView send_view, int dest_rank, int tag = 0) const {
@@ -130,6 +128,8 @@ class Communicator {
   }
 
   // Blocking collective
+  void barrier() const { MPI_Barrier(_raw_comm); }
+
   template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
   void reduce(SendView send_view, RecvView recv_view, Reducer op, int root) const {
     static_assert(std::is_same_v<typename SendView::value_type, typename RecvView::value_type>);
@@ -147,12 +147,18 @@ class Communicator {
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
     MPI_Allreduce(send_view.data(), recv_view.data(), send_view.size(), Impl::mpi_type<T>(), op, _raw_comm);
   }
+
+  // Async collective
+  KokkosComm::Request ibarrier() const {
+    MPI_Request req;
+    MPI_Ibarrier(_raw_comm, &req);
+    return KokkosComm::Request{req};
+  }
 };
 
 // Free function equivalents
 inline int size(Communicator comm) { return comm.size(); }
 inline int rank(Communicator comm) { return comm.rank(); }
-inline void barrier(Communicator comm) { comm.barrier(); }
 
 template <CommMode mode = CommMode::Default>
 inline void send(KokkosView auto send_view, int dest_rank, int tag, Communicator comm) {
@@ -180,6 +186,7 @@ inline Request isendrecv(KokkosView auto send_view, KokkosView auto recv_view, i
   return comm.isendrecv<mode>(send_view, recv_view, rank, tag);
 }
 
+inline void barrier(Communicator comm) { comm.barrier(); }
 template <CommMode mode = CommMode::Default>
 inline void reduce(KokkosView auto send_view, KokkosView auto recv_view, Reducer op, int root, Communicator comm) {
   comm.reduce<mode>(send_view, recv_view, op, root);
@@ -188,5 +195,7 @@ template <CommMode mode = CommMode::Default>
 inline void allreduce(KokkosView auto send_view, KokkosView auto recv_view, Reducer op, Communicator comm) {
   comm.allreduce<mode>(send_view, recv_view, op);
 }
+
+inline Request ibarrier(Communicator comm) { return comm.ibarrier(); }
 
 }  // namespace KokkosComm
