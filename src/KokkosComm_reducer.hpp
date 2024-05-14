@@ -17,7 +17,7 @@
 #pragma once
 
 #include <Kokkos_Core.hpp>
-#include "impl/KokkosComm_include_mpi.hpp"
+#include "KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm {
 
