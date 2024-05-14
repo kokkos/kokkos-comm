@@ -50,7 +50,7 @@ MPI_Datatype mpi_type() {
 
   else if constexpr (std::is_same_v<T, long long>)
     return MPI_LONG_LONG;
-  else if constexpr (std::is_same_v<T, unsigned long>)
+  else if constexpr (std::is_same_v<T, unsigned long long>)
     return MPI_UNSIGNED_LONG_LONG;
 
   else if constexpr (std::is_same_v<T, std::int8_t>)
