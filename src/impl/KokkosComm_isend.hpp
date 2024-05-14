@@ -20,6 +20,7 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "KokkosComm_base.hpp"
 #include "KokkosComm_concepts.hpp"
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_request.hpp"
@@ -32,7 +33,7 @@
 namespace KokkosComm::Impl {
 
 template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
-KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, KokkosComm::Communicator comm) {
+KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
 
   KokkosComm::Req req;

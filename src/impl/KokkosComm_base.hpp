@@ -17,12 +17,39 @@
 #pragma once
 
 #include <Kokkos_Core.hpp>
-#include "KokkosComm_request.hpp"
+
+#include "KokkosComm_include_mpi.hpp"
 #include "KokkosComm_concepts.hpp"
 #include "KokkosComm_comm_mode.hpp"
-#include "KokkosComm_reducer.hpp"
+#include "KokkosComm_types.hpp"
 
-namespace KokkosComm {
+namespace KokkosComm::Impl {
+
+class Request {
+ private:
+  MPI_Request _raw_req;
+
+ public:
+  Request(MPI_Request request = MPI_REQUEST_NULL) : _raw_req{request} {}
+  operator MPI_Request() const { return _raw_req; }
+
+  void wait() { MPI_Wait(&_raw_req, MPI_STATUS_IGNORE); }
+  void free() { MPI_Request_free(&_raw_req); }
+  int test() {
+    int flag;
+    MPI_Test(&_raw_req, &flag, MPI_STATUS_IGNORE);
+    return flag;
+  }
+};
+
+class Reducer {
+ private:
+  MPI_Op _op;
+
+ public:
+  Reducer(MPI_Op op) : _op{op} {}
+  operator MPI_Op() const { return _op; }
+};
 
 class Communicator {
  private:
@@ -84,7 +111,7 @@ class Communicator {
 
   // Async point to point
   template <CommMode mode = CommMode::Default, KokkosView SendView>
-  KokkosComm::Request isend(SendView send_view, int dest_rank, int tag = 0) const {
+  Request isend(SendView send_view, int dest_rank, int tag = 0) const {
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     using T = typename SendView::value_type;
     MPI_Request req;
@@ -104,27 +131,27 @@ class Communicator {
     else
       static_assert(std::is_void_v<SendView>, "Unknown communication mode");
 
-    return KokkosComm::Request{req};
+    return Request{req};
   }
 
   template <CommMode mode = CommMode::Default, KokkosView RecvView>
-  KokkosComm::Request irecv(RecvView recv_view, int src_rank, int tag = 0) const {
+  Request irecv(RecvView recv_view, int src_rank, int tag = 0) const {
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
     using T = typename RecvView::value_type;
     MPI_Request req;
     MPI_Irecv(recv_view.data(), recv_view.size(), Impl::mpi_type<T>(), src_rank, tag, _raw_comm, &req);
-    return KokkosComm::Request{req};
+    return Request{req};
   }
 
   template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
-  KokkosComm::Request isendrecv(SendView send_view, RecvView recv_view, int rank, int tag = 0) const {
+  Request isendrecv(SendView send_view, RecvView recv_view, int rank, int tag = 0) const {
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
     using T = typename SendView::value_type;
     MPI_Request req;
     MPI_Isendrecv(send_view.data(), send_view.size(), Impl::mpi_type<T>(), rank, tag,  //
                   recv_view.data(), recv_view.size(), Impl::mpi_type<T>(), rank, tag, _raw_comm, &req);
-    return KokkosComm::Request{req};
+    return Request{req};
   }
 
   // Blocking collective
@@ -149,83 +176,33 @@ class Communicator {
   }
 
   // Async collective
-  KokkosComm::Request ibarrier() const {
+  Request ibarrier() const {
     MPI_Request req;
     MPI_Ibarrier(_raw_comm, &req);
-    return KokkosComm::Request{req};
+    return Request{req};
   }
 
   template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
-  KokkosComm::Request ireduce(SendView send_view, RecvView recv_view, Reducer op, int root) const {
+  Request ireduce(SendView send_view, RecvView recv_view, Reducer op, int root) const {
     static_assert(std::is_same_v<typename SendView::value_type, typename RecvView::value_type>);
     using T = typename SendView::value_type;
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
     MPI_Request req;
     MPI_Ireduce(send_view.data(), recv_view.data(), send_view.size(), Impl::mpi_type<T>(), op, root, _raw_comm, &req);
-    return KokkosComm::Request{req};
+    return Request{req};
   }
 
   template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
-  KokkosComm::Request iallreduce(SendView send_view, RecvView recv_view, Reducer op) const {
+  Request iallreduce(SendView send_view, RecvView recv_view, Reducer op) const {
     static_assert(std::is_same_v<typename SendView::value_type, typename RecvView::value_type>);
     using T = typename SendView::value_type;
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
     MPI_Request req;
     MPI_Iallreduce(send_view.data(), recv_view.data(), send_view.size(), Impl::mpi_type<T>(), op, _raw_comm, &req);
-    return KokkosComm::Request{req};
+    return Request{req};
   }
 };
 
-// Free function equivalents
-inline int size(Communicator comm) { return comm.size(); }
-inline int rank(Communicator comm) { return comm.rank(); }
-
-template <CommMode mode = CommMode::Default>
-inline void send(KokkosView auto send_view, int dest_rank, int tag, Communicator comm) {
-  comm.send<mode>(send_view, dest_rank, tag);
-}
-template <CommMode mode = CommMode::Default>
-inline void recv(KokkosView auto recv_view, int src_rank, int tag, Communicator comm) {
-  comm.recv<mode>(recv_view, src_rank, tag);
-}
-template <CommMode mode = CommMode::Default>
-inline void sendrecv(KokkosView auto send_view, KokkosView auto recv_view, int rank, int tag, Communicator comm) {
-  comm.sendrecv<mode>(send_view, recv_view, rank, tag);
-}
-
-template <CommMode mode = CommMode::Default>
-inline Request isend(KokkosView auto send_view, int dest_rank, int tag, Communicator comm) {
-  return comm.isend<mode>(send_view, dest_rank, tag);
-}
-template <CommMode mode = CommMode::Default>
-inline Request irecv(KokkosView auto recv_view, int src_rank, int tag, Communicator comm) {
-  return comm.irecv<mode>(recv_view, src_rank, tag);
-}
-template <CommMode mode = CommMode::Default>
-inline Request isendrecv(KokkosView auto send_view, KokkosView auto recv_view, int rank, int tag, Communicator comm) {
-  return comm.isendrecv<mode>(send_view, recv_view, rank, tag);
-}
-
-inline void barrier(Communicator comm) { comm.barrier(); }
-template <CommMode mode = CommMode::Default>
-inline void reduce(KokkosView auto send_view, KokkosView auto recv_view, Reducer op, int root, Communicator comm) {
-  comm.reduce<mode>(send_view, recv_view, op, root);
-}
-template <CommMode mode = CommMode::Default>
-inline void allreduce(KokkosView auto send_view, KokkosView auto recv_view, Reducer op, Communicator comm) {
-  comm.allreduce<mode>(send_view, recv_view, op);
-}
-
-inline Request ibarrier(Communicator comm) { return comm.ibarrier(); }
-template <CommMode mode = CommMode::Default>
-inline Request ireduce(KokkosView auto send_view, KokkosView auto recv_view, Reducer op, int root, Communicator comm) {
-  return comm.ireduce<mode>(send_view, recv_view, op, root);
-}
-template <CommMode mode = CommMode::Default>
-inline Request iallreduce(KokkosView auto send_view, KokkosView auto recv_view, Reducer op, Communicator comm) {
-  return comm.iallreduce<mode>(send_view, recv_view, op);
-}
-
-}  // namespace KokkosComm
+}  // namespace KokkosComm::Impl

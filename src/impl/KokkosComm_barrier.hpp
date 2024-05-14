@@ -18,9 +18,9 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "KokkosComm_base.hpp"
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_traits.hpp"
-#include "KokkosComm_communicator.hpp"
 
 // impl
 #include "KokkosComm_include_mpi.hpp"
@@ -28,7 +28,7 @@
 
 namespace KokkosComm::Impl {
 template <KokkosExecutionSpace ExecSpace>
-void barrier(const ExecSpace &, KokkosComm::Communicator comm) {
+void barrier(const ExecSpace &, Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::barrier");
   comm.barrier();
   Kokkos::Tools::popRegion();

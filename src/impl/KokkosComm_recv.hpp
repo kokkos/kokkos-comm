@@ -18,17 +18,17 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "KokkosComm_base.hpp"
 #include "KokkosComm_concepts.hpp"
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_traits.hpp"
-#include "KokkosComm_communicator.hpp"
 
 // impl
 #include "KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm::Impl {
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-void recv(const ExecSpace &space, RecvView &rv, int src, int tag, KokkosComm::Communicator comm) {
+void recv(const ExecSpace &space, RecvView &rv, int src, int tag, Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
 
   using KCT  = KokkosComm::Traits<RecvView>;

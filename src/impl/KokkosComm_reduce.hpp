@@ -18,18 +18,13 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "KokkosComm_base.hpp"
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_traits.hpp"
-#include "KokkosComm_communicator.hpp"
-
-// impl
-#include "KokkosComm_include_mpi.hpp"
-#include "KokkosComm_types.hpp"
 
 namespace KokkosComm::Impl {
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Op op, int root,
-            KokkosComm::Communicator comm) {
+void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Op op, int root, Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::reduce");
 
   using SendPacker = typename KokkosComm::PackTraits<SendView>::packer_type;

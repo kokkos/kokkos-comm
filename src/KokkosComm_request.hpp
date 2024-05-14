@@ -22,22 +22,7 @@
 
 namespace KokkosComm {
 
-class Request {
- private:
-  MPI_Request _raw_req;
-
- public:
-  Request(MPI_Request request = MPI_REQUEST_NULL) : _raw_req{request} {}
-  operator MPI_Request() const { return _raw_req; }
-
-  void wait() { MPI_Wait(&_raw_req, MPI_STATUS_IGNORE); }
-  void free() { MPI_Request_free(&_raw_req); }
-  int test() {
-    int flag;
-    MPI_Test(&_raw_req, &flag, MPI_STATUS_IGNORE);
-    return flag;
-  }
-};
+using Impl::Request;
 
 class Req {
   // a type-erased view. Request uses these to keep temporary views alive for

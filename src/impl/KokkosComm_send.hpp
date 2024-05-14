@@ -18,9 +18,9 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "KokkosComm_base.hpp"
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_comm_mode.hpp"
-#include "KokkosComm_communicator.hpp"
 
 // impl
 #include "KokkosComm_include_mpi.hpp"
@@ -28,7 +28,7 @@
 namespace KokkosComm::Impl {
 
 template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
-void send(const ExecSpace &space, const SendView &sv, int dest, int tag, KokkosComm::Communicator comm) {
+void send(const ExecSpace &space, const SendView &sv, int dest, int tag, Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
   using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
 
