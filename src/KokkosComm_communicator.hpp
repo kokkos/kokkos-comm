@@ -145,7 +145,7 @@ class Communicator {
     using T = typename SendView::value_type;
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
-    MPI_Allreduce(send_view.data(), recv_view.data(), send_view.size(), Impl::mpi_type<T>(), op, root, _raw_comm);
+    MPI_Allreduce(send_view.data(), recv_view.data(), send_view.size(), Impl::mpi_type<T>(), op, _raw_comm);
   }
 };
 
