@@ -24,7 +24,7 @@ namespace KokkosComm::Impl {
 template <typename Scalar>
 MPI_Datatype mpi_type() {
   using T = std::decay_t<Scalar>;
-  
+
   if constexpr (std::is_same_v<T, std::byte>)
     return MPI_BYTE;
 
@@ -78,8 +78,8 @@ MPI_Datatype mpi_type() {
     if constexpr (sizeof(std::size_t) == 2) return MPI_UINT16_T;
     if constexpr (sizeof(std::size_t) == 4) return MPI_UINT32_T;
     if constexpr (sizeof(std::size_t) == 8) return MPI_UINT64_T;
-  } 
-  
+  }
+
   else if constexpr (std::is_same_v<T, std::ptrdiff_t>) {
     if constexpr (sizeof(std::ptrdiff_t) == 1) return MPI_INT8_T;
     if constexpr (sizeof(std::ptrdiff_t) == 2) return MPI_INT16_T;
