@@ -53,7 +53,7 @@ class Req {
 
   struct Record {
     Record() : req_(MPI_REQUEST_NULL) {}
-    MPI_Request req_;
+    Request req_;
     std::vector<std::shared_ptr<ViewHolderBase>> until_waits_;
   };
 
@@ -61,10 +61,10 @@ class Req {
   Req() : record_(std::make_shared<Record>()) {}
   Req(Request request) : Req{} { mpi_req() = request; }
 
-  MPI_Request &mpi_req() { return record_->req_; }
+  Request &mpi_req() { return record_->req_; }
 
   void wait() {
-    MPI_Wait(&(record_->req_), MPI_STATUS_IGNORE);
+    record_->req_.wait();
     record_->until_waits_.clear();  // drop any views we're keeping alive until wait()
   }
 
