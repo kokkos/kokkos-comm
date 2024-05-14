@@ -21,8 +21,10 @@
 #include <Kokkos_Core.hpp>
 
 namespace KokkosComm::Impl {
-template <typename T>
+template <typename Scalar>
 MPI_Datatype mpi_type() {
+  using T = std::decay_t<Scalar>;
+  
   if constexpr (std::is_same_v<T, std::byte>)
     return MPI_BYTE;
 
