@@ -154,6 +154,28 @@ class Communicator {
     MPI_Ibarrier(_raw_comm, &req);
     return KokkosComm::Request{req};
   }
+
+  template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
+  KokkosComm::Request ireduce(SendView send_view, RecvView recv_view, Reducer op, int root) const {
+    static_assert(std::is_same_v<typename SendView::value_type, typename RecvView::value_type>);
+    using T = typename SendView::value_type;
+    KOKKOS_ASSERT(send_view.span_is_contiguous());
+    KOKKOS_ASSERT(recv_view.span_is_contiguous());
+    MPI_Request req;
+    MPI_Ireduce(send_view.data(), recv_view.data(), send_view.size(), Impl::mpi_type<T>(), op, root, _raw_comm, &req);
+    return KokkosComm::Request{req};
+  }
+
+  template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
+  KokkosComm::Request iallreduce(SendView send_view, RecvView recv_view, Reducer op) const {
+    static_assert(std::is_same_v<typename SendView::value_type, typename RecvView::value_type>);
+    using T = typename SendView::value_type;
+    KOKKOS_ASSERT(send_view.span_is_contiguous());
+    KOKKOS_ASSERT(recv_view.span_is_contiguous());
+    MPI_Request req;
+    MPI_Iallreduce(send_view.data(), recv_view.data(), send_view.size(), Impl::mpi_type<T>(), op, _raw_comm, &req);
+    return KokkosComm::Request{req};
+  }
 };
 
 // Free function equivalents
@@ -197,5 +219,13 @@ inline void allreduce(KokkosView auto send_view, KokkosView auto recv_view, Redu
 }
 
 inline Request ibarrier(Communicator comm) { return comm.ibarrier(); }
+template <CommMode mode = CommMode::Default>
+inline Request ireduce(KokkosView auto send_view, KokkosView auto recv_view, Reducer op, int root, Communicator comm) {
+  return comm.ireduce<mode>(send_view, recv_view, op, root);
+}
+template <CommMode mode = CommMode::Default>
+inline Request iallreduce(KokkosView auto send_view, KokkosView auto recv_view, Reducer op, Communicator comm) {
+  return comm.iallreduce<mode>(send_view, recv_view, op);
+}
 
 }  // namespace KokkosComm
