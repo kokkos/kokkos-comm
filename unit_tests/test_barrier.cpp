@@ -25,7 +25,7 @@ TEST(Barrier, 0) {
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   KokkosComm::Impl::barrier(Kokkos::DefaultExecutionSpace(), MPI_COMM_WORLD);
 
-  auto comm = KokkosComm::Communicator{MPI_COMM_WORLD};
+  auto comm = KokkosComm::CommWorld();
   EXPECT_EQ(rank, KokkosComm::rank(comm));
   EXPECT_EQ(size, KokkosComm::size(comm));
   KokkosComm::barrier(comm);
