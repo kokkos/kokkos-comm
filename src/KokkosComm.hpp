@@ -33,7 +33,9 @@ namespace KokkosComm {
 using Impl::Communicator;
 using Impl::Reducer;
 using Impl::Request;
+
 using Impl::CommWorld;
+using Impl::Sum;
 
 inline int size(Communicator comm) { return comm.size(); }
 inline int rank(Communicator comm) { return comm.rank(); }

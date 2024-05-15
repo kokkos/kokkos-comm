@@ -36,9 +36,9 @@ operation is sum, so recvbuf[i] should be sum(0..size) + i * size
 TYPED_TEST(Reduce, 1D_contig) {
   using TestScalar = typename TestFixture::Scalar;
 
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  auto comm = KokkosComm::CommWorld();
+  int rank  = comm.rank();
+  int size  = comm.size();
 
   Kokkos::View<TestScalar *> sendv("sendv", 10);
   Kokkos::View<TestScalar *> recvv;
@@ -62,6 +62,32 @@ TYPED_TEST(Reduce, 1D_contig) {
             acc += r + i;
           }
           lsum += recvv(i) != acc;
+          // if (recvv(i) != acc) {
+          //   Kokkos::printf("%f != %f @ %lu\n", double(Kokkos::abs(recvv(i))),
+          //   double(Kokkos::abs(acc)), size_t(i));
+          // }
+        },
+        errs);
+    ASSERT_EQ(errs, 0);
+  }
+
+  Kokkos::View<TestScalar *> recvv2;
+  if (0 == rank) {
+    Kokkos::resize(recvv2, sendv.extent(0));
+  }
+
+  comm.reduce(sendv, recvv2, KokkosComm::Sum(), 0);
+
+  if (0 == rank) {
+    int errs;
+    Kokkos::parallel_reduce(
+        recvv2.extent(0),
+        KOKKOS_LAMBDA(const int &i, int &lsum) {
+          TestScalar acc = 0;
+          for (int r = 0; r < size; ++r) {
+            acc += r + i;
+          }
+          lsum += recvv2(i) != acc;
           // if (recvv(i) != acc) {
           //   Kokkos::printf("%f != %f @ %lu\n", double(Kokkos::abs(recvv(i))),
           //   double(Kokkos::abs(acc)), size_t(i));

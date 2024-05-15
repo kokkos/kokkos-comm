@@ -147,6 +147,8 @@ class Reducer {
   operator MPI_Op() const { return _op; }
 };
 
+inline Reducer Sum() { return Reducer{MPI_SUM}; }
+
 class Communicator {
  private:
   MPI_Comm _raw_comm = MPI_COMM_WORLD;
@@ -301,6 +303,6 @@ class Communicator {
   }
 };
 
-inline Communicator CommWorld(){ return Communicator{MPI_COMM_WORLD}; }
+inline Communicator CommWorld() { return Communicator{MPI_COMM_WORLD}; }
 
 }  // namespace KokkosComm::Impl
