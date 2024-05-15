@@ -17,8 +17,7 @@
 #pragma once
 
 #include "KokkosComm_concepts.hpp"
-#include "KokkosComm_types.hpp"
-#include "KokkosComm_include_mpi.hpp"
+#include "KokkosComm_mpi.hpp"
 
 namespace KokkosComm::Impl {
 namespace Packer {

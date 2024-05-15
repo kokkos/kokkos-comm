@@ -18,7 +18,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "KokkosComm_base.hpp"
+#include "KokkosComm_mpi.hpp"
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_traits.hpp"
 

@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "KokkosComm_include_mpi.hpp"
+#include "KokkosComm_mpi.hpp"
 
 namespace KokkosComm {
 

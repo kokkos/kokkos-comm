@@ -18,13 +18,13 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "KokkosComm_base.hpp"
+#include "KokkosComm_concepts.hpp"
+#include "KokkosComm_mpi.hpp"
 #include "KokkosComm_comm_mode.hpp"
 #include "KokkosComm_version.hpp"
 #include "KokkosComm_isend.hpp"
 #include "KokkosComm_recv.hpp"
 #include "KokkosComm_send.hpp"
-#include "KokkosComm_concepts.hpp"
 #include "KokkosComm_reduce.hpp"
 #include "KokkosComm_barrier.hpp"
 

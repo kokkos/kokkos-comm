@@ -14,10 +14,10 @@
 //
 //@HEADER
 
-#include "KokkosComm_include_mpi.hpp"
-
 #include <Kokkos_Core.hpp>
 #include <benchmark/benchmark.h>
+
+#include "KokkosComm_mpi.hpp"
 
 // This reporter does nothing.
 // We can use it to disable output from all but the root process

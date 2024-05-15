@@ -18,12 +18,9 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "KokkosComm_base.hpp"
+#include "KokkosComm_mpi.hpp"
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_comm_mode.hpp"
-
-// impl
-#include "KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm::Impl {
 

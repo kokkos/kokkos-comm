@@ -18,13 +18,9 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "KokkosComm_base.hpp"
+#include "KokkosComm_mpi.hpp"
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_traits.hpp"
-
-// impl
-#include "KokkosComm_include_mpi.hpp"
-#include "KokkosComm_types.hpp"
 
 namespace KokkosComm::Impl {
 template <KokkosExecutionSpace ExecSpace>
