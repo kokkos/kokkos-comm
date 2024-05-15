@@ -27,12 +27,16 @@
 
 namespace KokkosComm::Impl {
 
-void barrier(MPI_Comm comm) { MPI_Barrier(comm); }
-
-template <KokkosExecutionSpace ExecSpace>
-void barrier(const ExecSpace &space, MPI_Comm comm) {
+void barrier(MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::barrier");
   MPI_Barrier(comm);
   Kokkos::Tools::popRegion();
+}
+
+// a barrier in the provided space. For MPI, we have to fence the space and do a host barrier
+template <KokkosExecutionSpace ExecSpace>
+void barrier(const ExecSpace &space, MPI_Comm comm) {
+  space.fence("KokkosComm::Impl::barrier");
+  barrier(comm);
 }
 }  // namespace KokkosComm::Impl
