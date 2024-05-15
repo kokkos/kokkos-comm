@@ -29,6 +29,7 @@ namespace KokkosComm::Impl {
 
 template <KokkosView RecvView>
 void recv(RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *status) {
+  Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
   using KCT = KokkosComm::Traits<RecvView>;
 
   if (typename KCT::is_contiguous(rv)) {
@@ -37,6 +38,7 @@ void recv(RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *status) {
   } else {
     throw std::runtime_error("only contiguous views supported for low-level recv");
   }
+  Kokkos::Tools::popRegion();
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
@@ -51,12 +53,13 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
     using Args   = typename Packer::args_type;
 
     Args args = Packer::allocate_packed_for(space, "packed", rv);
-    space.fence();
+    space.fence();  // make sure allocation is complete before recv
     MPI_Recv(KCT::data_handle(args.view), args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
     Packer::unpack_into(space, rv, args.view);
   } else {
     using RecvScalar = typename RecvView::value_type;
-    MPI_Recv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<RecvScalar>, src, tag, comm, MPI_STATUS_IGNORE);
+    space.fence();  // can't recv in space until any preceeding work is done
+    recv(rv, src, tag, comm, MPI_STATUS_IGNORE);
   }
 
   Kokkos::Tools::popRegion();
