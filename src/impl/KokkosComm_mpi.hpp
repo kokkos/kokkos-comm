@@ -24,7 +24,7 @@
 #include <mpi.h>
 #pragma GCC diagnostic pop
 #else
-#include <mpi.h>  // Maybe we should have this included in the Impl namespace?
+#include <mpi.h>  // Maybe we should have this included in the Impl namespace rather than the global namespace?
 #endif
 
 #include <Kokkos_Core.hpp>

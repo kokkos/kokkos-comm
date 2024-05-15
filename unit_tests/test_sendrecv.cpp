@@ -35,26 +35,42 @@ void send_comm_mode_1d_contig() {
     GTEST_SKIP() << "Skipping test for ready-mode send";
   }
 
-  Kokkos::View<Scalar *> a("a", 1000);
-
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  auto comm = KokkosComm::CommWorld();
+  int rank  = comm.rank();
+  int size  = comm.size();
   if (size < 2) {
     GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
   }
+
+  Kokkos::View<Scalar *> a("a", 1000);
 
   if (0 == rank) {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::send<SendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    KokkosComm::send<SendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, comm);
   } else if (1 == rank) {
     int src = 0;
-    KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
+    KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, comm);
     int errs;
     Kokkos::parallel_reduce(
         a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != i; }, errs);
+    ASSERT_EQ(errs, 0);
+  }
+
+  Kokkos::View<Scalar *> b("a", 1000);
+
+  if (0 == rank) {
+    int dst = 1;
+    Kokkos::parallel_for(
+        b.extent(0), KOKKOS_LAMBDA(const int i) { b(i) = i; });
+    comm.send<SendMode>(b, dst);
+  } else if (1 == rank) {
+    int src = 0;
+    comm.recv(b, src);
+    int errs;
+    Kokkos::parallel_reduce(
+        b.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += b(i) != i; }, errs);
     ASSERT_EQ(errs, 0);
   }
 }
@@ -65,21 +81,25 @@ void send_comm_mode_1d_noncontig() {
     GTEST_SKIP() << "Skipping test for ready-mode send";
   }
 
+  auto comm = KokkosComm::CommWorld();
+  int rank  = comm.rank();
+  int size  = comm.size();
+  if (size < 2) {
+    GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
+  }
+
   // this is C-style layout, i.e. b(0,0) is next to b(0,1)
   Kokkos::View<Scalar **, Kokkos::LayoutRight> b("b", 10, 10);
   auto a = Kokkos::subview(b, Kokkos::ALL, 2);  // take column 2 (non-contiguous)
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   if (0 == rank) {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::send<SendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    KokkosComm::send<SendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, comm);
   } else if (1 == rank) {
     int src = 0;
-    KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
+    KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, comm);
     int errs;
     Kokkos::parallel_reduce(
         a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != i; }, errs);
