@@ -29,6 +29,7 @@ namespace KokkosComm::Impl {
 
 template <KokkosView SendView, KokkosView RecvView>
 void reduce(const SendView &sv, const RecvView &rv, MPI_Op op, int root, MPI_Comm comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::Impl::reduce");
   using SPT = KokkosComm::PackTraits<SendView>;
   using RPT = KokkosComm::PackTraits<RecvView>;
 
@@ -38,6 +39,7 @@ void reduce(const SendView &sv, const RecvView &rv, MPI_Op op, int root, MPI_Com
   } else {
     throw std::runtime_error("only contiguous views supported for low-level reduce");
   }
+  Kokkos::Tools::popRegion();
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
