@@ -111,7 +111,7 @@ Collective
     :tparam RecvView: A Kokkos::View to recv. Contiguous and rank 1.
     :tparam ExecSpace: A Kokkos execution space to operate in
 
-    If sv_ is a rank-0 view, the value from the jth rank will be placed in index j of rv_.
+    If ``sv`` is a rank-0 view, the value from the jth rank will be placed in index j of ``rv``.
 
 Related Types
 -------------
