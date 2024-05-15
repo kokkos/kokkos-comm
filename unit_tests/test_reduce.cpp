@@ -37,6 +37,7 @@ TYPED_TEST(Reduce, 1D_contig) {
   using TestScalar = typename TestFixture::Scalar;
 
   auto comm = KokkosComm::CommWorld();
+  auto sum  = KokkosComm::Sum();
   int rank  = comm.rank();
   int size  = comm.size();
 
@@ -50,7 +51,7 @@ TYPED_TEST(Reduce, 1D_contig) {
   Kokkos::parallel_for(
       sendv.extent(0), KOKKOS_LAMBDA(const int i) { sendv(i) = rank + i; });
 
-  KokkosComm::reduce(Kokkos::DefaultExecutionSpace(), sendv, recvv, MPI_SUM, 0, MPI_COMM_WORLD);
+  KokkosComm::reduce(Kokkos::DefaultExecutionSpace(), sendv, recvv, sum, 0, comm);
 
   if (0 == rank) {
     int errs;
@@ -76,7 +77,7 @@ TYPED_TEST(Reduce, 1D_contig) {
     Kokkos::resize(recvv2, sendv.extent(0));
   }
 
-  comm.reduce(sendv, recvv2, KokkosComm::Sum(), 0);
+  comm.reduce(sendv, recvv2, sum, 0);
 
   if (0 == rank) {
     int errs;
