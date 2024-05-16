@@ -23,6 +23,7 @@
 #include "KokkosComm_send.hpp"
 #include "KokkosComm_concepts.hpp"
 #include "KokkosComm_comm_mode.hpp"
+#include "KokkosComm_communicator.hpp"
 
 #include <Kokkos_Core.hpp>
 
@@ -52,13 +53,17 @@ class Universe {
 
   auto set_buffer_size(size_t size) -> void {
     detach_buffer();
-    if (0 <= size) {
+    if (0 < size) {
       _buffer.resize(size);
       MPI_Buffer_attach(_buffer.data(), _buffer.size());
     }
   }
 
-  auto detach_buffer(void) -> void { MPI_Buffer_detach(&_buffer.data(), &_buffer.size()); }
+  auto detach_buffer(void) -> void {
+    int size;
+    MPI_Buffer_detach(_buffer.data(), &size);
+    assert(static_cast<size_t>(size) == _buffer.size()); // safety check
+  }
 
  private:
   std::vector<uint8_t> _buffer;
