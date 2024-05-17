@@ -9,8 +9,8 @@
 
 namespace KokkosComm::Impl {
 
-template <Impl::KokkosExecutionSpace Space, Impl::KokkosView View>
-struct NonContigDeepCopy {
+template <KokkosExecutionSpace Space, KokkosView View>
+struct NonContigDeepCopySendRecv {
   using KCT                 = KokkosComm::Traits<View>;
   using non_const_data_type = typename View::non_const_data_type;
 
@@ -27,23 +27,27 @@ struct NonContigDeepCopy {
       return non_const_packed_view_type(Kokkos::view_alloc(space, Kokkos::WithoutInitializing, label), view.extent(0),
                                         view.extent(1));
     } else {
-      static_assert(std::is_void_v<View>, "NonContigDeepCopy for rank >= 2 views unimplemented");
+      static_assert(std::is_void_v<View>, "NonContigDeepCopySendRecv for rank >= 2 views unimplemented");
     }
   }
 
-  static Ctx pre_send(const Space &space, const View &view) {
-    Ctx ctx;
+
+
+  static CtxBufCount pre_send(const Space &space, const View &view) {
+
+    CtxBufCount ctx;
 
     using KCT = KokkosComm::Traits<View>;
 
     if (KCT::is_contiguous(view)) {
       ctx.mpi_args.push_back(
-          Ctx::MpiArgs(KCT::data_handle(view), mpi_type<typename View::non_const_value_type>(), KCT::span(view)));
+          CtxBufCount::MpiArgs(KCT::data_handle(view), mpi_type<typename View::non_const_value_type>(), KCT::span(view)));
       ctx.wait_callbacks.push_back(std::make_shared<ViewHolder<View>>(view));
     } else {
       non_const_packed_view_type packed = allocate_for(space, view);
       Kokkos::deep_copy(space, packed, view);
-      ctx.mpi_args.push_back(Ctx::MpiArgs(PVT::data_handle(packed),
+      ctx.set_pre_uses_space();
+      ctx.mpi_args.push_back(CtxBufCount::MpiArgs(PVT::data_handle(packed),
                                           mpi_type<typename non_const_packed_view_type::non_const_value_type>(),
                                           packed.size()));
       ctx.wait_callbacks.push_back(std::make_shared<ViewHolder<non_const_packed_view_type>>(packed));
@@ -52,16 +56,17 @@ struct NonContigDeepCopy {
     return ctx;
   }
 
-  static Ctx pre_recv(const Space &space, const View &view) {
-    Ctx ctx;
+  static CtxBufCount pre_recv(const Space &space, const View &view) {
+    CtxBufCount ctx;
 
     if (KCT::is_contiguous(view)) {
       ctx.mpi_args.push_back(
-          Ctx::MpiArgs(KCT::data_handle(view), mpi_type<typename View::non_const_value_type>(), KCT::span(view)));
+          CtxBufCount::MpiArgs(KCT::data_handle(view), mpi_type<typename View::non_const_value_type>(), KCT::span(view)));
     } else {
       non_const_packed_view_type packed = allocate_for(space, view);
       Kokkos::deep_copy(space, packed, view);
-      ctx.mpi_args.push_back(Ctx::MpiArgs(PVT::data_handle(packed),
+      ctx.set_pre_uses_space();
+      ctx.mpi_args.push_back(CtxBufCount::MpiArgs(PVT::data_handle(packed),
                                           mpi_type<typename non_const_packed_view_type::non_const_value_type>(),
                                           packed.size()));
       ctx.views.push_back(std::make_shared<ViewHolder<non_const_packed_view_type>>(packed));
@@ -69,20 +74,19 @@ struct NonContigDeepCopy {
     return ctx;
   }
 
-  static Ctx post_recv(const Space &space, const View &view, Ctx &ctx) {
-    if (KCT::is_contiguous(view)) {
-      // no unpacking to do
-    } else {
-      for (Ctx::MpiArgs &args : ctx.mpi_args) {
+  static CtxBufCount post_recv(const Space &space, const View &view, CtxBufCount &ctx) {
+    if (!KCT::is_contiguous(view)) {
+      for (CtxBufCount::MpiArgs &args : ctx.mpi_args) {
         using UVT = Kokkos::View<non_const_data_type, Kokkos::LayoutRight, Kokkos::MemoryUnmanaged>;
 
         if constexpr (KCT::rank() == 1) {
           UVT ub(static_cast<View::non_const_value_type *>(args.buf), view.extent(0));
           Kokkos::deep_copy(space, view, ub);
-          space.fence();
+          ctx.set_post_uses_space();
         } else if constexpr (KCT::rank() == 2) {
           UVT ub(static_cast<View::non_const_value_type *>(args.buf), view.extent(0), view.extent(1));
           Kokkos::deep_copy(space, view, ub);
+          ctx.set_post_uses_space();
         } else {
           static_assert(std::is_void_v<View>, "FIXME");
         }
@@ -90,6 +94,7 @@ struct NonContigDeepCopy {
     }
     return ctx;
   }
+
 };
 
 };  // namespace KokkosComm::Impl

@@ -41,7 +41,7 @@ void send(const SendView &sv, int dest, int tag, MPI_Comm comm) {
 }
 
 template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView,
-          NonContig NC      = DefaultNonContig<ExecSpace, SendView>>
+          NonContigSendRecv NC      = DefaultNonContigSendRecv<ExecSpace, SendView>>
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
   Req req;
@@ -67,9 +67,9 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
 
   // I think it's okay to use the same tag for all messages here due to
   // non-overtaking of messages that match the same recv
-  const Ctx ctx = NC::pre_send(space, sv);  // FIXME: terrible name
+  const CtxBufCount ctx = NC::pre_send(space, sv);  // FIXME: terrible name
   space.fence();
-  for (const Ctx::MpiArgs &args : ctx.mpi_args) {
+  for (const CtxBufCount::MpiArgs &args : ctx.mpi_args) {
     mpi_send_fn(args.buf, args.count, args.datatype, dest, tag, comm);
   }
 

@@ -30,6 +30,12 @@ template <typename Fn>
 concept Invokable = std::is_invocable_v<Fn>;
 
 template <typename T>
-concept NonContig = !std::is_void_v<T>;  // placeholder
+concept NonContigSendRecv = !std::is_void_v<T>;  // FIXME: placeholder
+
+template <typename T>
+concept NonContigReduce = !std::is_void_v<T>;  // FIXME: placeholder
+
+template <typename T>
+concept NonContigAlltoall = !std::is_void_v<T>;  // FIXME: placeholder
 
 }  // namespace KokkosComm::Impl

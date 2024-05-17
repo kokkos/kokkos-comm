@@ -26,7 +26,7 @@
 #include "KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm::Impl {
-template <KokkosExecutionSpace ExecSpace, KokkosView RecvView, NonContig NC = DefaultNonContig<ExecSpace, RecvView>>
+template <KokkosExecutionSpace ExecSpace, KokkosView RecvView, NonContigSendRecv NC = DefaultNonContigSendRecv<ExecSpace, RecvView>>
 void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
   using KCT = KokkosComm::Traits<RecvView>;
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
@@ -35,9 +35,9 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
 
   // I think it's okay to use the same tag for all messages here due to
   // non-overtaking of messages that match the same recv
-  Ctx ctx = NC::pre_recv(space, rv);  // FIXME: terrible name
+  CtxBufCount ctx = NC::pre_recv(space, rv);  // FIXME: terrible name
   space.fence();
-  for (const Ctx::MpiArgs &args : ctx.mpi_args) {
+  for (const CtxBufCount::MpiArgs &args : ctx.mpi_args) {
     MPI_Recv(args.buf, args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
 #if 0
     {

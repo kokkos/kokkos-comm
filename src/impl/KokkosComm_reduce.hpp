@@ -28,44 +28,16 @@
 
 namespace KokkosComm::Impl {
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView,
-          NonContig SNC = DefaultNonContig<ExecSpace, SendView>, NonContig RNC = DefaultNonContig<ExecSpace, RecvView>>
+          NonContigReduce NC = DefaultNonContigReduce<ExecSpace, SendView, RecvView>>
 void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Op op, int root, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::reduce");
 
-  const int rank = [=]() -> int {
-    int _r;
-    MPI_Comm_rank(comm, &_r);
-    return _r;
-  }();
-
-  // This doesn't work directly with the datatype engine
-
-  if (root == rank) {
-    Ctx sctx = SNC::pre_send(space, sv);  // FIXME: terrible name
-    Ctx rctx = RNC::pre_recv(space, rv);  // FIXME: terrible name
-    space.fence();
-
-    if (sctx.mpi_args.size() != rctx.mpi_args.size()) {
-      throw std::logic_error("internal error");  // FIXME
-    }
-
-    for (size_t ai = 0; ai < sctx.mpi_args.size(); ++ai) {
-      Ctx::MpiArgs &sargs = sctx.mpi_args[ai];
-      Ctx::MpiArgs &rargs = rctx.mpi_args[ai];
-      MPI_Reduce(sargs.buf, rargs.buf, sargs.count, sargs.datatype, op, root, comm);
-    }
-    RNC::post_recv(space, rv, rctx);
-    space.fence();
-
-  } else {
-    Ctx sctx = SNC::pre_send(space, sv);  // FIXME: terrible name
-    space.fence();
-
-    for (size_t ai = 0; ai < sctx.mpi_args.size(); ++ai) {
-      Ctx::MpiArgs &sargs = sctx.mpi_args[ai];
-      MPI_Reduce(sargs.buf, rv.data() /*shouldn't matter*/, sargs.count, sargs.datatype, op, root, comm);
-    }
+  CtxReduce ctx = NC::pre_reduce(space, sv, rv);
+  if (ctx.pre_uses_space()) space.fence();
+  for (const auto &args : ctx.mpi_args) {
+    MPI_Reduce(args.sbuf, args.rbuf, args.count, args.datatype, op, root, comm);
   }
+  NC::post_reduce(space, sv, rv, ctx);
 
   Kokkos::Tools::popRegion();
 }

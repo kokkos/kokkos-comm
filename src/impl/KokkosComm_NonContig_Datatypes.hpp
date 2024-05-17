@@ -4,13 +4,14 @@
 #include "impl/KokkosComm_NonContigCtx.hpp"
 #include "impl/KokkosComm_types.hpp"
 #include "impl/KokkosComm_request.hpp"
+#include "impl/KokkosComm_NonContig_Base.hpp"
 
 // constructs an MPI datatype for non-contiguous data
 
 namespace KokkosComm::Impl {
 
 template <Impl::KokkosExecutionSpace Space, Impl::KokkosView View>
-struct NonContigDatatypes {
+struct NonContigDatatypes : public NonContigBase<NonContigDatatypes> {
   using KCT                 = KokkosComm::Traits<View>;
   using non_const_data_type = typename View::non_const_data_type;
 
@@ -20,7 +21,7 @@ struct NonContigDatatypes {
 
   using value_type = typename View::non_const_value_type;
 
-  static Ctx pre_send(const Space &space, const View &view) {
+  static Ctx pre_send(const Space &space, const View &view, const std::vector<int> &counts, const std::vector<int> &displs) {
     Ctx ctx;
 
     MPI_Datatype type = mpi_type<value_type>();
@@ -45,7 +46,7 @@ struct NonContigDatatypes {
     return ctx;
   }
 
-  static Ctx pre_recv(const Space &space, const View &view) {
+  static Ctx pre_recv(const Space &space, const View &view, const std::vector<int> &counts, const std::vector<int> &displs) {
     Ctx ctx;
 
     using KCT = KokkosComm::Traits<View>;

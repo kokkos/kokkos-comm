@@ -18,10 +18,9 @@ struct NonContigMultiMessage {
       Kokkos::View<non_const_data_type, Kokkos::LayoutRight, typename View::memory_space>;
   using PVT = KokkosComm::Traits<non_const_packed_view_type>;
 
-  static Ctx pre_send(const Space &space, const View &view) {
-    Ctx ctx;
-
+  static Ctx pre_send(const Space &space, const View &view, int sendCount) {
     using KCT = KokkosComm::Traits<View>;
+    Ctx ctx;
 
     if constexpr (KCT::rank() == 1) {
       for (size_t i = 0; i < view.extent(0); ++i) {
@@ -40,6 +39,12 @@ struct NonContigMultiMessage {
     }
 
     return ctx;
+  }
+
+  static Ctx pre_send(const Space &space, const View &view) {
+    
+    return pre_send(space, view, KokkosComm::Traits<View>::span(view));
+
   }
 
   static Ctx pre_recv(const Space &space, const View &view) {

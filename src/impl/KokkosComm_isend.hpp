@@ -28,7 +28,7 @@
 namespace KokkosComm::Impl {
 
 template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView,
-          NonContig NC      = DefaultNonContig<ExecSpace, SendView>>
+          NonContigSendRecv NC      = DefaultNonContigSendRecv<ExecSpace, SendView>>
 Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
   Req req;
@@ -52,9 +52,9 @@ Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
 
   // I think it's okay to use the same tag for all messages here due to
   // non-overtaking of messages that match the same recv
-  Ctx ctx = NC::pre_send(space, sv);  // FIXME: terrible name
-  space.fence();
-  for (Ctx::MpiArgs &args : ctx.mpi_args) {
+  CtxBufCount ctx = NC::pre_send(space, sv);
+  if (ctx.pre_uses_space()) space.fence();
+  for (CtxBufCount::MpiArgs &args : ctx.mpi_args) {
     mpi_isend_fn(args.buf, args.count, args.datatype, dest, tag, comm, &args.req);
   }
   for (auto v : ctx.wait_callbacks) {
