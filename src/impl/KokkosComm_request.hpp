@@ -31,8 +31,8 @@ class Req {
   // the lifetime of "Immediate" MPI operations
 
   struct Record {
-    Record() : req_(MPI_REQUEST_NULL) {}
-    MPI_Request req_;
+    Record() = default;
+    std::vector<MPI_Request> reqs_;
     std::vector<std::shared_ptr<ViewHolderBase>> until_waits_;
     std::vector<std::shared_ptr<InvokableHolderBase>> wait_callbacks_;
   };
@@ -40,10 +40,8 @@ class Req {
  public:
   Req() : record_(std::make_shared<Record>()) {}
 
-  MPI_Request &mpi_req() { return record_->req_; }
-
   void wait() {
-    MPI_Wait(&(record_->req_), MPI_STATUS_IGNORE);
+    MPI_Waitall(record_->reqs_.size(), record_->reqs_.data(), MPI_STATUSES_IGNORE);
     record_->until_waits_.clear();  // drop any views we're keeping alive until wait()
     for (auto &c : record_->wait_callbacks_) {
       (*c)();
@@ -60,6 +58,15 @@ class Req {
 
   void call_and_drop_at_wait(const std::shared_ptr<InvokableHolderBase> &ihb) {
     record_->wait_callbacks_.push_back(ihb);
+  }
+
+  MPI_Request add_mpi_wait() {
+    record_->reqs_.push_back(MPI_Request{});
+    return record_->reqs_.back();
+  }
+  MPI_Request add_mpi_wait(MPI_Request req) {
+    record_->reqs_.push_back(req);
+    return req;
   }
 
  private:

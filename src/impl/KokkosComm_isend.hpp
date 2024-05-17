@@ -56,7 +56,9 @@ Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
   if (ctx.pre_uses_space()) space.fence();
   for (CtxBufCount::MpiArgs &args : ctx.mpi_args) {
     mpi_isend_fn(args.buf, args.count, args.datatype, dest, tag, comm, &args.req);
+    req.add_mpi_wait(args.req);
   }
+  
   for (auto v : ctx.wait_callbacks) {
     req.call_and_drop_at_wait(v);
   }
