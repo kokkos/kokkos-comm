@@ -66,11 +66,6 @@ void test_reduce_1d() {
   }
 }
 
+TYPED_TEST(Reduce, 1D_noncontig) { test_reduce_1d<noncontig, typename TestFixture::Scalar>(); }
 
-TYPED_TEST(Reduce, 1D_noncontig) {
-  test_reduce_1d<noncontig, typename TestFixture::Scalar>();
-}
-
-TYPED_TEST(Reduce, 1D_contig) {
-  test_reduce_1d<noncontig, typename TestFixture::Scalar>();
-}
+TYPED_TEST(Reduce, 1D_contig) { test_reduce_1d<noncontig, typename TestFixture::Scalar>(); }
