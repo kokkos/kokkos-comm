@@ -32,12 +32,21 @@ template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvVi
 void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Op op, int root, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::reduce");
 
-  CtxReduce ctx = NC::pre_reduce(space, sv, rv);
-  if (ctx.pre_uses_space()) space.fence();
+  // FIXME: debug only
+  {
+    int rank;
+    MPI_Comm_rank(comm, &rank);
+    if (root == rank && sv.size() != rv.size()) {
+      throw std::runtime_error("reduce: send view and recv view must have the same number of entries.");
+    }
+  }
+
+  CtxReduce ctx = NC::pre_reduce(space, sv, rv, sv.size());
+  space.fence();  // space may be producing our data
   for (const auto &args : ctx.mpi_args) {
     MPI_Reduce(args.sbuf, args.rbuf, args.count, args.datatype, op, root, comm);
   }
-  NC::post_reduce(space, sv, rv, ctx);
+  NC::post_reduce(space, rv, ctx);
 
   Kokkos::Tools::popRegion();
 }

@@ -31,25 +31,22 @@ struct NonContigDeepCopySendRecv {
     }
   }
 
-
-
   static CtxBufCount pre_send(const Space &space, const View &view) {
-
     CtxBufCount ctx;
 
     using KCT = KokkosComm::Traits<View>;
 
     if (KCT::is_contiguous(view)) {
-      ctx.mpi_args.push_back(
-          CtxBufCount::MpiArgs(KCT::data_handle(view), mpi_type<typename View::non_const_value_type>(), KCT::span(view)));
+      ctx.mpi_args.push_back(CtxBufCount::MpiArgs(KCT::data_handle(view),
+                                                  mpi_type<typename View::non_const_value_type>(), KCT::span(view)));
       ctx.wait_callbacks.push_back(std::make_shared<ViewHolder<View>>(view));
     } else {
       non_const_packed_view_type packed = allocate_for(space, view);
       Kokkos::deep_copy(space, packed, view);
       ctx.set_pre_uses_space();
       ctx.mpi_args.push_back(CtxBufCount::MpiArgs(PVT::data_handle(packed),
-                                          mpi_type<typename non_const_packed_view_type::non_const_value_type>(),
-                                          packed.size()));
+                                                  mpi_type<typename non_const_packed_view_type::non_const_value_type>(),
+                                                  packed.size()));
       ctx.wait_callbacks.push_back(std::make_shared<ViewHolder<non_const_packed_view_type>>(packed));
     }
 
@@ -60,15 +57,15 @@ struct NonContigDeepCopySendRecv {
     CtxBufCount ctx;
 
     if (KCT::is_contiguous(view)) {
-      ctx.mpi_args.push_back(
-          CtxBufCount::MpiArgs(KCT::data_handle(view), mpi_type<typename View::non_const_value_type>(), KCT::span(view)));
+      ctx.mpi_args.push_back(CtxBufCount::MpiArgs(KCT::data_handle(view),
+                                                  mpi_type<typename View::non_const_value_type>(), KCT::span(view)));
     } else {
       non_const_packed_view_type packed = allocate_for(space, view);
       Kokkos::deep_copy(space, packed, view);
       ctx.set_pre_uses_space();
       ctx.mpi_args.push_back(CtxBufCount::MpiArgs(PVT::data_handle(packed),
-                                          mpi_type<typename non_const_packed_view_type::non_const_value_type>(),
-                                          packed.size()));
+                                                  mpi_type<typename non_const_packed_view_type::non_const_value_type>(),
+                                                  packed.size()));
       ctx.views.push_back(std::make_shared<ViewHolder<non_const_packed_view_type>>(packed));
     }
     return ctx;
@@ -94,7 +91,6 @@ struct NonContigDeepCopySendRecv {
     }
     return ctx;
   }
-
 };
 
 };  // namespace KokkosComm::Impl

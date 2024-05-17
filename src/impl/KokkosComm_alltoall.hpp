@@ -51,8 +51,7 @@ void alltoall(const ExecSpace &space, const SendView &sv, const RecvView &rv, MP
   Kokkos::Tools::pushRegion("KokkosComm::Impl::alltoall");
 
   // FIXME: check some relative sizes of sv and rv, etc
-  {
-  }
+  {}
 
   CtxAlltoall ctx = NC::pre_alltoall(space, sv, rv);
 
@@ -68,7 +67,8 @@ void alltoall(const ExecSpace &space, const SendView &sv, const RecvView &rv, MP
 }
 
 // in-place alltoall
-template <KokkosExecutionSpace ExecSpace, KokkosView View, NonContigAlltoall NC = DefaultNonContigAlltoall<ExecSpace, View, View>>
+template <KokkosExecutionSpace ExecSpace, KokkosView View,
+          NonContigAlltoall NC = DefaultNonContigAlltoall<ExecSpace, View, View>>
 void alltoall(const ExecSpace &space, const View &v, const size_t recvCount, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::alltoall");
 

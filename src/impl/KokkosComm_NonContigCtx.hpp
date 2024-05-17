@@ -10,26 +10,18 @@
 namespace KokkosComm {
 
 class CtxBase {
-public:
+ public:
   CtxBase() : pre_uses_space_(false), post_uses_space_(false) {}
 
-  bool pre_uses_space() const {
-    return pre_uses_space_;
-  }
-  void set_pre_uses_space(bool val = true) {
-    pre_uses_space_ = val;
-  }
-  bool post_uses_space() const {
-    return post_uses_space_;
-  }
-  void set_post_uses_space(bool val = true) {
-    post_uses_space_ = val;
-  }
+  bool pre_uses_space() const { return pre_uses_space_; }
+  void set_pre_uses_space(bool val = true) { pre_uses_space_ = val; }
+  bool post_uses_space() const { return post_uses_space_; }
+  void set_post_uses_space(bool val = true) { post_uses_space_ = val; }
 
   std::vector<std::shared_ptr<Impl::InvokableHolderBase>> wait_callbacks;
   std::vector<std::shared_ptr<Impl::ViewHolderBase>> views;  // views that need to stay alive as long as this thing
 
-protected:
+ protected:
   bool pre_uses_space_;
   bool post_uses_space_;
 };
@@ -51,14 +43,16 @@ struct CtxBufCount : public CtxBase {
   std::vector<MpiArgs> mpi_args;
 };
 
-
 struct CtxReduce : public CtxBase {
   struct MpiArgs {
     void *sbuf;
     void *rbuf;
     MPI_Datatype datatype;
-    MPI_Request req;
     int count;
+    MPI_Request req;
+
+    MpiArgs(void *_sbuf, void *_rbuf, MPI_Datatype _datatype, int _count)
+        : sbuf(_sbuf), rbuf(_rbuf), datatype(_datatype), count(_count), req(MPI_REQUEST_NULL) {}
   };
 
   CtxReduce() = default;

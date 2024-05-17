@@ -42,9 +42,7 @@ struct NonContigMultiMessage {
   }
 
   static Ctx pre_send(const Space &space, const View &view) {
-    
     return pre_send(space, view, KokkosComm::Traits<View>::span(view));
-
   }
 
   static Ctx pre_recv(const Space &space, const View &view) {

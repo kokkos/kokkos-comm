@@ -11,7 +11,6 @@ namespace KokkosComm::Impl {
 
 template <KokkosExecutionSpace Space, KokkosView SendView, KokkosView RecvView>
 struct NonContigDeepCopyAlltoall {
-
   static CtxAlltoall pre_alltoall(const Space &space, const SendView &sv, const RecvView &rv) {
     throw std::runtime_error("unimplemented");
   }
@@ -27,7 +26,6 @@ struct NonContigDeepCopyAlltoall {
   static CtxAlltoall post_alltoall_inplace(const Space &space, const RecvView &rv, CtxAlltoall &ctx) {
     throw std::runtime_error("unimplemented");
   }
-
 };
 
 };  // namespace KokkosComm::Impl

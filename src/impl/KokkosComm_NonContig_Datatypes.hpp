@@ -21,7 +21,8 @@ struct NonContigDatatypes : public NonContigBase<NonContigDatatypes> {
 
   using value_type = typename View::non_const_value_type;
 
-  static Ctx pre_send(const Space &space, const View &view, const std::vector<int> &counts, const std::vector<int> &displs) {
+  static Ctx pre_send(const Space &space, const View &view, const std::vector<int> &counts,
+                      const std::vector<int> &displs) {
     Ctx ctx;
 
     MPI_Datatype type = mpi_type<value_type>();
@@ -46,7 +47,8 @@ struct NonContigDatatypes : public NonContigBase<NonContigDatatypes> {
     return ctx;
   }
 
-  static Ctx pre_recv(const Space &space, const View &view, const std::vector<int> &counts, const std::vector<int> &displs) {
+  static Ctx pre_recv(const Space &space, const View &view, const std::vector<int> &counts,
+                      const std::vector<int> &displs) {
     Ctx ctx;
 
     using KCT = KokkosComm::Traits<View>;

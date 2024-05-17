@@ -27,8 +27,8 @@
 
 namespace KokkosComm::Impl {
 
-template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView,
-          NonContigSendRecv NC      = DefaultNonContigSendRecv<ExecSpace, SendView>>
+template <CommMode SendMode    = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView,
+          NonContigSendRecv NC = DefaultNonContigSendRecv<ExecSpace, SendView>>
 Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
   Req req;
@@ -58,7 +58,7 @@ Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
     mpi_isend_fn(args.buf, args.count, args.datatype, dest, tag, comm, &args.req);
     req.add_mpi_wait(args.req);
   }
-  
+
   for (auto v : ctx.wait_callbacks) {
     req.call_and_drop_at_wait(v);
   }
