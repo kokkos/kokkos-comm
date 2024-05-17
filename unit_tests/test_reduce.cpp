@@ -18,6 +18,8 @@
 
 #include "KokkosComm.hpp"
 
+#include "view_builder.hpp"
+
 template <typename T>
 class Reduce : public testing::Test {
  public:
@@ -27,24 +29,17 @@ class Reduce : public testing::Test {
 using ScalarTypes = ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>, Kokkos::complex<double>>;
 TYPED_TEST_SUITE(Reduce, ScalarTypes);
 
-/*!
-Each rank fills its sendbuf[i] with `rank + i`
-
-operation is sum, so recvbuf[i] should be sum(0..size) + i * size
-
-*/
-TYPED_TEST(Reduce, 1D_contig) {
+template <typename Contig, typename Scalar>
+void test_reduce_1d() {
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  using TestScalar = typename TestFixture::Scalar;
-
-  Kokkos::View<TestScalar *> sv("sv", 10);
-  Kokkos::View<TestScalar *> rv;
-  if (0 == rank) {
-    Kokkos::resize(rv, sv.extent(0));
-  }
+  auto sv = ViewBuilder<Scalar, 1>::view(Contig{}, "sv", 10);
+  auto rv = ViewBuilder<Scalar, 1>::view(Contig{}, "rv", 10);
+  // if (0 == rank) {
+  //   Kokkos::resize(rv, sv.extent(0));
+  // }
 
   // fill send buffer
   Kokkos::parallel_for(
@@ -57,7 +52,7 @@ TYPED_TEST(Reduce, 1D_contig) {
     Kokkos::parallel_reduce(
         rv.extent(0),
         KOKKOS_LAMBDA(const int &i, int &lsum) {
-          TestScalar acc = 0;
+          Scalar acc = 0;
           for (int r = 0; r < size; ++r) {
             acc += r + i;
           }
@@ -69,4 +64,13 @@ TYPED_TEST(Reduce, 1D_contig) {
         errs);
     ASSERT_EQ(errs, 0);
   }
+}
+
+
+TYPED_TEST(Reduce, 1D_noncontig) {
+  test_reduce_1d<noncontig, typename TestFixture::Scalar>();
+}
+
+TYPED_TEST(Reduce, 1D_contig) {
+  test_reduce_1d<noncontig, typename TestFixture::Scalar>();
 }
