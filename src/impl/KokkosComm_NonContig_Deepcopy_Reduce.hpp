@@ -62,10 +62,10 @@ struct NonContigDeepCopyReduce {
   }
 
   static CtxReduce &post_reduce(const Space &space, const RecvView &rv, CtxReduce &ctx) {
+    using UVT = Kokkos::View<typename RecvView::non_const_data_type, Kokkos::LayoutRight, Kokkos::MemoryUnmanaged>;
+
     if (!RT::is_contiguous(rv)) {
       for (ctx_type::MpiArgs &args : ctx.mpi_args) {
-        using UVT = Kokkos::View<Scalar *, Kokkos::LayoutRight, Kokkos::MemoryUnmanaged>;
-
         if constexpr (RT::rank() == 1) {
           UVT ub(static_cast<Scalar *>(args.rbuf), rv.extent(0));
           Kokkos::deep_copy(space, rv, ub);

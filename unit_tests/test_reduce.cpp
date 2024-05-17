@@ -37,9 +37,7 @@ void test_reduce_1d() {
 
   auto sv = ViewBuilder<Scalar, 1>::view(Contig{}, "sv", 10);
   auto rv = ViewBuilder<Scalar, 1>::view(Contig{}, "rv", 10);
-  // if (0 == rank) {
-  //   Kokkos::resize(rv, sv.extent(0));
-  // }
+  // FIXME: zero out rv size for non-root ranks
 
   // fill send buffer
   Kokkos::parallel_for(
@@ -66,6 +64,47 @@ void test_reduce_1d() {
   }
 }
 
+template <typename Contig, typename Scalar>
+void test_reduce_2d() {
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+  auto sv = ViewBuilder<Scalar, 2>::view(Contig{}, "sv", 10, 10);
+  auto rv = ViewBuilder<Scalar, 2>::view(Contig{}, "rv", 10, 10);
+  // FIXME: zero out rv size for non-root ranks
+
+  // fill send buffer
+  Kokkos::parallel_for(
+      Kokkos::MDRangePolicy({0, 0}, {sv.extent(0), sv.extent(1)}),
+      KOKKOS_LAMBDA(const int i, const int j) { sv(i, j) = rank + i * sv.extent(0) + j; });
+
+  KokkosComm::reduce(Kokkos::DefaultExecutionSpace(), sv, rv, MPI_SUM, 0, MPI_COMM_WORLD);
+
+  if (0 == rank) {
+    int errs;
+    Kokkos::parallel_reduce(
+        Kokkos::MDRangePolicy({0, 0}, {sv.extent(0), sv.extent(1)}),
+        KOKKOS_LAMBDA(const int i, const int j, int &lsum) {
+          Scalar acc = 0;
+          for (int r = 0; r < size; ++r) {
+            acc += r + i * sv.extent(0) + j;
+          }
+          lsum += rv(i, j) != acc;
+          if (rv(i, j) != acc) {
+            Kokkos::printf("%f != %f @ %lu,%lu\n", double(Kokkos::abs(rv(i, j))), double(Kokkos::abs(acc)), size_t(i),
+                           size_t(j));
+          }
+        },
+        errs);
+    ASSERT_EQ(errs, 0);
+  }
+}
+
 TYPED_TEST(Reduce, 1D_noncontig) { test_reduce_1d<noncontig, typename TestFixture::Scalar>(); }
 
-TYPED_TEST(Reduce, 1D_contig) { test_reduce_1d<noncontig, typename TestFixture::Scalar>(); }
+TYPED_TEST(Reduce, 1D_contig) { test_reduce_1d<contig, typename TestFixture::Scalar>(); }
+
+TYPED_TEST(Reduce, 2D_noncontig) { test_reduce_2d<noncontig, typename TestFixture::Scalar>(); }
+
+TYPED_TEST(Reduce, 2D_contig) { test_reduce_2d<contig, typename TestFixture::Scalar>(); }
