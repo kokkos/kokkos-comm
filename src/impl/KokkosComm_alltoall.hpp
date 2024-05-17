@@ -51,9 +51,15 @@ void alltoall(const ExecSpace &space, const SendView &sv, const RecvView &rv, MP
   Kokkos::Tools::pushRegion("KokkosComm::Impl::alltoall");
 
   // FIXME: check some relative sizes of sv and rv, etc
+  // FIXME: debug only
   {}
 
-  CtxAlltoall ctx = NC::pre_alltoall(space, sv, rv);
+  int size;
+  MPI_Comm_size(comm, &size);
+  const int scount = sv.size() / size;
+  const int rcount = rv.size() / size;
+
+  CtxAlltoall ctx = NC::pre_alltoall(space, sv, rv, scount, rcount);
 
   if (ctx.pre_uses_space()) {
     space.fence("ctx fence before MPI_Alltoall");
@@ -69,13 +75,17 @@ void alltoall(const ExecSpace &space, const SendView &sv, const RecvView &rv, MP
 // in-place alltoall
 template <KokkosExecutionSpace ExecSpace, KokkosView View,
           NonContigAlltoall NC = DefaultNonContigAlltoall<ExecSpace, View, View>>
-void alltoall(const ExecSpace &space, const View &v, const size_t recvCount, MPI_Comm comm) {
+void alltoall(const ExecSpace &space, const View &v, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::alltoall");
 
-  CtxAlltoall ctx = NC::pre_alltoall_inplace(space, v);
+  int size;
+  MPI_Comm_size(comm, &size);
+  const int rcount = v.size() / size;
+
+  CtxAlltoall ctx = NC::pre_alltoall_inplace(space, v, rcount);
   space.fence();
   for (const CtxAlltoall::MpiArgs &args : ctx.mpi_args) {
-    MPI_Alltoall(MPI_IN_PLACE, 0 /*ignored*/, MPI_BYTE /*ignored*/, args.rbuf, args.rcount, args.rtype, comm);
+    MPI_Alltoall(args.sbuf, args.scount, args.stype, args.rbuf, args.rcount, args.rtype, comm);
   }
   NC::post_alltoall_inplace(space, v, ctx);
 

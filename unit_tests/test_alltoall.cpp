@@ -45,27 +45,7 @@ TYPED_TEST(Alltoall, 1D_contig) {
   Kokkos::parallel_for(
       sv.extent(0), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
 
-  {
-    std::stringstream ss;
-    ss << "r" << rank << " s:";
-    for (size_t i = 0; i < sv.size(); ++i) {
-      ss << " " << sv(i);
-    }
-    ss << "\n";
-    std::cerr << ss.str();
-  }
-
   KokkosComm::Impl::alltoall(Kokkos::DefaultExecutionSpace(), sv, rv, MPI_COMM_WORLD);
-
-  {
-    std::stringstream ss;
-    ss << "r" << rank << " r:";
-    for (size_t i = 0; i < rv.size(); ++i) {
-      ss << " " << rv(i);
-    }
-    ss << "\n";
-    std::cerr << ss.str();
-  }
 
   int errs;
   Kokkos::parallel_reduce(
@@ -94,7 +74,7 @@ TYPED_TEST(Alltoall, 1D_inplace_contig) {
   Kokkos::parallel_for(
       rv.extent(0), KOKKOS_LAMBDA(const int i) { rv(i) = rank + i; });
 
-  KokkosComm::Impl::alltoall(Kokkos::DefaultExecutionSpace(), rv, nContrib, MPI_COMM_WORLD);
+  KokkosComm::Impl::alltoall(Kokkos::DefaultExecutionSpace(), rv, MPI_COMM_WORLD);
 
   int errs;
   Kokkos::parallel_reduce(

@@ -64,11 +64,20 @@ struct CtxAlltoall : public CtxBase {
   struct MpiArgs {
     void *sbuf;
     void *rbuf;
+    int scount;
+    int rcount;
     MPI_Datatype stype;
     MPI_Datatype rtype;
     MPI_Request req;
-    int scount;
-    int rcount;
+
+    MpiArgs(void *_sbuf, int _scount, MPI_Datatype _stype, void *_rbuf, int _rcount, MPI_Datatype _rtype)
+        : sbuf(_sbuf),
+          scount(_scount),
+          stype(_stype),
+          rbuf(_rbuf),
+          rcount(_rcount),
+          rtype(_rtype),
+          req(MPI_REQUEST_NULL) {}
   };
 
   CtxAlltoall() = default;
