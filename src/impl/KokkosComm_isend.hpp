@@ -28,9 +28,8 @@
 #include "KokkosComm_comm_mode.hpp"
 
 namespace KokkosComm::Impl {
-
-template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
-KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, Communicator comm) {
+template <CommMode SendMode = CommMode::Default, KokkosView SendView>
+KokkosComm::Req isend(KokkosExecutionSpace auto const& space, SendView sv, int dest, int tag, Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
 
   KokkosComm::Req req;
@@ -56,5 +55,4 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest, int 
   Kokkos::Tools::popRegion();
   return req;
 }
-
 }  // namespace KokkosComm::Impl

@@ -36,4 +36,4 @@ void ireduce(SendView sv, RecvView rv, Reducer op, int root, Communicator comm) 
   Kokkos::Tools::popRegion();
   return req;
 }
-}
+}  // namespace KokkosComm::Impl

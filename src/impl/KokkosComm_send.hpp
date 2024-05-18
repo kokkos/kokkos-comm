@@ -23,7 +23,6 @@
 #include "KokkosComm_comm_mode.hpp"
 
 namespace KokkosComm::Impl {
-
 template <KokkosView SendView>
 void send(SendView sv, int dest, int tag, Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
@@ -52,5 +51,4 @@ void send(KokkosExecutionSpace auto const &space, SendView sv, int dest, int tag
 
   Kokkos::Tools::popRegion();
 }
-
 }  // namespace KokkosComm::Impl

@@ -35,4 +35,4 @@ void allreduce(SendView sv, RecvView rv, Reducer op, Communicator comm) {
   comm.allreduce(sv, rv, op);
   Kokkos::Tools::popRegion();
 }
-}
+}  // namespace KokkosComm::Impl
