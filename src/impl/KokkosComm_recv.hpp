@@ -24,8 +24,21 @@
 #include "KokkosComm_traits.hpp"
 
 namespace KokkosComm::Impl {
-template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-void recv(const ExecSpace &space, RecvView &rv, int src, int tag, Communicator comm) {
+template <KokkosView RecvView>
+void recv(RecvView rv, int src, int tag, Communicator comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
+  using KCT = typename KokkosComm::Traits<RecvView>;
+
+  if (KCT::is_contiguous(rv)) {
+    comm.send(rv, src, tag);
+  } else {
+    throw std::runtime_error("only contiguous views supported for low-level recv");
+  }
+  Kokkos::Tools::popRegion();
+}
+
+template <KokkosView RecvView>
+void recv(KokkosExecutionSpace auto const& space, RecvView rv, int src, int tag, Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
 
   using KCT  = KokkosComm::Traits<RecvView>;

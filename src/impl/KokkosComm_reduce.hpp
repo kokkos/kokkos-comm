@@ -23,8 +23,21 @@
 #include "KokkosComm_traits.hpp"
 
 namespace KokkosComm::Impl {
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Op op, int root, Communicator comm) {
+template <KokkosView SendView, KokkosView RecvView>
+void reduce(SendView sv, RecvView rv, Reducer op, int root, Communicator comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::Impl::reduce");
+  using SVT = typename KokkosComm::Traits<SendView>;
+  using RVT = typename KokkosComm::Traits<RecvView>;
+
+  if (not SVT::is_contiguous(sv) or not RVT::is_contiguous(rv))
+    throw std::runtime_error("only contiguous views supported for low-level reduce");
+
+  comm.reduce(sv, rv, op, root);
+  Kokkos::Tools::popRegion();
+}
+
+template <KokkosView SendView, KokkosView RecvView>
+void reduce(KokkosExecutionSpace auto const &space, SendView sv, RecvView rv, Reducer op, int root, Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::reduce");
 
   using SendPacker = typename KokkosComm::PackTraits<SendView>::packer_type;

@@ -304,5 +304,6 @@ class Communicator {
 };
 
 inline Communicator CommWorld() { return Communicator{MPI_COMM_WORLD}; }
+inline Communicator CommSelf() { return Communicator{MPI_COMM_SELF}; }
 
 }  // namespace KokkosComm::Impl

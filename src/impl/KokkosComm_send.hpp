@@ -37,8 +37,8 @@ void send(SendView sv, int dest, int tag, Communicator comm) {
   Kokkos::Tools::popRegion();
 }
 
-template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
-void send(const ExecSpace &space, const SendView &sv, int dest, int tag, Communicator comm) {
+template <CommMode SendMode = CommMode::Default, KokkosView SendView>
+void send(KokkosExecutionSpace auto const &space, SendView sv, int dest, int tag, Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
   using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
 
