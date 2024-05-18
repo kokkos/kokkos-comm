@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include <Kokkos_Core.hpp>
 
 #include "KokkosComm_mpi.hpp"
@@ -24,16 +26,19 @@
 
 namespace KokkosComm::Impl {
 
-void barrier(Communicator comm) {
-  Kokkos::Tools::pushRegion("KokkosComm::Impl::barrier");
-  comm.barrier();
-  Kokkos::Tools::popRegion();
-}
+// low-level API
+template <KokkosView RecvView>
+Request irecv(RecvView rv, int src, int tag, Communicator comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::Impl::irecv");
 
-// a barrier in the provided space. For MPI, we have to fence the space and do a host barrier
-template <KokkosExecutionSpace ExecSpace>
-void barrier(const ExecSpace &space, Communicator comm) {
-  space.fence("KokkosComm::Impl::barrier");
-  barrier(comm);
+  using KCT = KokkosComm::Traits<RecvView>;
+
+  if (KCT::is_contiguous(rv)) {
+    return comm.irecv(rv, src, tag);
+  } else {
+    throw std::runtime_error("Only contiguous irecv viewsupported");
+  }
+
+  Kokkos::Tools::popRegion();
 }
 }  // namespace KokkosComm::Impl

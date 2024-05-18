@@ -26,15 +26,16 @@
 #include "KokkosComm_recv.hpp"
 #include "KokkosComm_send.hpp"
 #include "KokkosComm_reduce.hpp"
+#include "KokkosComm_alltoall.hpp"
 #include "KokkosComm_barrier.hpp"
 
 namespace KokkosComm {
-
 using Impl::Communicator;
-using Impl::Reducer;
+using Impl::CommWorld;
+
 using Impl::Request;
 
-using Impl::CommWorld;
+using Impl::Reducer;
 using Impl::Sum;
 
 inline int size(Communicator comm) { return comm.size(); }

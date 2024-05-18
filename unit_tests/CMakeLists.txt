@@ -51,6 +51,8 @@ add_executable(test-main test_main.cpp
   test_allreduce.cpp
   test_iallreduce.cpp
   test_barrier.cpp
+  test_alltoall.cpp
+  test_reduce.cpp
 )
 target_link_libraries(test-main KokkosComm::KokkosComm gtest)
 if(KOKKOSCOMM_ENABLE_TESTS)

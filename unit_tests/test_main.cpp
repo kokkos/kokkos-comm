@@ -88,7 +88,6 @@ int main(int argc, char *argv[]) {
   if (0 == rank) {
     std::cerr << argv[0] << " (KokkosComm " << KOKKOSCOMM_VERSION_MAJOR << "." << KOKKOSCOMM_VERSION_MINOR << "."
               << KOKKOSCOMM_VERSION_PATCH << ")\n";
-    std::cerr << "size=" << size << "\n";
   }
 
   Kokkos::initialize();
