@@ -24,7 +24,7 @@
 
 namespace KokkosComm::Impl {
 
-void barrier(Communicator comm) {
+inline void barrier(Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::barrier");
   comm.barrier();
   Kokkos::Tools::popRegion();

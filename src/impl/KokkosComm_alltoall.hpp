@@ -23,8 +23,8 @@
 
 namespace KokkosComm::Impl {
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount, const RecvView &rv,
-              const size_t recvCount, Communicator comm) {
+void alltoall(const ExecSpace &, const SendView &sv, const size_t sendCount, const RecvView &rv, const size_t recvCount,
+              Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::alltoall");
 
   using ST         = KokkosComm::Traits<SendView>;
@@ -62,7 +62,7 @@ void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount
 
 // in-place alltoall
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-void alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount, Communicator comm) {
+void alltoall(const ExecSpace &, const RecvView &rv, const size_t recvCount, Communicator comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::alltoall");
 
   using RT         = KokkosComm::Traits<RecvView>;
