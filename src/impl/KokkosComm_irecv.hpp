@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include <Kokkos_Core.hpp>
 
 #include "KokkosComm_pack_traits.hpp"
@@ -23,20 +25,23 @@
 
 // impl
 #include "KokkosComm_include_mpi.hpp"
-#include "KokkosComm_types.hpp"
 
 namespace KokkosComm::Impl {
 
-void barrier(MPI_Comm comm) {
-  Kokkos::Tools::pushRegion("KokkosComm::Impl::barrier");
-  MPI_Barrier(comm);
-  Kokkos::Tools::popRegion();
-}
+// low-level API
+template <KokkosView RecvView>
+void irecv(RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Request &req) {
+  Kokkos::Tools::pushRegion("KokkosComm::Impl::irecv");
 
-// a barrier in the provided space. For MPI, we have to fence the space and do a host barrier
-template <KokkosExecutionSpace ExecSpace>
-void barrier(const ExecSpace &space, MPI_Comm comm) {
-  space.fence("KokkosComm::Impl::barrier");
-  barrier(comm);
+  using KCT = KokkosComm::Traits<RecvView>;
+
+  if (KCT::is_contiguous(rv)) {
+    using RecvScalar = typename RecvView::value_type;
+    MPI_Irecv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<RecvScalar>, src, tag, comm, &req);
+  } else {
+    throw std::runtime_error("Only contiguous irecv viewsupported");
+  }
+
+  Kokkos::Tools::popRegion();
 }
 }  // namespace KokkosComm::Impl

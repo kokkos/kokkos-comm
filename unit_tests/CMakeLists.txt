@@ -44,10 +44,12 @@ target_link_libraries(test-mpi MPI::MPI_CXX)
 # Kokkos Comm tests
 add_executable(test-main test_main.cpp
   test_gtest_mpi.cpp
+  test_isendirecv.cpp
   test_isendrecv.cpp
-  test_reduce.cpp
   test_sendrecv.cpp
   test_barrier.cpp
+  test_alltoall.cpp
+  test_reduce.cpp
 )
 target_link_libraries(test-main KokkosComm::KokkosComm gtest)
 if(KOKKOSCOMM_ENABLE_TESTS)
