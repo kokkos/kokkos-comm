@@ -31,8 +31,8 @@ class Communicator {
  public:
   ~Communicator() {
     switch (_comm_kind) {
-      case CommunicatorKind::User: MPI_Comm_free(&_comm); break;
-      // case CommunicatorKind::Inter: MPI_Comm_disconnect(&_comm); break;
+      // FIXME: find out how to properly free a session-associated communicator
+      // case CommunicatorKind::User: MPI_Comm_free(&_comm); break;
       default: break;
     }
   }
@@ -48,18 +48,11 @@ class Communicator {
     } else {
       int flag;
       MPI_Comm_test_inter(raw, &flag);
-      if (0 != flag) {
+      if (0 == flag) {
+        comm_kind = CommunicatorKind::User;
+      } else {
         fprintf(stderr, "[KokkosComm] error: intercommunicators are not supported (yet).\n");
         std::terminate();
-        // MPI_Comm parent_comm = MPI_COMM_NULL;
-        // MPI_Comm_get_parent(&parent_comm);
-        // if (raw == parent_comm) {
-        //   comm_kind = CommunicatorKind::Parent;
-        // } else {
-        //   comm_kind = CommunicatorKind::Inter;
-        // }
-      } else {
-        comm_kind = CommunicatorKind::User;
       }
     }
 
@@ -111,8 +104,6 @@ class Communicator {
     Self,   // MPI_COMM_SELF
     World,  // MPI_COMM_WORLD
     User,   // User-defined communicator
-    // Parent,
-    // Inter,
   };
 
   Communicator(MPI_Comm comm, CommunicatorKind comm_kind) : _comm(comm), _comm_kind(comm_kind) {}
