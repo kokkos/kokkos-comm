@@ -18,6 +18,7 @@
 
 #include "KokkosComm_concepts.hpp"
 
+#include <Kokkos_Core_fwd.hpp>
 #include <cstdio>
 #include <mpi.h>
 
@@ -26,66 +27,37 @@ namespace KokkosComm {
 using Color = int;
 using Key   = int;
 
-template <KokkosExecutionSpace ExecSpace>
+template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace>
 class Communicator {
+ private:
+  MPI_Comm _comm;
+  ExecSpace _exec_space;
+
  public:
-  ~Communicator() {
-    switch (_comm_kind) {
-      // FIXME: find out how to properly free a session-associated communicator
-      // case CommunicatorKind::User: MPI_Comm_free(&_comm); break;
-      default: break;
-    }
-  }
-
-  static auto from_raw(MPI_Comm raw) -> Communicator {
-    assert(MPI_COMM_NULL != raw);
-
-    CommunicatorKind comm_kind;
-    if (MPI_COMM_SELF == raw) {
-      comm_kind = CommunicatorKind::Self;
-    } else if (MPI_COMM_WORLD == raw) {
-      comm_kind = CommunicatorKind::World;
-    } else {
-      int flag;
-      MPI_Comm_test_inter(raw, &flag);
-      if (0 == flag) {
-        comm_kind = CommunicatorKind::User;
-      } else {
-        fprintf(stderr, "[KokkosComm] error: intercommunicators are not supported (yet).\n");
-        std::terminate();
-      }
-    }
-
-    return Communicator(raw, comm_kind);
-  }
-
-  inline static auto from_raw_unchecked(MPI_Comm comm) -> Communicator {
-    return Communicator(comm, CommunicatorKind::User);
-  }
+  Communicator(MPI_Comm comm) : _comm(comm) {}
+  Communicator(const Communicator& other) = delete;
+  Communicator(const Communicator&& other) { _comm = std::move(other._comm); }
+  ~Communicator() { /*MPI_Comm_free(&_comm);*/ }
 
   static auto dup_raw(MPI_Comm raw) -> Communicator {
     MPI_Comm new_comm;
     MPI_Comm_dup(raw, &new_comm);
-    return Communicator(new_comm, CommunicatorKind::User);
+    return Communicator(new_comm);
   }
 
-  static auto dup(const Communicator &other) -> Communicator { return Communicator::dup_raw(other.as_raw()); }
+  static auto dup(const Communicator& other) -> Communicator { return Communicator::dup_raw(other.as_raw()); }
 
   static auto split_raw(MPI_Comm raw, Color color, Key key) -> Communicator {
     MPI_Comm new_comm;
     MPI_Comm_split(raw, color, key, &new_comm);
-    return Communicator(new_comm, CommunicatorKind::User);
+    return Communicator(new_comm);
   }
 
-  static auto split(const Communicator &other, Color color, Key key) -> Communicator {
+  static auto split(const Communicator& other, Color color, Key key) -> Communicator {
     return Communicator::split_raw(other.as_raw(), color, key);
   }
 
   inline auto as_raw() const -> MPI_Comm { return _comm; }
-
-  inline static auto self(void) -> Communicator { return Communicator::from_raw_unchecked(MPI_COMM_SELF); }
-
-  inline static auto world(void) -> Communicator { return Communicator::from_raw_unchecked(MPI_COMM_WORLD); }
 
   inline auto size(void) const -> int {
     int size;
@@ -98,19 +70,6 @@ class Communicator {
     MPI_Comm_rank(_comm, &rank);
     return rank;
   }
-
- private:
-  enum class CommunicatorKind {
-    Self,   // MPI_COMM_SELF
-    World,  // MPI_COMM_WORLD
-    User,   // User-defined communicator
-  };
-
-  Communicator(MPI_Comm comm, CommunicatorKind comm_kind) : _comm(comm), _comm_kind(comm_kind) {}
-
-  MPI_Comm _comm;
-  CommunicatorKind _comm_kind;
-  ExecSpace _exec_space;
 };
 
 }  // namespace KokkosComm
