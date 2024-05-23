@@ -38,8 +38,8 @@ void test_1d(const View1D &a) {
   static_assert(View1D::rank == 1, "");
   using Scalar = typename View1D::non_const_value_type;
 
-  auto universe = KokkosComm::initialize<Kokkos::DefaultExecutionSpace>();
-  auto comm     = universe.comm();
+  auto ctx         = KokkosComm::initialize<Kokkos::DefaultExecutionSpace>();
+  const auto &comm = ctx.comm();
 
   int rank = comm.rank();
   int size = comm.size();
@@ -68,8 +68,8 @@ void test_2d(const View2D &a) {
   static_assert(View2D::rank == 2, "");
   using Scalar = typename View2D::non_const_value_type;
 
-  auto universe = KokkosComm::initialize<Kokkos::DefaultExecutionSpace>();
-  auto comm     = universe.comm();
+  auto ctx         = KokkosComm::initialize<Kokkos::DefaultExecutionSpace>();
+  const auto &comm = ctx.comm();
 
   int rank = comm.rank();
   int size = comm.size();

@@ -31,8 +31,8 @@ void send_recv(benchmark::State &, const KokkosComm::Communicator<Space> &comm, 
 }
 
 void benchmark_sendrecv(benchmark::State &state) {
-  auto universe = KokkosComm::initialize<Kokkos::DefaultExecutionSpace>();
-  auto comm     = universe.comm();
+  auto ctx         = KokkosComm::initialize<Kokkos::DefaultExecutionSpace>();
+  const auto &comm = ctx.comm();
 
   int rank = comm.rank();
   int size = comm.size();

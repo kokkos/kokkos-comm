@@ -74,8 +74,8 @@ void benchmark_2dhalo(benchmark::State &state) {
   int ny     = 512;
   int nprops = 3;
 
-  auto universe = KokkosComm::initialize<Kokkos::DefaultExecutionSpace>();
-  auto comm     = universe.comm();
+  auto ctx         = KokkosComm::initialize<Kokkos::DefaultExecutionSpace>();
+  const auto &comm = ctx.comm();
 
   int rank     = comm.rank();
   int size     = comm.size();

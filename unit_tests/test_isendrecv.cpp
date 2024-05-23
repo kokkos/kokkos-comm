@@ -38,8 +38,8 @@ void isend_comm_mode_1d_contig() {
 
   Kokkos::View<Scalar *> a("a", 1000);
 
-  auto universe = KokkosComm::initialize<Kokkos::DefaultExecutionSpace>();
-  auto comm     = universe.comm();
+  auto ctx         = KokkosComm::initialize<Kokkos::DefaultExecutionSpace>();
+  const auto &comm = ctx.comm();
 
   int rank = comm.rank();
   int size = comm.size();
@@ -71,8 +71,8 @@ void isend_comm_mode_1d_noncontig() {
   Kokkos::View<Scalar **, Kokkos::LayoutRight> b("a", 10, 10);
   auto a = Kokkos::subview(b, Kokkos::ALL, 2);  // take column 2 (non-contiguous)
 
-  auto universe = KokkosComm::initialize<Kokkos::DefaultExecutionSpace>();
-  auto comm     = universe.comm();
+  auto ctx         = KokkosComm::initialize<Kokkos::DefaultExecutionSpace>();
+  const auto &comm = ctx.comm();
 
   int rank = comm.rank();
   if (0 == rank) {
