@@ -38,9 +38,9 @@ void test_1d(const View1D &a) {
   static_assert(View1D::rank == 1, "");
   using Scalar = typename View1D::non_const_value_type;
 
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  auto comm = KokkosComm::CommWorld();
+  int rank  = comm.rank();
+  int size  = comm.size();
   if (size < 2) {
     GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
   }
@@ -49,14 +49,12 @@ void test_1d(const View1D &a) {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, comm);
     req.wait();
   } else if (1 == rank) {
-    int src = 0;
-    MPI_Request req;
-    KokkosComm::Impl::irecv(a, src, 0, MPI_COMM_WORLD, req);
-    MPI_Wait(&req, MPI_STATUS_IGNORE);
-    int errs;
+    int src                 = 0;
+    KokkosComm::Request req = irecv(a, src, 0, comm);
+    req.wait() int errs;
     Kokkos::parallel_reduce(
         a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
     ASSERT_EQ(errs, 0);
@@ -68,9 +66,9 @@ void test_2d(const View2D &a) {
   static_assert(View2D::rank == 2, "");
   using Scalar = typename View2D::non_const_value_type;
 
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  auto comm = KokkosComm::CommWorld();
+  int rank  = comm.rank();
+  int size  = comm.size();
   if (size < 2) {
     GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
   }
@@ -82,13 +80,12 @@ void test_2d(const View2D &a) {
     int dst = 1;
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(int i, int j) { a(i, j) = i * a.extent(0) + j; });
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, comm);
     req.wait();
   } else if (1 == rank) {
-    int src = 0;
-    MPI_Request req;
-    KokkosComm::Impl::irecv(a, src, 0, MPI_COMM_WORLD, req);
-    MPI_Wait(&req, MPI_STATUS_IGNORE);
+    int src                 = 0;
+    KokkosComm::Request req = irecv(a, src, 0, comm);
+    req.wait();
     int errs;
     Kokkos::parallel_reduce(
         policy, KOKKOS_LAMBDA(int i, int j, int &lsum) { lsum += a(i, j) != Scalar(i * a.extent(0) + j); }, errs);

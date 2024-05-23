@@ -17,25 +17,21 @@
 // https://google.github.io/googletest/advanced.html
 
 #include <sstream>
-
 #include <gtest/gtest.h>
-
-#include <KokkosComm.hpp>
 #include <Kokkos_Core.hpp>
-
-#include "KokkosComm_mpi.hpp"
+#include <KokkosComm.hpp>
 
 class MpiEnvironment : public ::testing::Environment {
  public:
   ~MpiEnvironment() override {}
 
   // Override this to define how to set up the environment.
-  void SetUp() override { comm_ = MPI_COMM_WORLD; }
+  void SetUp() override {}
 
   // Override this to define how to tear down the environment.
   void TearDown() override {}
 
-  MPI_Comm comm_;
+  KokkosComm::Communicator comm_ = KokkosComm::CommWorld();
 };
 
 class MpiListener : public testing::EmptyTestEventListener {
@@ -49,8 +45,8 @@ class MpiListener : public testing::EmptyTestEventListener {
 
   // called after a failed assertion or SUCCESS()
   void OnTestPartResult(const testing::TestPartResult &result) override {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    auto comm = KokkosComm::CommWorld();
+    int rank  = comm.rank();
 
     const int rankFailed = result.failed();
     if (rankFailed) {
@@ -59,10 +55,10 @@ class MpiListener : public testing::EmptyTestEventListener {
       std::cout << ss.str() << std::endl;
     }
 
-    // if one ranks has hung or crashed this MPI_Reduce might not work, but most
+    // if one ranks has hung or crashed this reduce might not work, but most
     // of the info is hopefully printed above
     int globalFailed;
-    MPI_Reduce(&rankFailed, &globalFailed, 1, MPI_INT, MPI_LOR, 0, MPI_COMM_WORLD);
+    comm.reduce(Kokkos::View<int const>{&rankFailed}, Kokkos::View<int>{&globalFailed}, KokkosComm::LogicalOr(), 0);
     if (globalFailed && 0 == rank) {
       std::cout << "(some rank failed, more information above)" << std::endl;
     }
@@ -82,9 +78,8 @@ int main(int argc, char *argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
 
   MPI_Init(&argc, &argv);
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  auto comm = KokkosComm::CommWorld();
+  int rank  = comm.rank();
   if (0 == rank) {
     std::cerr << argv[0] << " (KokkosComm " << KOKKOSCOMM_VERSION_MAJOR << "." << KOKKOSCOMM_VERSION_MINOR << "."
               << KOKKOSCOMM_VERSION_PATCH << ")\n";

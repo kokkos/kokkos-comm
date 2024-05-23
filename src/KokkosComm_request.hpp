@@ -37,7 +37,6 @@ class Req {
   };
 
   struct Record {
-    Record() : req_(MPI_REQUEST_NULL) {}
     Request req_;
     std::vector<std::shared_ptr<ViewHolderBase>> until_waits_;
   };

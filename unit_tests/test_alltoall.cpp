@@ -32,9 +32,9 @@ TYPED_TEST_SUITE(Alltoall, ScalarTypes);
 TYPED_TEST(Alltoall, 1D_contig) {
   using TestScalar = typename TestFixture::Scalar;
 
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  auto comm = KokkosComm::CommWorld();
+  int rank  = comm.rank();
+  int size  = comm.size();
 
   const int nContrib = 10;
 
@@ -45,7 +45,7 @@ TYPED_TEST(Alltoall, 1D_contig) {
   Kokkos::parallel_for(
       sv.extent(0), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
 
-  KokkosComm::Impl::alltoall(Kokkos::DefaultExecutionSpace(), sv, nContrib, rv, nContrib, MPI_COMM_WORLD);
+  KokkosComm::Impl::alltoall(Kokkos::DefaultExecutionSpace(), sv, nContrib, rv, nContrib, comm);
 
   int errs;
   Kokkos::parallel_reduce(
@@ -62,9 +62,9 @@ TYPED_TEST(Alltoall, 1D_contig) {
 TYPED_TEST(Alltoall, 1D_inplace_contig) {
   using TestScalar = typename TestFixture::Scalar;
 
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  auto comm = KokkosComm::CommWorld();
+  int rank  = comm.rank();
+  int size  = comm.size();
 
   const int nContrib = 10;
 
@@ -74,7 +74,7 @@ TYPED_TEST(Alltoall, 1D_inplace_contig) {
   Kokkos::parallel_for(
       rv.extent(0), KOKKOS_LAMBDA(const int i) { rv(i) = rank + i; });
 
-  KokkosComm::Impl::alltoall(Kokkos::DefaultExecutionSpace(), rv, nContrib, MPI_COMM_WORLD);
+  KokkosComm::Impl::alltoall(Kokkos::DefaultExecutionSpace(), rv, nContrib, comm);
 
   int errs;
   Kokkos::parallel_reduce(

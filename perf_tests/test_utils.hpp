@@ -17,14 +17,12 @@
 #pragma once
 
 #include <chrono>
-
 #include <benchmark/benchmark.h>
-
 #include "KokkosComm_mpi.hpp"
 
-// F is a function that takes (state, MPI_Comm, args...)
+// F is a function that takes (state, Communicator, args...)
 template <typename F, typename... Args>
-void do_iteration(benchmark::State &state, MPI_Comm comm, F &&func, Args... args) {
+void do_iteration(benchmark::State &state, KokkosComm::Communicator comm, F &&func, Args... args) {
   using Clock    = std::chrono::steady_clock;
   using Duration = std::chrono::duration<double>;
 
@@ -32,8 +30,8 @@ void do_iteration(benchmark::State &state, MPI_Comm comm, F &&func, Args... args
   func(state, comm, args...);
   Duration elapsed = Clock::now() - start;
 
-  double max_elapsed_second;
+  double max_elapsed_seconds;
   double elapsed_seconds = elapsed.count();
-  MPI_Allreduce(&elapsed_seconds, &max_elapsed_second, 1, MPI_DOUBLE, MPI_MAX, comm);
-  state.SetIterationTime(max_elapsed_second);
+  comm.allreduce(Kokkos::View<double>{&elapsed_seconds}, Kokkos::View<double>{&max_elapsed_seconds}, KokkosComm::Max());
+  state.SetIterationTime(max_elapsed_seconds);
 }

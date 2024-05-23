@@ -30,7 +30,7 @@ void recv(RecvView rv, int src, int tag, Communicator comm) {
   using KCT = typename KokkosComm::Traits<RecvView>;
 
   if (KCT::is_contiguous(rv)) {
-    comm.send(rv, src, tag);
+    comm.recv(rv, src, tag);
   } else {
     throw std::runtime_error("only contiguous views supported for low-level recv");
   }
@@ -53,6 +53,7 @@ void recv(KokkosExecutionSpace auto const& space, RecvView rv, int src, int tag,
     comm.recv(args.view, src, tag);
     Packer::unpack_into(space, rv, args.view);
   } else {
+    space.fence();
     comm.recv(rv, src, tag);
   }
 

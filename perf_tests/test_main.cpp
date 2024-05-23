@@ -16,8 +16,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <benchmark/benchmark.h>
-
-#include "KokkosComm_mpi.hpp"
+#include "KokkosComm.hpp"
 
 // This reporter does nothing.
 // We can use it to disable output from all but the root process
@@ -33,9 +32,7 @@ class NullReporter : public ::benchmark::BenchmarkReporter {
 // reporter according to the process rank
 int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  int rank = KokkosComm::CommWorld().rank();
 
   Kokkos::initialize();
 

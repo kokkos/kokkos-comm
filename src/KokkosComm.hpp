@@ -43,10 +43,13 @@ using Impl::Communicator;
 using Impl::CommWorld;
 using Impl::CommSelf;
 
-using Impl::Request;
-
 using Impl::Reducer;
 using Impl::Sum;
+using Impl::Min;
+using Impl::Max;
+using Impl::LogicalOr;
+
+using Impl::Request;
 
 using Impl::send;
 using Impl::recv;

@@ -14,17 +14,15 @@
 //
 //@HEADER
 
+#include <iostream>
+#include "KokkosComm.hpp"
 #include "test_utils.hpp"
 
-#include "KokkosComm.hpp"
-
-#include <iostream>
-
-void noop(benchmark::State, MPI_Comm) {}
+void noop(benchmark::State, KokkosComm::Communicator) {}
 
 template <typename Space, typename View>
-void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, int ny, int rx, int ry, int rs,
-               const View &v) {
+void send_recv(benchmark::State &, KokkosComm::Communicator comm, const Space &space, int nx, int ny, int rx, int ry,
+               int rs, const View &v) {
   // 2D index of nbrs in minus and plus direction (periodic)
   const int xm1 = (rx + rs - 1) % rs;
   const int ym1 = (ry + rs - 1) % rs;
@@ -73,9 +71,9 @@ void benchmark_2dhalo(benchmark::State &state) {
   int ny     = 512;
   int nprops = 3;
 
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  auto comm = KokkosComm::CommWorld();
+  int rank  = comm.rank();
+  int size  = comm.size();
 
   const int rs = std::sqrt(size);
   const int rx = rank % rs;
@@ -86,12 +84,11 @@ void benchmark_2dhalo(benchmark::State &state) {
     // grid of elements, each with 3 properties, and a radius-1 halo
     grid_type grid("", nx + 2, ny + 2, nprops);
     while (state.KeepRunning()) {
-      do_iteration(state, MPI_COMM_WORLD, send_recv<Kokkos::DefaultExecutionSpace, grid_type>, space, nx, ny, rx, ry,
-                   rs, grid);
+      do_iteration(state, comm, send_recv<Kokkos::DefaultExecutionSpace, grid_type>, space, nx, ny, rx, ry, rs, grid);
     }
   } else {
     while (state.KeepRunning()) {
-      do_iteration(state, MPI_COMM_WORLD, noop);  // do nothing...
+      do_iteration(state, comm, noop);  // do nothing...
     }
   }
 

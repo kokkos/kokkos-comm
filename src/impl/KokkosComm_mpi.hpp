@@ -148,6 +148,9 @@ class Reducer {
 };
 
 inline Reducer Sum() { return Reducer{MPI_SUM}; }
+inline Reducer Min() { return Reducer{MPI_MIN}; }
+inline Reducer Max() { return Reducer{MPI_MAX}; }
+inline Reducer LogicalOr() { return Reducer{MPI_LOR}; }
 
 class Communicator {
  private:
@@ -200,9 +203,9 @@ class Communicator {
 
   template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
   void sendrecv(SendView send_view, RecvView recv_view, int rank, int tag = 0) const {
+    using T = std::remove_const_t<typename SendView::value_type>;
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
-    using T = typename SendView::value_type;
     MPI_Sendrecv(send_view.data(), send_view.size(), Impl::mpi_type<T>(), rank, tag,  //
                  recv_view.data(), recv_view.size(), Impl::mpi_type<T>(), rank, tag, _raw_comm, MPI_STATUS_IGNORE);
   }
@@ -210,8 +213,8 @@ class Communicator {
   // Async point to point
   template <CommMode mode = CommMode::Default, KokkosView SendView>
   Request isend(SendView send_view, int dest_rank, int tag = 0) const {
+    using T = std::remove_const_t<typename SendView::value_type>;
     KOKKOS_ASSERT(send_view.span_is_contiguous());
-    using T = typename SendView::value_type;
     MPI_Request req;
 
     if constexpr (mode == CommMode::Standard)
@@ -243,9 +246,10 @@ class Communicator {
 
   template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
   Request isendrecv(SendView send_view, RecvView recv_view, int rank, int tag = 0) const {
+    using T = std::remove_const_t<typename SendView::value_type>;
+    static_assert(std::is_same_v<T, typename RecvView::value_type>);
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
-    using T = typename SendView::value_type;
     MPI_Request req;
     MPI_Isendrecv(send_view.data(), send_view.size(), Impl::mpi_type<T>(), rank, tag,  //
                   recv_view.data(), recv_view.size(), Impl::mpi_type<T>(), rank, tag, _raw_comm, &req);
@@ -257,8 +261,8 @@ class Communicator {
 
   template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
   void reduce(SendView send_view, RecvView recv_view, Reducer op, int root) const {
-    static_assert(std::is_same_v<typename SendView::value_type, typename RecvView::value_type>);
-    using T = typename SendView::value_type;
+    using T = std::remove_const_t<typename SendView::value_type>;
+    static_assert(std::is_same_v<T, typename RecvView::value_type>);
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
     MPI_Reduce(send_view.data(), recv_view.data(), send_view.size(), Impl::mpi_type<T>(), op, root, _raw_comm);
@@ -266,8 +270,8 @@ class Communicator {
 
   template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
   void allreduce(SendView send_view, RecvView recv_view, Reducer op) const {
-    static_assert(std::is_same_v<typename SendView::value_type, typename RecvView::value_type>);
-    using T = typename SendView::value_type;
+    using T = std::remove_const_t<typename SendView::value_type>;
+    static_assert(std::is_same_v<T, typename RecvView::value_type>);
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
     MPI_Allreduce(send_view.data(), recv_view.data(), send_view.size(), Impl::mpi_type<T>(), op, _raw_comm);
@@ -282,8 +286,8 @@ class Communicator {
 
   template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
   Request ireduce(SendView send_view, RecvView recv_view, Reducer op, int root) const {
-    static_assert(std::is_same_v<typename SendView::value_type, typename RecvView::value_type>);
-    using T = typename SendView::value_type;
+    using T = std::remove_const_t<typename SendView::value_type>;
+    static_assert(std::is_same_v<T, typename RecvView::value_type>);
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
     MPI_Request req;
@@ -293,8 +297,8 @@ class Communicator {
 
   template <CommMode mode = CommMode::Default, KokkosView SendView, KokkosView RecvView>
   Request iallreduce(SendView send_view, RecvView recv_view, Reducer op) const {
-    static_assert(std::is_same_v<typename SendView::value_type, typename RecvView::value_type>);
-    using T = typename SendView::value_type;
+    using T = std::remove_const_t<typename SendView::value_type>;
+    static_assert(std::is_same_v<T, typename RecvView::value_type>);
     KOKKOS_ASSERT(send_view.span_is_contiguous());
     KOKKOS_ASSERT(recv_view.span_is_contiguous());
     MPI_Request req;

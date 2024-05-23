@@ -20,14 +20,12 @@
 
 namespace {
 TEST(Barrier, 0) {
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  KokkosComm::Impl::barrier(Kokkos::DefaultExecutionSpace(), MPI_COMM_WORLD);
-
   auto comm = KokkosComm::CommWorld();
-  EXPECT_EQ(rank, KokkosComm::rank(comm));
-  EXPECT_EQ(size, KokkosComm::size(comm));
-  KokkosComm::barrier(comm);
+  barrier(comm);
+}
+
+TEST(Barrier, 1) {
+  auto comm = KokkosComm::CommWorld();
+  barrier(Kokkos::DefaultExecutionSpace(), comm);
 }
 }  // namespace
