@@ -42,8 +42,7 @@ TYPED_TEST(Alltoall, 1D_contig) {
   Kokkos::View<TestScalar *> rv("rv", size * nContrib);
 
   // fill send buffer
-  Kokkos::parallel_for(
-      sv.extent(0), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
+  Kokkos::parallel_for(sv.extent(0), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
 
   KokkosComm::Impl::alltoall(Kokkos::DefaultExecutionSpace(), sv, nContrib, rv, nContrib, MPI_COMM_WORLD);
 
@@ -71,8 +70,7 @@ TYPED_TEST(Alltoall, 1D_inplace_contig) {
   Kokkos::View<TestScalar *> rv("rv", size * nContrib);
 
   // fill send buffer
-  Kokkos::parallel_for(
-      rv.extent(0), KOKKOS_LAMBDA(const int i) { rv(i) = rank + i; });
+  Kokkos::parallel_for(rv.extent(0), KOKKOS_LAMBDA(const int i) { rv(i) = rank + i; });
 
   KokkosComm::Impl::alltoall(Kokkos::DefaultExecutionSpace(), rv, nContrib, MPI_COMM_WORLD);
 

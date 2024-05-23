@@ -26,7 +26,8 @@
 
 // F is a function that takes (state, MPI_Comm, args...)
 template <typename F, typename... Args>
-void do_iteration(benchmark::State &state, KokkosComm::Communicator<Kokkos::DefaultExecutionSpace>& comm, F &&func, Args... args) {
+void do_iteration(benchmark::State &state, KokkosComm::Communicator<Kokkos::DefaultExecutionSpace> &comm, F &&func,
+                  Args... args) {
   using Clock    = std::chrono::steady_clock;
   using Duration = std::chrono::duration<double>;
 

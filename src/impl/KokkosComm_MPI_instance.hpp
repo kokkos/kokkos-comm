@@ -32,7 +32,7 @@ class Universe {
 
  public:
   Universe(MPI_Session shandle, MPI_Comm comm)
-      : _comm(Communicator<ExecSpace>::from_raw_unchecked(comm)), _shandle(shandle)  {}
+      : _comm(Communicator<ExecSpace>::from_raw_unchecked(comm)), _shandle(shandle) {}
 
   ~Universe() {
     // FIXME: find out how to properly finalize the session
