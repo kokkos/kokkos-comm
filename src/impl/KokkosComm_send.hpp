@@ -50,8 +50,6 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
                         MPI_Comm mpi_comm) {
     if constexpr (SendMode == CommMode::Standard) {
       MPI_Send(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
-    } else if constexpr (SendMode == CommMode::Buffered) {
-      MPI_Bsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
     } else if constexpr (SendMode == CommMode::Ready) {
       MPI_Rsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
     } else if constexpr (SendMode == CommMode::Synchronous) {

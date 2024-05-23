@@ -29,13 +29,6 @@ enum class CommMode {
   // Standard mode is non-local: successful completion of the send operation may depend on the occurrence of a matching
   // receive.
   Standard,
-  // Buffered mode: Send operation can be started whether or not a matching receive has been started. It may complete
-  // before a matching receive is started. However, unlike the standard send, this operation is local, and its
-  // completion does not depend on the occurrence of a matching receive. Thus, if a send is executed and no matching
-  // receive is started, then MPI must buffer the outgoing message, so as to allow the send call to complete. An error
-  // will occur if there is insufficient buffer space. The amount of available buffer space is controlled by the user
-  // (see Section 3.6). Buffer allocation by the user may be required for the buffered mode to be effective.
-  Buffered,
   // Ready mode: Send operations may be started only if the matching receive is already started.
   Ready,
   // Synchronous mode: Send operations complete successfully only if a matching receive is started, and the receive

@@ -25,6 +25,7 @@
 #include "KokkosComm_request.hpp"
 #include "KokkosComm_traits.hpp"
 #include "KokkosComm_comm_mode.hpp"
+#include "KokkosComm_communicator.hpp"
 
 // impl
 #include "KokkosComm_include_mpi.hpp"
@@ -44,8 +45,6 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest, int 
                          MPI_Comm mpi_comm, MPI_Request *mpi_req) {
     if constexpr (SendMode == CommMode::Standard) {
       MPI_Isend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
-    } else if constexpr (SendMode == CommMode::Buffered) {
-      MPI_Ibsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
     } else if constexpr (SendMode == CommMode::Ready) {
       MPI_Irsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
     } else if constexpr (SendMode == CommMode::Synchronous) {
