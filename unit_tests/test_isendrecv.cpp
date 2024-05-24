@@ -49,14 +49,16 @@ void isend_comm_mode_1d_contig() {
 
   if (0 == rank) {
     int dst = 1;
-    Kokkos::parallel_for(a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
+    Kokkos::parallel_for(
+        a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
     KokkosComm::Req req = KokkosComm::isend<IsendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, comm);
     req.wait();
   } else if (1 == rank) {
     int src = 0;
     KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, comm);
     int errs;
-    Kokkos::parallel_reduce(a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
+    Kokkos::parallel_reduce(
+        a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
     ASSERT_EQ(errs, 0);
   }
 }
@@ -77,14 +79,16 @@ void isend_comm_mode_1d_noncontig() {
   int rank = comm.rank();
   if (0 == rank) {
     int dst = 1;
-    Kokkos::parallel_for(a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
+    Kokkos::parallel_for(
+        a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
     KokkosComm::Req req = KokkosComm::isend<IsendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, comm);
     req.wait();
   } else if (1 == rank) {
     int src = 0;
     KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, comm);
     int errs;
-    Kokkos::parallel_reduce(a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
+    Kokkos::parallel_reduce(
+        a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
     ASSERT_EQ(errs, 0);
   }
 }

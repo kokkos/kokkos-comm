@@ -47,7 +47,8 @@ TYPED_TEST(Reduce, 1D_contig) {
   }
 
   // fill send buffer
-  Kokkos::parallel_for(sendv.extent(0), KOKKOS_LAMBDA(const int i) { sendv(i) = rank + i; });
+  Kokkos::parallel_for(
+      sendv.extent(0), KOKKOS_LAMBDA(const int i) { sendv(i) = rank + i; });
 
   KokkosComm::reduce(Kokkos::DefaultExecutionSpace(), sendv, recvv, MPI_SUM, 0, MPI_COMM_WORLD);
 
