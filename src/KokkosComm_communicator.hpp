@@ -37,7 +37,13 @@ class Communicator {
   Communicator(MPI_Comm comm) : _comm(comm) {}
   Communicator(const Communicator& other) = delete;
   Communicator(const Communicator&& other) { _comm = std::move(other._comm); }
-  ~Communicator() { /*MPI_Comm_free(&_comm);*/ }
+  ~Communicator() {
+    // Only free the communicator if it hasn't been set to `MPI_COMM_NULL` before. This is to prevent double freeing
+    // when we explicitly call the communicator's dtor in the `Context` dtor.
+    if (MPI_COMM_NULL != _comm) {
+      MPI_Comm_free(&_comm);
+    }
+  }
 
   static auto dup_raw(MPI_Comm raw) -> Communicator {
     MPI_Comm new_comm;

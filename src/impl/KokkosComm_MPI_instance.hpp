@@ -33,7 +33,11 @@ class Context {
  public:
   Context(MPI_Session shandle, MPI_Comm comm) : _shandle(shandle), _comm(Communicator<ExecSpace>(comm)) {}
 
-  ~Context() { MPI_Session_finalize(&_shandle); }
+  ~Context() {
+    // Ensure the session-associated communicator is destroyed before the session is finalized.
+    _comm.~Communicator();
+    MPI_Session_finalize(&_shandle);
+  }
 
   auto comm(void) -> const Communicator<ExecSpace>& { return _comm; }
 };
