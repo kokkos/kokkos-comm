@@ -97,6 +97,22 @@ Collective
     :tparam RecvView: A Kokkos::View to recv
     :tparam ExecSpace: A Kokkos execution space to operate in
 
+
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView> \
+                  void KokkosComm::allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Comm comm)
+
+    MPI_Allgather wrapper
+
+    :param space: The execution space to operate in
+    :param sv: The data to send
+    :param rv: The view to receive into
+    :param comm: the MPI communicator
+    :tparam SendView: A Kokkos::View to send. Contiguous and rank less than 2.
+    :tparam RecvView: A Kokkos::View to recv. Contiguous and rank 1.
+    :tparam ExecSpace: A Kokkos execution space to operate in
+
+    If ``sv`` is a rank-0 view, the value from the jth rank will be placed in index j of ``rv``.
+
 Related Types
 -------------
 
