@@ -52,6 +52,24 @@ void allgather(const SendView &sv, const RecvView &rv, MPI_Comm comm) {
   Kokkos::Tools::popRegion();
 }
 
+// in-place allgather
+template <KokkosView RecvView>
+void allgather(const RecvView &rv, MPI_Comm comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::Impl::allgather");
+
+  using RT         = KokkosComm::Traits<RecvView>;
+  using RecvScalar = typename RecvView::value_type;
+
+  static_assert(RT::rank() <= 1, "allgather for RecvView::rank > 1 not supported");
+
+  if (!RT::is_contiguous(rv)) {
+    throw std::runtime_error("low-level allgather requires contiguous recv view");
+  }
+  MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, RT::data_handle(rv), RT::span(rv), mpi_type_v<RecvScalar>, comm);
+
+  Kokkos::Tools::popRegion();
+}
+
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
 void allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::allgather");
