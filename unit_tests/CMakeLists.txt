@@ -37,13 +37,13 @@ if (NOT googletest_POPULATED)
     RESULT_VARIABLE patch_result
   )
 
-  # patch exists with 1 if some hunks were skipped, or 2 for real problems.
+  # patch exits with 1 if some hunks were skipped, or 2 for real problems.
   # we want to tolerate hunks being skipped in case of a partial cmake,
   # where the patch was already applied.
   # unfortunately this might consume some other errors
   if(patch_result GREATER 1)
     message(FATAL_ERROR "Failed to patch gtest for nvcc: ${patch_result}")
-  else()
+  elseif(patch_result GREATER 0)
     message(WARNING "Possible error while patching gtest for nvcc. This is okay if the only messages above are about ignored hunks.")
   endif()
 
