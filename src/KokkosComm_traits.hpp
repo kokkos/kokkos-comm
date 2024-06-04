@@ -32,24 +32,45 @@ struct Traits {
 /*! \brief This can be specialized to do custom behavior for a particular view*/
 template <KokkosView View>
 struct Traits<View> {
-  // product of extents is span
-  static bool is_contiguous(const View &v) { return v.span_is_contiguous(); }
-
-  static auto data_handle(const View &v) { return v.data(); }
-
   using non_const_packed_view_type =
       Kokkos::View<typename View::non_const_data_type, typename View::array_layout, typename View::memory_space>;
   using packed_view_type =
       Kokkos::View<typename View::data_type, typename View::array_layout, typename View::memory_space>;
-
-  static size_t span(const View &v) { return v.span(); }
-
-  static size_t extent(const View &v, const int i) { return v.extent(i); }
-  static size_t stride(const View &v, const int i) { return v.stride(i); }
-
-  static constexpr bool is_reference_counted() { return true; }
-
-  static constexpr size_t rank() { return View::rank; }
 };
+
+template <KokkosView View>
+auto data_handle(const View &v) {
+  return v.data();
+}
+
+template <KokkosView View>
+auto span(const View &v) {
+  return v.span();
+}
+
+// true iff product of extents is span
+template <KokkosView View>
+bool is_contiguous(const View &v) {
+  return v.span_is_contiguous();
+}
+
+template <KokkosView View>
+constexpr size_t rank() {
+  return View::rank;
+}
+
+template <KokkosView View>
+size_t extent(const View &v, const int i) {
+  return v.extent(i);
+}
+template <KokkosView View>
+size_t stride(const View &v, const int i) {
+  return v.stride(i);
+}
+
+template <KokkosView View>
+constexpr bool is_reference_counted() {
+  return true;
+}
 
 }  // namespace KokkosComm

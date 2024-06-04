@@ -35,9 +35,9 @@ void irecv(RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Request &req) {
 
   using KCT = KokkosComm::Traits<RecvView>;
 
-  if (KCT::is_contiguous(rv)) {
+  if (KokkosComm::is_contiguous(rv)) {
     using RecvScalar = typename RecvView::value_type;
-    MPI_Irecv(KCT::data_handle(rv), KCT::span(rv), mpi_type_v<RecvScalar>, src, tag, comm, &req);
+    MPI_Irecv(KokkosComm::data_handle(rv), KokkosComm::span(rv), mpi_type_v<RecvScalar>, src, tag, comm, &req);
   } else {
     throw std::runtime_error("Only contiguous irecv viewsupported");
   }
