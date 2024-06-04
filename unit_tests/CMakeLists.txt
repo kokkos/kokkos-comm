@@ -18,16 +18,35 @@ endif()
 
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/archive/530d5c8c84abd2a46f38583ee817743c9b3a42b4.zip # 12-18-2023
+  URL https://github.com/google/googletest/archive/a7f443b80b105f940225332ed3c31f2790092f47.zip # 05-28-2024
 )
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-# FetchContent_MakeAvailable(googletest)
-# was making install install googletest as well
+# FetchContent_MakeAvailable(googletest) was making install install googletest as well
 # EXCLUDE_FROM_ALL here seems to be the magic
+FetchContent_GetProperties(googletest)
 if (NOT googletest_POPULATED)
   FetchContent_Populate(googletest)
   add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+  set(PATCH_PATH "${PROJECT_SOURCE_DIR}/cmake/gtest_a7f443b8.patch")
+  message(STATUS "patching gtest @ ${googletest_SOURCE_DIR} with ${PATCH_PATH}")
+  execute_process(
+    COMMAND patch -N -p1 -i "${PATCH_PATH}"
+    WORKING_DIRECTORY "${googletest_SOURCE_DIR}"
+    RESULT_VARIABLE patch_result
+  )
+
+  # patch exists with 1 if some hunks were skipped, or 2 for real problems.
+  # we want to tolerate hunks being skipped in case of a partial cmake,
+  # where the patch was already applied.
+  # unfortunately this might consume some other errors
+  if(patch_result GREATER 1)
+    message(FATAL_ERROR "Failed to patch gtest for nvcc: ${patch_result}")
+  else()
+    message(WARNING "Possible error while patching gtest for nvcc. This is okay if the only messages above are about ignored hunks.")
+  endif()
+
 endif()
 
 # Standalone MPI smoke tests (do not use KokkosComm)
