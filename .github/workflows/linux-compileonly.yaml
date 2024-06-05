@@ -1,5 +1,11 @@
 name: Linux-CompileOnly
-on: push
+on:
+  pull_request:
+    paths-ignore:
+    - README.md
+    - 'docs/**'
+    types: [ opened, reopened, synchronize ]
+  workflow_dispatch:
 
 jobs:
   Kokkos-master-OpenMPI416-CUDA1250-Release:
