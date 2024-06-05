@@ -36,20 +36,22 @@ struct MpiArgs {
 template <KokkosView View>
 struct DeepCopy {
   using non_const_packed_view_type =
-      Kokkos::View<typename View::non_const_data_type, Kokkos::LayoutRight, typename View::memory_space>;
+      Kokkos::View<typename View::non_const_data_type, Kokkos::LayoutLeft, typename View::memory_space>;
   using args_type = MpiArgs<non_const_packed_view_type>;
 
   template <KokkosExecutionSpace ExecSpace>
   static args_type allocate_packed_for(const ExecSpace &space, const std::string &label, const View &src) {
     using KCT = KokkosComm::Traits<View>;
 
-    if constexpr (KCT::rank() == 1) {
+    if constexpr (KokkosComm::rank<View>() == 1) {
       non_const_packed_view_type packed(Kokkos::view_alloc(space, Kokkos::WithoutInitializing, label), src.extent(0));
-      return args_type(packed, MPI_PACKED, KCT::span(packed) * sizeof(typename non_const_packed_view_type::value_type));
-    } else if constexpr (KCT::rank() == 2) {
+      return args_type(packed, MPI_PACKED,
+                       KokkosComm::span(packed) * sizeof(typename non_const_packed_view_type::value_type));
+    } else if constexpr (KokkosComm::rank<View>() == 2) {
       non_const_packed_view_type packed(Kokkos::view_alloc(space, Kokkos::WithoutInitializing, label), src.extent(0),
                                         src.extent(1));
-      return args_type(packed, MPI_PACKED, KCT::span(packed) * sizeof(typename non_const_packed_view_type::value_type));
+      return args_type(packed, MPI_PACKED,
+                       KokkosComm::span(packed) * sizeof(typename non_const_packed_view_type::value_type));
     } else {
       static_assert(std::is_void_v<View>, "allocate_packed_for for rank >= 2 views unimplemented");
     }

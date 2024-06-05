@@ -31,23 +31,21 @@ template <KokkosView SendView, KokkosView RecvView>
 void allgather(const SendView &sv, const RecvView &rv, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::allgather");
 
-  using ST         = KokkosComm::Traits<SendView>;
-  using RT         = KokkosComm::Traits<RecvView>;
   using SendScalar = typename SendView::value_type;
   using RecvScalar = typename RecvView::value_type;
 
-  static_assert(ST::rank() <= 1, "allgather for SendView::rank > 1 not supported");
-  static_assert(RT::rank() <= 1, "allgather for RecvView::rank > 1 not supported");
+  static_assert(KokkosComm::rank<SendView>() <= 1, "allgather for SendView::rank > 1 not supported");
+  static_assert(KokkosComm::rank<RecvView>() <= 1, "allgather for RecvView::rank > 1 not supported");
 
-  if (!ST::is_contiguous(sv)) {
+  if (!KokkosComm::is_contiguous(sv)) {
     throw std::runtime_error("low-level allgather requires contiguous send view");
   }
-  if (!RT::is_contiguous(rv)) {
+  if (!KokkosComm::is_contiguous(rv)) {
     throw std::runtime_error("low-level allgather requires contiguous recv view");
   }
-  const int count = ST::span(sv);  // all ranks send/recv same count
-  MPI_Allgather(ST::data_handle(sv), count, mpi_type_v<SendScalar>, RT::data_handle(rv), count, mpi_type_v<RecvScalar>,
-                comm);
+  const int count = KokkosComm::span(sv);  // all ranks send/recv same count
+  MPI_Allgather(KokkosComm::data_handle(sv), count, mpi_type_v<SendScalar>, KokkosComm::data_handle(rv), count,
+                mpi_type_v<RecvScalar>, comm);
 
   Kokkos::Tools::popRegion();
 }

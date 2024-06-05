@@ -49,13 +49,11 @@ void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount
               const size_t recvCount, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::alltoall");
 
-  using ST         = KokkosComm::Traits<SendView>;
-  using RT         = KokkosComm::Traits<RecvView>;
   using SendScalar = typename SendView::value_type;
   using RecvScalar = typename RecvView::value_type;
 
-  static_assert(ST::rank() <= 1, "alltoall for SendView::rank > 1 not supported");
-  static_assert(RT::rank() <= 1, "alltoall for RecvView::rank > 1 not supported");
+  static_assert(KokkosComm::rank<SendView>() <= 1, "alltoall for SendView::rank > 1 not supported");
+  static_assert(KokkosComm::rank<RecvView>() <= 1, "alltoall for RecvView::rank > 1 not supported");
 
   if (KokkosComm::PackTraits<SendView>::needs_pack(sv) || KokkosComm::PackTraits<RecvView>::needs_pack(rv)) {
     throw std::runtime_error("alltoall for non-contiguous views not implemented");
@@ -63,20 +61,20 @@ void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount
     int size;
     MPI_Comm_size(comm, &size);
 
-    if (sendCount * size > ST::extent(sv, 0)) {
+    if (sendCount * size > KokkosComm::extent(sv, 0)) {
       std::stringstream ss;
       ss << "alltoall sendCount * communicator size (" << sendCount << " * " << size
          << ") is greater than send view size";
       throw std::runtime_error(ss.str());
     }
-    if (recvCount * size > RT::extent(rv, 0)) {
+    if (recvCount * size > KokkosComm::extent(rv, 0)) {
       std::stringstream ss;
       ss << "alltoall recvCount * communicator size (" << recvCount << " * " << size
          << ") is greater than recv view size";
       throw std::runtime_error(ss.str());
     }
 
-    MPI_Alltoall(ST::data_handle(sv), sendCount, mpi_type_v<SendScalar>, RT::data_handle(rv), recvCount,
+    MPI_Alltoall(KokkosComm::data_handle(sv), sendCount, mpi_type_v<SendScalar>, KokkosComm::data_handle(rv), recvCount,
                  mpi_type_v<RecvScalar>, comm);
   }
 
@@ -88,10 +86,9 @@ template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 void alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::alltoall");
 
-  using RT         = KokkosComm::Traits<RecvView>;
   using RecvScalar = typename RecvView::value_type;
 
-  static_assert(RT::rank() <= 1, "alltoall for RecvView::rank > 1 not supported");
+  static_assert(RecvView::rank <= 1, "alltoall for RecvView::rank > 1 not supported");
 
   if (KokkosComm::PackTraits<RecvView>::needs_pack(rv)) {
     throw std::runtime_error("alltoall for non-contiguous views not implemented");
@@ -99,14 +96,14 @@ void alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount
     int size;
     MPI_Comm_size(comm, &size);
 
-    if (recvCount * size > RT::extent(rv, 0)) {
+    if (recvCount * size > KokkosComm::extent(rv, 0)) {
       std::stringstream ss;
       ss << "alltoall recvCount * communicator size (" << recvCount << " * " << size
          << ") is greater than recv view size";
       throw std::runtime_error(ss.str());
     }
 
-    MPI_Alltoall(MPI_IN_PLACE, 0 /*ignored*/, MPI_BYTE /*ignored*/, RT::data_handle(rv), recvCount,
+    MPI_Alltoall(MPI_IN_PLACE, 0 /*ignored*/, MPI_BYTE /*ignored*/, KokkosComm::data_handle(rv), recvCount,
                  mpi_type_v<RecvScalar>, comm);
   }
 

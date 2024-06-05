@@ -36,9 +36,9 @@ void isend(const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Request &re
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
   using KCT = typename KokkosComm::Traits<SendView>;
 
-  if (KCT::is_contiguous(sv)) {
+  if (KokkosComm::is_contiguous(sv)) {
     using SendScalar = typename SendView::non_const_value_type;
-    MPI_Isend(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>, dest, tag, comm, &req);
+    MPI_Isend(KokkosComm::data_handle(sv), KokkosComm::span(sv), mpi_type_v<SendScalar>, dest, tag, comm, &req);
   } else {
     throw std::runtime_error("only contiguous views supported for low-level isend");
   }
@@ -77,13 +77,14 @@ KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest, int 
 
     MpiArgs args = Packer::pack(space, sv);
     space.fence();
-    mpi_isend_fn(KCT::data_handle(args.view), args.count, args.datatype, dest, tag, comm, &req.mpi_req());
+    mpi_isend_fn(KokkosComm::data_handle(args.view), args.count, args.datatype, dest, tag, comm, &req.mpi_req());
     req.keep_until_wait(args.view);
   } else {
     using SendScalar = typename SendView::value_type;
     space.fence();  // can't issue isend until work in space is complete
-    mpi_isend_fn(KCT::data_handle(sv), KCT::span(sv), mpi_type_v<SendScalar>, dest, tag, comm, &req.mpi_req());
-    if (KCT::is_reference_counted()) {
+    mpi_isend_fn(KokkosComm::data_handle(sv), KokkosComm::span(sv), mpi_type_v<SendScalar>, dest, tag, comm,
+                 &req.mpi_req());
+    if (KokkosComm::is_reference_counted<SendView>()) {
       req.keep_until_wait(sv);
     }
   }

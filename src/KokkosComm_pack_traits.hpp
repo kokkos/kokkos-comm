@@ -37,8 +37,8 @@ template <KokkosView View>
 struct PackTraits<View> {
   using packer_type = Impl::Packer::DeepCopy<View>;
 
-  static bool needs_unpack(const View &v) { return !Traits<View>::is_contiguous(v); }
-  static bool needs_pack(const View &v) { return !Traits<View>::is_contiguous(v); }
+  static bool needs_unpack(const View &v) { return !KokkosComm::is_contiguous(v); }
+  static bool needs_pack(const View &v) { return !KokkosComm::is_contiguous(v); }
 };
 
 }  // namespace KokkosComm
