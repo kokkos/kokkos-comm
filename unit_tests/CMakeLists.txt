@@ -28,25 +28,6 @@ FetchContent_GetProperties(googletest)
 if (NOT googletest_POPULATED)
   FetchContent_Populate(googletest)
   add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
-
-  set(PATCH_PATH "${PROJECT_SOURCE_DIR}/cmake/gtest_a7f443b8.patch")
-  message(STATUS "patching gtest @ ${googletest_SOURCE_DIR} with ${PATCH_PATH}")
-  execute_process(
-    COMMAND patch -N -p1 -i "${PATCH_PATH}"
-    WORKING_DIRECTORY "${googletest_SOURCE_DIR}"
-    RESULT_VARIABLE patch_result
-  )
-
-  # patch exits with 1 if some hunks were skipped, or 2 for real problems.
-  # we want to tolerate hunks being skipped in case of a partial cmake,
-  # where the patch was already applied.
-  # unfortunately this might consume some other errors
-  if(patch_result GREATER 1)
-    message(FATAL_ERROR "Failed to patch gtest for nvcc: ${patch_result}")
-  elseif(patch_result GREATER 0)
-    message(WARNING "Possible error while patching gtest for nvcc. This is okay if the only messages above are about ignored hunks.")
-  endif()
-
 endif()
 
 # Standalone MPI smoke tests (do not use KokkosComm)
