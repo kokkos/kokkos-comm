@@ -35,7 +35,7 @@ Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
 }
 
 template <KokkosView RecvView>
-void irecv(RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Request &req) {
+void irecv(RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Request req) {
   return Impl::irecv(rv, src, tag, comm, req);
 }
 
