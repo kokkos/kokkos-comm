@@ -4,8 +4,8 @@
 cmake_minimum_required(VERSION 3.12)
 project(KokkosComm VERSION 0.0.2)
 
-option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" ON)
-option(KokkosComm_ENABLE_TESTS "Build KokkosComm perf tests" ON)
+option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" OFF)
+option(KokkosComm_ENABLE_TESTS "Build KokkosComm perf tests" OFF)
 
 
 ## resolve options
