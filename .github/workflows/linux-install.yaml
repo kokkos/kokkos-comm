@@ -6,7 +6,7 @@ on:
     - README.md
     - 'docs/**'
     types: [ opened, reopened, synchronize ]
-    
+
 jobs:
    Kokkos-master-OpenMPI:
     env:
@@ -39,7 +39,7 @@ jobs:
           cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
       - name: Configure KokkosComm
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKokkosComm_ENABLE_TESTS=OFF -DKokkosComm_ENABLE_PERFTESTS=OFF -DCMAKE_INSTALL_PREFIX="$COMM_INSTALL"
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$COMM_INSTALL"
       - name: Build and Install KokkosComm
         run: |
           VERBOSE=1 cmake --build "$COMM_BUILD" --target install

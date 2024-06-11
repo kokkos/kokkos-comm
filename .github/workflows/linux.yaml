@@ -6,7 +6,7 @@ on:
     - README.md
     - 'docs/**'
     types: [ opened, reopened, synchronize ]
-    
+
 jobs:
    Kokkos-040200-OpenMPI-OpenMP-Release:
     env:
@@ -44,7 +44,7 @@ jobs:
           cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
       - name: Build KokkosComm
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release -DKokkosComm_ENABLE_TESTS=ON -DKokkosComm_ENABLE_PERFTESTS=ON
           VERBOSE=1 cmake --build "$COMM_BUILD"
       - name: Test KokkosComm
         run: |
@@ -76,8 +76,8 @@ jobs:
           cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
       - name: Build KokkosComm
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Debug
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Debug -DKokkosComm_ENABLE_TESTS=ON -DKokkosComm_ENABLE_PERFTESTS=ON
           VERBOSE=1 cmake --build "$COMM_BUILD"
       - name: Test KokkosComm
         run: |
-          ctest -V --test-dir "$COMM_BUILD"          
+          ctest -V --test-dir "$COMM_BUILD"
