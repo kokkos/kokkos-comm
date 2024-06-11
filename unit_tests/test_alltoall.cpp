@@ -29,17 +29,16 @@ class Alltoall : public testing::Test {
 using ScalarTypes = ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>, Kokkos::complex<double>>;
 TYPED_TEST_SUITE(Alltoall, ScalarTypes);
 
-TYPED_TEST(Alltoall, 1D_contig) {
-  using TestScalar = typename TestFixture::Scalar;
-
+template <typename Scalar>
+void test_alltoall_1d_contig() {
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   const int nContrib = 10;
 
-  Kokkos::View<TestScalar *> sv("sv", size * nContrib);
-  Kokkos::View<TestScalar *> rv("rv", size * nContrib);
+  Kokkos::View<Scalar *> sv("sv", size * nContrib);
+  Kokkos::View<Scalar *> rv("rv", size * nContrib);
 
   // fill send buffer
   Kokkos::parallel_for(
@@ -59,16 +58,17 @@ TYPED_TEST(Alltoall, 1D_contig) {
   EXPECT_EQ(errs, 0);
 }
 
-TYPED_TEST(Alltoall, 1D_inplace_contig) {
-  using TestScalar = typename TestFixture::Scalar;
+TYPED_TEST(Alltoall, 1D_contig) { test_alltoall_1d_contig<typename TestFixture::Scalar>(); }
 
+template <typename Scalar>
+void test_alltoall_1d_inplace_contig() {
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   const int nContrib = 10;
 
-  Kokkos::View<TestScalar *> rv("rv", size * nContrib);
+  Kokkos::View<Scalar *> rv("rv", size * nContrib);
 
   // fill send buffer
   Kokkos::parallel_for(
@@ -87,5 +87,7 @@ TYPED_TEST(Alltoall, 1D_inplace_contig) {
       errs);
   EXPECT_EQ(errs, 0);
 }
+
+TYPED_TEST(Alltoall, 1D_inplace_contig) { test_alltoall_1d_inplace_contig<typename TestFixture::Scalar>(); }
 
 }  // namespace

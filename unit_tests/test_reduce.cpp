@@ -18,6 +18,8 @@
 
 #include "KokkosComm.hpp"
 
+namespace {
+
 template <typename T>
 class Reduce : public testing::Test {
  public:
@@ -31,17 +33,15 @@ TYPED_TEST_SUITE(Reduce, ScalarTypes);
 Each rank fills its sendbuf[i] with `rank + i`
 
 operation is sum, so recvbuf[i] should be sum(0..size) + i * size
-
 */
-TYPED_TEST(Reduce, 1D_contig) {
-  using TestScalar = typename TestFixture::Scalar;
-
+template <typename Scalar>
+void test_reduce_1d_contig() {
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  Kokkos::View<TestScalar *> sendv("sendv", 10);
-  Kokkos::View<TestScalar *> recvv;
+  Kokkos::View<Scalar *> sendv("sendv", 10);
+  Kokkos::View<Scalar *> recvv;
   if (0 == rank) {
     Kokkos::resize(recvv, sendv.extent(0));
   }
@@ -57,17 +57,17 @@ TYPED_TEST(Reduce, 1D_contig) {
     Kokkos::parallel_reduce(
         recvv.extent(0),
         KOKKOS_LAMBDA(const int &i, int &lsum) {
-          TestScalar acc = 0;
+          Scalar acc = 0;
           for (int r = 0; r < size; ++r) {
             acc += r + i;
           }
           lsum += recvv(i) != acc;
-          // if (recvv(i) != acc) {
-          //   Kokkos::printf("%f != %f @ %lu\n", double(Kokkos::abs(recvv(i))),
-          //   double(Kokkos::abs(acc)), size_t(i));
-          // }
         },
         errs);
     ASSERT_EQ(errs, 0);
   }
 }
+
+TYPED_TEST(Reduce, 1D_contig) { test_reduce_1d_contig<typename TestFixture::Scalar>(); }
+
+}  // namespace
