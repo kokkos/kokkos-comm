@@ -18,6 +18,8 @@
 
 #include "KokkosComm.hpp"
 
+namespace {
+
 template <typename T>
 class Allgather : public testing::Test {
  public:
@@ -27,17 +29,14 @@ class Allgather : public testing::Test {
 using ScalarTypes = ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>, Kokkos::complex<double>>;
 TYPED_TEST_SUITE(Allgather, ScalarTypes);
 
-TYPED_TEST(Allgather, 0D) {
-  using TestScalar = typename TestFixture::Scalar;
-
+template <typename Scalar>
+void test_allgather_0d() {
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  const int nContrib = 10;
-
-  Kokkos::View<TestScalar> sv("sv");
-  Kokkos::View<TestScalar *> rv("rv", size);
+  Kokkos::View<Scalar> sv("sv");
+  Kokkos::View<Scalar *> rv("rv", size);
 
   // fill send buffer
   Kokkos::parallel_for(
@@ -51,17 +50,18 @@ TYPED_TEST(Allgather, 0D) {
   EXPECT_EQ(errs, 0);
 }
 
-TYPED_TEST(Allgather, 1D_contig) {
-  using TestScalar = typename TestFixture::Scalar;
+TYPED_TEST(Allgather, 0D) { test_allgather_0d<typename TestFixture::Scalar>(); }
 
+template <typename Scalar>
+void test_allgather_1d_contig() {
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   const int nContrib = 10;
 
-  Kokkos::View<TestScalar *> sv("sv", nContrib);
-  Kokkos::View<TestScalar *> rv("rv", size * nContrib);
+  Kokkos::View<Scalar *> sv("sv", nContrib);
+  Kokkos::View<Scalar *> rv("rv", size * nContrib);
 
   // fill send buffer
   Kokkos::parallel_for(
@@ -80,3 +80,7 @@ TYPED_TEST(Allgather, 1D_contig) {
       errs);
   EXPECT_EQ(errs, 0);
 }
+
+TYPED_TEST(Allgather, 1D_contig) { test_allgather_1d_contig<typename TestFixture::Scalar>(); }
+
+}  // namespace

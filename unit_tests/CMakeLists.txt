@@ -18,13 +18,13 @@ endif()
 
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/archive/530d5c8c84abd2a46f38583ee817743c9b3a42b4.zip # 12-18-2023
+  URL https://github.com/google/googletest/archive/a7f443b80b105f940225332ed3c31f2790092f47.zip # 05-28-2024
 )
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-# FetchContent_MakeAvailable(googletest)
-# was making install install googletest as well
+# FetchContent_MakeAvailable(googletest) was making install install googletest as well
 # EXCLUDE_FROM_ALL here seems to be the magic
+FetchContent_GetProperties(googletest)
 if (NOT googletest_POPULATED)
   FetchContent_Populate(googletest)
   add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
