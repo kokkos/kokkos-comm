@@ -8,8 +8,8 @@ enable_testing()
 if (NOT TARGET KokkosComm::KokkosComm)
   find_package(KokkosComm REQUIRED)
 
-  # Find MPI, useful for standalone tests and for having MPI_EXEC macros
-  # find_package(MPI REQUIRED) # not needed, KokkosComm already does this
+  # find_package(MPI REQUIRED), useful for standalone tests and for having MPI_EXEC macros
+  # Commented out because KokkosComm already does this and we want to test the export is working properly
 endif()
 
 include(FetchContent)
