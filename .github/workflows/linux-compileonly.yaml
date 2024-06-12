@@ -1,0 +1,64 @@
+name: Linux-CompileOnly
+on:
+  pull_request:
+    paths-ignore:
+    - README.md
+    - 'docs/**'
+    types: [ opened, reopened, synchronize ]
+  workflow_dispatch:
+
+jobs:
+  Kokkos-master-OpenMPI416-CUDA1250-Release:
+    runs-on: ubuntu-latest
+    container:
+      image: nvidia/cuda:12.5.0-devel-ubuntu22.04
+      env:
+        KOKKOS_SRC: ${{ github.workspace }}/_deps/kokkos
+        KOKKOS_BUILD: ${{ github.workspace }}/_deps/kokkos-build
+        KOKKOS_INSTALL: ${{ github.workspace }}/_deps/kokkos-install
+        COMM_SRC: ${{ github.workspace }}
+        COMM_BUILD: ${{ github.workspace }}/build
+        timeout-minutes: 20
+    steps:
+      - name: Create workspace
+        run: mkdir -p ${{ github.workspace }}
+      - name: Check out Repository Code
+        uses: actions/checkout@v4
+      # inside the container, GITHUB_WORKSPACE is something like /__w/... which is not the same as ${{github.workspace}}. For consistency, we'll try to do everything in ${{github.workspace}}, so move the files over there.
+      - name: Move Repository Code to Expected Location
+        shell: bash # for shopt -s dotglob, which also moves hidden files
+        run: |
+          shopt -s dotglob && mv "$GITHUB_WORKSPACE"/* ${{ github.workspace }}
+      - name: Install packages
+        run: |
+          apt-get update && apt-get install -y cmake wget git
+      # Build a CUDA-enabled OpenMPI. This is probably not necessary for a compile-only test.
+      - name: Download MPI
+        run: |
+          wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.6.tar.bz2
+          tar -xf openmpi-4.1.6.tar.bz2
+      - name: Configure MPI
+        run: cd openmpi-4.1.6 && ./configure --prefix=/usr/local --with-cuda=/usr/local/cuda
+      - name: Build MPI
+        run: make -C openmpi-4.1.6 -j$(nproc) all
+      - name: Install MPI
+        run: |
+          make -C openmpi-4.1.6 all install
+          ldconfig
+      - name: Print some MPI Info
+        run: |
+          which mpirun
+          mpirun --version
+          which mpicxx
+          mpicxx --version
+      - name: Check MPI CUDA Support
+        run: ompi_info --parsable --all | grep mpi_built_with_cuda_support:value:true
+      - name: Build Kokkos
+        run: |
+          git clone https://github.com/kokkos/kokkos.git --branch master --depth 1 "$KOKKOS_SRC"
+          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_CXX_COMPILER="$KOKKOS_SRC/bin/nvcc_wrapper" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON
+          cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
+      - name: Build Kokkos Comm
+        run: |
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DCMAKE_CXX_COMPILER="$KOKKOS_SRC/bin/nvcc_wrapper" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release
+          VERBOSE=1 cmake --build "$COMM_BUILD"
