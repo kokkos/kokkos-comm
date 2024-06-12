@@ -40,7 +40,7 @@ void test_allgather_0d() {
 
   // fill send buffer
   Kokkos::parallel_for(
-      sv.extent(0), KOKKOS_LAMBDA(const int i) { sv() = rank; });
+      sv.extent(0), KOKKOS_LAMBDA(const int) { sv() = rank; });
 
   KokkosComm::allgather(Kokkos::DefaultExecutionSpace(), sv, rv, MPI_COMM_WORLD);
 
