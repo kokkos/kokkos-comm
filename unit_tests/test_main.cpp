@@ -81,7 +81,8 @@ int main(int argc, char *argv[]) {
   // Intialize google test
   ::testing::InitGoogleTest(&argc, argv);
 
-  MPI_Init(&argc, &argv);
+  KokkosComm::initialize(argc, &argv);
+
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -89,8 +90,6 @@ int main(int argc, char *argv[]) {
     std::cerr << argv[0] << " (KokkosComm " << KOKKOSCOMM_VERSION_MAJOR << "." << KOKKOSCOMM_VERSION_MINOR << "."
               << KOKKOSCOMM_VERSION_PATCH << ")\n";
   }
-
-  Kokkos::initialize();
 
   // Intialize google test
   ::testing::InitGoogleTest(&argc, argv);
@@ -105,9 +104,8 @@ int main(int argc, char *argv[]) {
   // run tests
   auto exit_code = RUN_ALL_TESTS();
 
-  // Finalize MPI before exiting
-  Kokkos::finalize();
-  MPI_Finalize();
+  // Finalize KokkosComm before exiting
+  KokkosComm::finalize();
 
   return exit_code;
 }

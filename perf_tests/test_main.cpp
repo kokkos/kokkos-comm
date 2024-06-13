@@ -15,6 +15,7 @@
 //@HEADER
 
 #include "KokkosComm_include_mpi.hpp"
+#include "KokkosComm.hpp"
 
 #include <Kokkos_Core.hpp>
 #include <benchmark/benchmark.h>
@@ -32,15 +33,12 @@ class NullReporter : public ::benchmark::BenchmarkReporter {
 // The main is rewritten to allow for MPI initializing and for selecting a
 // reporter according to the process rank
 int main(int argc, char **argv) {
-  MPI_Init(&argc, &argv);
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  Kokkos::initialize();
+  KokkosComm::initialize(argc, &argv);
 
   ::benchmark::Initialize(&argc, argv);
 
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   if (rank == 0)
     // root process will use a reporter from the usual set provided by
     // ::benchmark
@@ -51,7 +49,6 @@ int main(int argc, char **argv) {
     ::benchmark::RunSpecifiedBenchmarks(&null);
   }
 
-  Kokkos::finalize();
-  MPI_Finalize();
+  KokkosComm::finalize();
   return 0;
 }
