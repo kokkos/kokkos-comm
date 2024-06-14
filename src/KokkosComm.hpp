@@ -62,9 +62,8 @@ inline void initialize(int &argc, char *argv[], ThreadSupportLevel required) {
   // Strip "--help" and "--kokkos-help" from the flags passed to Kokkos if we are not on rank 0 to prevent Kokkos
   // from printing the help message multiple times.
   if (0 != rank) {
-    auto *help_it = std::find_if(
-        argv, argv + argc, [](std::string_view const &x) { return x.find("--kokkos-") != std::string_view::npos; });
-    if (help_it != argv + argc) {
+    if (auto *help_it = std::find_if(argv, argv + argc, [](std::string_view const &x) { return x == "--kokkos-help"; });
+        help_it != argv + argc) {
       std::swap(*help_it, *(argv + argc - 1));
       --argc;
     }
