@@ -41,14 +41,14 @@ Point-to-point
 
     Wrapper for ``MPI_Isend``, ``MPI_Irsend`` and ``MPI_Issend``.
 
-    :param space: The execution space to operate in
+    :param space: A Kokkos execution space instance to order the communication in and execute any required operations.
     :param sv: The data to send
     :param dest: the destination rank
     :param tag: the MPI tag
     :param comm: the MPI communicator
     :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a synchronous ``MPI_Issend`` if ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` is defined, otherwise defaults to a standard ``MPI_Isend``.
-    :tparam SendView: A Kokkos::View to send
-    :tparam ExecSpace: A Kokkos execution space to operate in
+    :tparam SendView: Type of the provided Kokkos::View
+    :tparam ExecSpace: Type of the provided Kokkos execution space instance
     :returns: A KokkosComm::Req representing the asynchronous communication and any lifetime-extended views.
 
 .. cpp:function:: template <KokkosComm::CommMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
@@ -56,28 +56,40 @@ Point-to-point
 
     Wrapper for ``MPI_Send``, ``MPI_Rsend`` and ``MPI_Ssend``.
 
-    :param space: The execution space to operate in
+    :param space: A Kokkos execution space instance to order the communication in and execute any required operations.
     :param sv: The data to send
     :param dest: the destination rank
     :param tag: the MPI tag
     :param comm: the MPI communicator
     :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a synchronous ``MPI_Ssend`` if ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` is defined, otherwise defaults to a standard ``MPI_Send``.
-    :tparam SendView: A Kokkos::View to send
-    :tparam ExecSpace: A Kokkos execution space to operate in
+    :tparam SendView: Type of the provided Kokkos::View
+    :tparam ExecSpace: Type of the provided Kokkos execution space instance
 
 .. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView RecvView> \
                   void KokkosComm::recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
 
-    MPI_Recv wrapper
+    Wrapper for ``MPI_Recv``.
 
-    :param space: The execution space to operate in
-    :param srv: The data to recv
+    :param space: A Kokkos execution space instance to order the communication in and execute any required operations.
+    :param rv: The data to recv
     :param src: the source rank
     :param tag: the MPI tag
     :param comm: the MPI communicator
-    :tparam Recv: A Kokkos::View to send
-    :tparam ExecSpace: A Kokkos execution space to operate in
+    :tparam RecvView: Type of the provided Kokkos::View
+    :tparam ExecSpace: Type of the provided Kokkos execution space instance
 
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView RecvView> \
+                  Req KokkosComm::irecv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
+
+    Wrapper for ``MPI_Irecv``. If ``rv`` is a managed view, the view will not be destroyed until the communication is complete.
+
+    :param space: A Kokkos execution space instance to order the communication in and execute any required operations.
+    :param rv: The data to recv
+    :param src: the source rank
+    :param tag: the MPI tag
+    :param comm: the MPI communicator
+    :tparam RecvView: Type of the provided Kokkos::View
+    :tparam ExecSpace: Type of the provided Kokkos execution space instance
 
 Collective
 ----------
@@ -87,13 +99,13 @@ Collective
 
     MPI_Reduce wrapper
 
-    :param space: The execution space to operate in
+    :param space: A Kokkos execution space instance to order the communication in and execute any required operations.
     :param sv: The data to send
     :param rv: The view to receive into
     :param op: The MPI_Op to use in the reduction
     :param root: The root rank for the reduction
     :param comm: the MPI communicator
-    :tparam SendView: A Kokkos::View to send
+    :tparam SendView: Type of the provided Kokkos::View
     :tparam RecvView: A Kokkos::View to recv
     :tparam ExecSpace: A Kokkos execution space to operate in
 
@@ -103,11 +115,11 @@ Collective
 
     MPI_Allgather wrapper
 
-    :param space: The execution space to operate in
+    :param space: A Kokkos execution space instance to order the communication in and execute any required operations.
     :param sv: The data to send
     :param rv: The view to receive into
     :param comm: the MPI communicator
-    :tparam SendView: A Kokkos::View to send. Contiguous and rank less than 2.
+    :tparam SendView: Type of the provided Kokkos::View. Contiguous and rank less than 2.
     :tparam RecvView: A Kokkos::View to recv. Contiguous and rank 1.
     :tparam ExecSpace: A Kokkos execution space to operate in
 
