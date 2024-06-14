@@ -40,27 +40,18 @@ inline void initialize(int &argc, char ***argv) {
   MPI_Initialized(&flag);
   // Eagerly abort if MPI has already been initialized
   if (0 != flag) {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    if (0 == rank) {
-      fprintf(stderr, "error: MPI must not be initialized prior to initializing KokkosComm\n");
-    }
     MPI_Abort(MPI_COMM_WORLD, -1);
   }
 
   int provided;
   MPI_Init_thread(&argc, argv, MPI_THREAD_MULTIPLE, &provided);
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
   // Abort if MPI failed to provide Thread Multiple
   if (MPI_THREAD_MULTIPLE != provided) {
-    if (0 == rank) {
-      fprintf(stderr, "error: failed to initialized with required thread support\n");
-    }
     MPI_Abort(MPI_COMM_WORLD, -1);
   }
 
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   // Strip "--help" and "--kokkos-help" from the flags passed to Kokkos if we are not on rank 0 to prevent Kokkos
   // from printing the help message multiple times.
   if (0 != rank) {
