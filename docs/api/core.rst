@@ -68,10 +68,9 @@ KokkosComm provides a unified interface for initializing and finalizing both Kok
         Multiple threads may call MPI, with no restrictions.
 
 
-.. cpp:function:: void KokkosComm::initialize(int &argc, char *argv[], KokkosComm::ThreadSupportLevel required)
-.. cpp:function:: void KokkosComm::initialize(int &argc, char *argv[])
+.. cpp:function:: void KokkosComm::initialize(int &argc, char *argv[], KokkosComm::ThreadSupportLevel required = KokkosComm::ThreadSupportLevel::Multiple)
 
-    Initializes the MPI execution environment with the required MPI thread level support (``MPI_THREAD_MULTIPLE`` if unspecified), and then initializes the Kokkos execution environment. This function also strips ``--kokkos-help`` flags to prevent Kokkos from printing them on all MPI ranks.
+    Initializes the MPI execution environment with the required MPI thread level support (``Multiple`` if left unspecified), and then initializes the Kokkos execution environment. This function also strips ``--kokkos-help`` flags to prevent Kokkos from printing them on all MPI ranks.
 
     :param argc: Non-negative value representing the number of command-line arguments passed to the program.
     :param argv: Pointer to the first element of an array of ``argc + 1`` pointers, of which the last one is null and the previous, if any, point to null-terminated multi-byte strings that represent the arguments passed to the program.

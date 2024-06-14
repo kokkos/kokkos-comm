@@ -42,7 +42,7 @@ enum class ThreadSupportLevel {
   Multiple   = MPI_THREAD_MULTIPLE,
 };
 
-inline void initialize(int &argc, char *argv[], ThreadSupportLevel required) {
+inline void initialize(int &argc, char *argv[], ThreadSupportLevel required = ThreadSupportLevel::Multiple) {
   int flag;
   MPI_Initialized(&flag);
   // Forbid calling this function if MPI has already been initialized
@@ -75,8 +75,6 @@ inline void initialize(int &argc, char *argv[], ThreadSupportLevel required) {
   }
   Kokkos::initialize(argc, argv);
 }
-
-inline void initialize(int &argc, char *argv[]) { initialize(argc, argv, ThreadSupportLevel::Multiple); }
 
 inline void finalize() {
   // Forbid calling this function if Kokkos has already been finalized or isn't yet initialized
