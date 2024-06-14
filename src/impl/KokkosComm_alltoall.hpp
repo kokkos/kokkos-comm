@@ -55,6 +55,9 @@ void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount
   static_assert(KokkosComm::rank<SendView>() <= 1, "alltoall for SendView::rank > 1 not supported");
   static_assert(KokkosComm::rank<RecvView>() <= 1, "alltoall for RecvView::rank > 1 not supported");
 
+  // Make sure views are ready
+  space.fence("KokkosComm::Impl::alltoall");
+
   if (KokkosComm::PackTraits<SendView>::needs_pack(sv) || KokkosComm::PackTraits<RecvView>::needs_pack(rv)) {
     throw std::runtime_error("alltoall for non-contiguous views not implemented");
   } else {
@@ -89,6 +92,9 @@ void alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount
   using RecvScalar = typename RecvView::value_type;
 
   static_assert(RecvView::rank <= 1, "alltoall for RecvView::rank > 1 not supported");
+
+  // Make sure views are ready
+  space.fence("KokkosComm::Impl::alltoall");
 
   if (KokkosComm::PackTraits<RecvView>::needs_pack(rv)) {
     throw std::runtime_error("alltoall for non-contiguous views not implemented");
