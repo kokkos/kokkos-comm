@@ -1,12 +1,15 @@
 Core
-====
+****
+
+MPI API Support
+===============
 
 .. list-table:: MPI API Support
     :widths: 40 30 15
     :header-rows: 1
 
     * - MPI
-      - ``KokkosComm::``
+      - KokkosComm
       - ``Kokkos::View``
     * - ``MPI_Send``
       - ``send`` or ``send<CommMode::Standard>``
@@ -32,6 +35,41 @@ Core
     * - ``MPI_Reduce``
       - ``reduce``
       - ✓
+
+
+Initialization and finalization
+-------------------------------
+
+KokkosComm provides a unified interface for initializing and finalizing both Kokkos and MPI.
+
+.. Attention:: It is mandatory to use KokkosComm's initialization and finalization functions instead of their respective Kokkos and MPI counterparts.
+
+.. cpp:function:: void KokkosComm::initialize(int &argc, char ***argv)
+
+    Initializes the MPI execution environment with ``THREAD_MULTIPLE`` support, and then initializes the Kokkos execution environment. This function also strips ``--kokkos-help`` flags to prevent Kokkos from printing the help on all MPI ranks.
+
+    :param argc: Non-negative value representing the number of command-line arguments passed to the program.
+    :param argv: Pointer to a pointer to the first element of an array of ``argc + 1`` pointers, of which the last one is null and the previous, if any, point to null-terminated multi-byte strings that represent the arguments passed to the program.
+
+    **Requirements:**
+
+    * ``KokkosComm::initialize`` has the same combined requirements as ``MPI_Init`` and ``Kokkos::initialize``.
+    * ``KokkosComm::initialize`` must be called in place of ``MPI_Init`` and ``Kokkos::initialize``.
+    * User-initiated MPI objects cannot be constructed, and MPI functions cannot be called until after ``KokkosComm::initialize`` is called.
+    * User-initiated Kokkos objects cannot be constructed until after ``KokkosComm::initialize`` is called.
+
+.. cpp:function:: void KokkosComm::finalize()
+
+    Terminates the Kokkos and MPI execution environments.
+
+    Programs are ill-formed if they do not call this function *after* calling ``KokkosComm::initialize``.
+
+    **Requirements:**
+
+    * ``KokkosComm::finalize`` has the same combined requirements as ``MPI_Finalize`` and ``Kokkos::finalize``.
+    * ``KokkosComm::finalize`` must be called in place of ``MPI_Finalize`` and ``Kokkos::finalize``.
+    * ``KokkosComm::finalize`` must be called after user-initialized Kokkos objects are out of scope.
+
 
 Point-to-point
 --------------
