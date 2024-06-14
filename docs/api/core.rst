@@ -84,7 +84,7 @@ Point-to-point
     Wrapper for ``MPI_Irecv``. If ``rv`` is a managed view, the view will not be destroyed until the communication is complete.
 
     :param space: A Kokkos execution space instance to order the communication in and execute any required operations.
-    :param rv: The data to recv
+    :param rv: The data to receive
     :param src: the source rank
     :param tag: the MPI tag
     :param comm: the MPI communicator
