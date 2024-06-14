@@ -35,7 +35,7 @@
 
 namespace KokkosComm {
 
-inline void initialize(int &argc, char ***argv) {
+inline void initialize(int &argc, char *argv[], int mpi_required_thread_lvl) {
   int flag;
   MPI_Initialized(&flag);
   // Eagerly abort if MPI has already been initialized
@@ -44,9 +44,9 @@ inline void initialize(int &argc, char ***argv) {
   }
 
   int provided;
-  MPI_Init_thread(&argc, argv, MPI_THREAD_MULTIPLE, &provided);
-  // Abort if MPI failed to provide Thread Multiple
-  if (MPI_THREAD_MULTIPLE != provided) {
+  MPI_Init_thread(&argc, &argv, mpi_required_thread_lvl, &provided);
+  // Abort if MPI failed to provide the required thread level
+  if (mpi_required_thread_lvl != provided) {
     MPI_Abort(MPI_COMM_WORLD, -1);
   }
 
@@ -55,14 +55,18 @@ inline void initialize(int &argc, char ***argv) {
   // Strip "--help" and "--kokkos-help" from the flags passed to Kokkos if we are not on rank 0 to prevent Kokkos
   // from printing the help message multiple times.
   if (0 != rank) {
-    auto *help_it = std::find_if(*argv, *argv + argc,
+    auto *help_it = std::find_if(argv, argv + argc,
                                  [](std::string_view const &x) { return x == "--help" || x == "--kokkos-help"; });
-    if (help_it != *argv + argc) {
-      std::swap(*help_it, *(*argv + argc - 1));
+    if (help_it != argv + argc) {
+      std::swap(*help_it, *(argv + argc - 1));
       --argc;
     }
   }
-  Kokkos::initialize(argc, *argv);
+  Kokkos::initialize(argc, argv);
+}
+
+inline void initialize(int &argc, char *argv[]) {
+  initialize(argc, argv, MPI_THREAD_MULTIPLE);
 }
 
 inline void finalize() {
