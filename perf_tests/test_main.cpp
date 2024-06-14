@@ -33,7 +33,7 @@ class NullReporter : public ::benchmark::BenchmarkReporter {
 // The main is rewritten to allow for MPI initializing and for selecting a
 // reporter according to the process rank
 int main(int argc, char **argv) {
-  KokkosComm::initialize(argc, &argv);
+  KokkosComm::initialize(argc, argv);
 
   ::benchmark::Initialize(&argc, argv);
 

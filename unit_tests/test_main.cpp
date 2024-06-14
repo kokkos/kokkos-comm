@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
   // Intialize google test
   ::testing::InitGoogleTest(&argc, argv);
 
-  KokkosComm::initialize(argc, &argv);
+  KokkosComm::initialize(argc, argv);
 
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
