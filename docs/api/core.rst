@@ -42,20 +42,44 @@ Initialization and finalization
 
 KokkosComm provides a unified interface for initializing and finalizing both Kokkos and MPI.
 
-.. Attention:: It is mandatory to use KokkosComm's initialization and finalization functions instead of their respective Kokkos and MPI counterparts.
+.. Attention:: It is strongly recommended to use KokkosComm's initialization and finalization functions instead of their respective Kokkos and MPI counterparts. However, users have two options for using KokkosComm:
 
-.. cpp:function:: void KokkosComm::initialize(int &argc, char *argv[], int mpi_required_thread_lvl)
+    1. Initialize/finalize KokkosComm using ``KokkosComm::{initialize,finalize}``. In this case, it is **forbidden** to call ``MPI_{Init,Init_thread,Finalize}`` and ``Kokkos::{initialize,finalize}`` (otherwise, the application will abort).
+    2. Initialize/finalize MPI and Kokkos manually through their respective interfaces. In this case, it is **forbidden** to call ``KokkosComm::{initialize,finalize}`` (otherwise, the application will abort).
+
+.. cpp:enum-class:: KokkosComm::ThreadSupportLevel
+
+    A scoped enum to wrap the MPI thread support levels.
+
+    .. cpp:enumerator:: KokkosComm::ThreadSupportLevel::Single
+
+        Only one thread will execute.
+
+    .. cpp:enumerator:: KokkosComm::ThreadSupportLevel::Funneled
+
+        The process may be multi-threaded, but only the main thread will make MPI calls (all MPI calls are funneled to the main thread).
+
+    .. cpp:enumerator:: KokkosComm::ThreadSupportLevel::Serialized
+
+        The process may be multi-threaded, and multiple threads may make MPI calls, but only one at a time: MPI calls are not made concurrently from two distinct threads (all MPI calls are serialized).
+
+    .. cpp:enumerator:: KokkosComm::ThreadSupportLevel::Multiple
+
+        Multiple threads may call MPI, with no restrictions.
+
+
+.. cpp:function:: void KokkosComm::initialize(int &argc, char *argv[], KokkosComm::ThreadSupportLevel required)
 .. cpp:function:: void KokkosComm::initialize(int &argc, char *argv[])
 
-    Initializes the MPI execution environment with the required MPI thread level support (``MPI_THREAD_MULTIPLE`` if unspecified), and then initializes the Kokkos execution environment. This function also strips ``--kokkos-*`` flags to prevent Kokkos from printing them on all MPI ranks.
+    Initializes the MPI execution environment with the required MPI thread level support (``MPI_THREAD_MULTIPLE`` if unspecified), and then initializes the Kokkos execution environment. This function also strips ``--kokkos-help`` flags to prevent Kokkos from printing them on all MPI ranks.
 
     :param argc: Non-negative value representing the number of command-line arguments passed to the program.
     :param argv: Pointer to the first element of an array of ``argc + 1`` pointers, of which the last one is null and the previous, if any, point to null-terminated multi-byte strings that represent the arguments passed to the program.
-    :param mpi_required_thread_lvl: Level of desired MPI thread support.
+    :param required: Level of desired MPI thread support.
 
     **Requirements:**
 
-    * ``KokkosComm::initialize`` has the same combined requirements as ``MPI_Init`` and ``Kokkos::initialize``.
+    * ``KokkosComm::initialize`` has the same combined requirements as ``MPI_{Init,Init_thread}`` and ``Kokkos::initialize``.
     * ``KokkosComm::initialize`` must be called in place of ``MPI_Init`` and ``Kokkos::initialize``.
     * User-initiated MPI objects cannot be constructed, and MPI functions cannot be called until after ``KokkosComm::initialize`` is called.
     * User-initiated Kokkos objects cannot be constructed until after ``KokkosComm::initialize`` is called.
