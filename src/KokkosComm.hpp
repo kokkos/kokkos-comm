@@ -35,7 +35,14 @@
 
 namespace KokkosComm {
 
-inline void initialize(int &argc, char *argv[], int mpi_required_thread_lvl) {
+enum class ThreadSupportLevel {
+  Single     = MPI_THREAD_SINGLE,
+  Funneled   = MPI_THREAD_FUNNELED,
+  Serialized = MPI_THREAD_SERIALIZED,
+  Multiple   = MPI_THREAD_MULTIPLE,
+};
+
+inline void initialize(int &argc, char *argv[], ThreadSupportLevel required) {
   int flag;
   MPI_Initialized(&flag);
   // Eagerly abort if MPI has already been initialized
@@ -44,9 +51,9 @@ inline void initialize(int &argc, char *argv[], int mpi_required_thread_lvl) {
   }
 
   int provided;
-  MPI_Init_thread(&argc, &argv, mpi_required_thread_lvl, &provided);
-  // Abort if MPI failed to provide the required thread level
-  if (mpi_required_thread_lvl != provided) {
+  MPI_Init_thread(&argc, &argv, static_cast<int>(required), &provided);
+  // Abort if MPI failed to provide the required thread support level
+  if (static_cast<int>(required) < provided) {
     MPI_Abort(MPI_COMM_WORLD, -1);
   }
 
@@ -65,7 +72,7 @@ inline void initialize(int &argc, char *argv[], int mpi_required_thread_lvl) {
   Kokkos::initialize(argc, argv);
 }
 
-inline void initialize(int &argc, char *argv[]) { initialize(argc, argv, MPI_THREAD_MULTIPLE); }
+inline void initialize(int &argc, char *argv[]) { initialize(argc, argv, ThreadSupportLevel::Multiple); }
 
 inline void finalize() {
   Kokkos::finalize();
