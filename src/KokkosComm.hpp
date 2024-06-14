@@ -45,9 +45,14 @@ enum class ThreadSupportLevel {
 inline void initialize(int &argc, char *argv[], ThreadSupportLevel required) {
   int flag;
   MPI_Initialized(&flag);
-  // Eagerly abort if MPI has already been initialized
+  // Forbid calling this function if MPI has already been initialized
   if (0 != flag) {
     MPI_Abort(MPI_COMM_WORLD, -1);
+  }
+
+  // Forbid calling this function if Kokkos has already been initialized
+  if (Kokkos::is_initialized()) {
+    std::abort();
   }
 
   int provided;
@@ -74,7 +79,18 @@ inline void initialize(int &argc, char *argv[], ThreadSupportLevel required) {
 inline void initialize(int &argc, char *argv[]) { initialize(argc, argv, ThreadSupportLevel::Multiple); }
 
 inline void finalize() {
+  // Forbid calling this function if Kokkos has already been finalized or isn't yet initialized
+  if (Kokkos::is_finalized() || !Kokkos::is_initialized()) {
+    MPI_Abort(MPI_COMM_WORLD, -1);
+  }
   Kokkos::finalize();
+
+  int flag;
+  MPI_Finalized(&flag);
+  // Forbid calling this function if MPI has already been finalized
+  if (0 != flag) {
+    std::abort();
+  }
   MPI_Finalize();
 }
 
