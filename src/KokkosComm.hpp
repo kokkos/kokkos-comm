@@ -34,4 +34,5 @@ namespace KokkosComm {
   using Impl::send;
   using Impl::recv;
   using Impl::alltoall;
+  
 }  // namespace KokkosComm
