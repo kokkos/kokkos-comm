@@ -46,7 +46,7 @@ Point-to-point
     :param dest: the destination rank
     :param tag: the MPI tag
     :param comm: the MPI communicator
-    :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a synchronous ``MPI_Issend`` if ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` is defined, otherwise defaults to a standard ``MPI_Isend``.
+    :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a synchronous ``MPI_Issend`` if ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` is defined, otherwise defaults to a ``MPI_Isend``.
     :tparam SendView: Type of the provided Kokkos::View
     :tparam ExecSpace: Type of the provided Kokkos execution space instance
     :returns: A KokkosComm::Req representing the asynchronous communication and any lifetime-extended views.
