@@ -54,7 +54,7 @@ void test_1d(const View1D &a) {
   } else if (1 == rank) {
     int src = 0;
     MPI_Request req;
-    KokkosComm::Impl::irecv(a, src, 0, MPI_COMM_WORLD, req);
+    KokkosComm::irecv(a, src, 0, MPI_COMM_WORLD, req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     int errs;
     Kokkos::parallel_reduce(
@@ -87,7 +87,7 @@ void test_2d(const View2D &a) {
   } else if (1 == rank) {
     int src = 0;
     MPI_Request req;
-    KokkosComm::Impl::irecv(a, src, 0, MPI_COMM_WORLD, req);
+    KokkosComm::irecv(a, src, 0, MPI_COMM_WORLD, req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     int errs;
     Kokkos::parallel_reduce(
