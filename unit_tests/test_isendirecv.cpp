@@ -85,10 +85,9 @@ void test_2d(const View2D &a) {
     KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
     req.wait();
   } else if (1 == rank) {
-    int src = 0;
-    MPI_Request req;
-    KokkosComm::irecv(a, src, 0, MPI_COMM_WORLD, req);
-    MPI_Wait(&req, MPI_STATUS_IGNORE);
+    int src             = 0;
+    KokkosComm::Req req = KokkosComm::irecv(a, src, 0, MPI_COMM_WORLD);
+    req.wait();
     int errs;
     Kokkos::parallel_reduce(
         policy, KOKKOS_LAMBDA(int i, int j, int &lsum) { lsum += a(i, j) != Scalar(i * a.extent(0) + j); }, errs);
