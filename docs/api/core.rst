@@ -119,7 +119,7 @@ Collective
     :param sv: The data to send
     :param rv: The view to receive into
     :param comm: the MPI communicator
-    :tparam SendView: Type of the provided Kokkos::View. Contiguous and rank less than 2.
+    :tparam SendView: Type of the provided Kokkos::View. Contiguous and rank 0 or 1.
     :tparam RecvView: A Kokkos::View to recv. Contiguous and rank 1.
     :tparam ExecSpace: A Kokkos execution space to operate in
 
