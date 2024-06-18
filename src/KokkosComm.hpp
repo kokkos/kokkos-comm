@@ -29,10 +29,10 @@
 #include <Kokkos_Core.hpp>
 
 namespace KokkosComm {
-using Impl::isend;
-using Impl::irecv;
-using Impl::send;
-using Impl::recv;
 using Impl::alltoall;
+using Impl::irecv;
+using Impl::isend;
+using Impl::recv;
+using Impl::send;
 
 }  // namespace KokkosComm
