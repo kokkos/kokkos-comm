@@ -16,14 +16,15 @@
 
 #include <gtest/gtest.h>
 
-#include "KokkosComm_barrier.hpp"
+#include "KokkosComm.hpp"
 
 namespace {
+
 TEST(Barrier, 0) {
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-  KokkosComm::Impl::barrier(Kokkos::DefaultExecutionSpace(), MPI_COMM_WORLD);
+  KokkosComm::barrier(Kokkos::DefaultExecutionSpace(), MPI_COMM_WORLD);
 }
+
 }  // namespace
