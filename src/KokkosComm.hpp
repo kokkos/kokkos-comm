@@ -23,13 +23,16 @@
 #include "KokkosComm_recv.hpp"
 #include "KokkosComm_send.hpp"
 #include "KokkosComm_alltoall.hpp"
+#include "KokkosComm_barrier.hpp"
 #include "KokkosComm_concepts.hpp"
 #include "KokkosComm_comm_mode.hpp"
 
 #include <Kokkos_Core.hpp>
 
 namespace KokkosComm {
+
 using Impl::alltoall;
+using Impl::barrier;
 using Impl::irecv;
 using Impl::isend;
 using Impl::recv;

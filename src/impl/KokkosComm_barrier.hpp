@@ -18,16 +18,14 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "KokkosComm_pack_traits.hpp"
-#include "KokkosComm_traits.hpp"
+#include "KokkosComm_concepts.hpp"
 
 // impl
 #include "KokkosComm_include_mpi.hpp"
-#include "KokkosComm_types.hpp"
 
 namespace KokkosComm::Impl {
 
-void barrier(MPI_Comm comm) {
+inline void barrier(MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::barrier");
   MPI_Barrier(comm);
   Kokkos::Tools::popRegion();
@@ -39,4 +37,5 @@ void barrier(const ExecSpace &space, MPI_Comm comm) {
   space.fence("KokkosComm::Impl::barrier");
   barrier(comm);
 }
+
 }  // namespace KokkosComm::Impl
