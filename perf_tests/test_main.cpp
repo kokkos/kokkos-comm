@@ -32,7 +32,11 @@ class NullReporter : public ::benchmark::BenchmarkReporter {
 // The main is rewritten to allow for MPI initializing and for selecting a
 // reporter according to the process rank
 int main(int argc, char **argv) {
-  MPI_Init(&argc, &argv);
+  int provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+  if (provided != MPI_THREAD_MULTIPLE) {
+    throw std::runtime_error("MPI_THREAD_MULTIPLE is needed");
+  }
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
