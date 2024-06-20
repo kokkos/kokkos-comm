@@ -50,12 +50,14 @@ void test_1d(const View1D &a) {
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
 
-    KokkosComm::Handle h = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    KokkosComm::Handle<Kokkos::DefaultExecutionSpace> h =
+        KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
     h.wait();
   } else if (1 == rank) {
     int src = 0;
 
-    KokkosComm::Handle h = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
+    KokkosComm::Handle<Kokkos::DefaultExecutionSpace> h =
+        KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
     h.wait();
     int errs;
     Kokkos::parallel_reduce(
@@ -83,16 +85,14 @@ void test_2d(const View2D &a) {
     int dst = 1;
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(int i, int j) { a(i, j) = i * a.extent(0) + j; });
-    std::cerr << __FILE__ << ":" << __LINE__ << " isend...\n";
-    KokkosComm::Handle h = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    KokkosComm::Handle<Kokkos::DefaultExecutionSpace> h =
+        KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
     h.wait();
-    std::cerr << __FILE__ << ":" << __LINE__ << " isend done\n";
   } else if (1 == rank) {
     int src = 0;
-    std::cerr << __FILE__ << ":" << __LINE__ << " irecv...\n";
-    KokkosComm::Handle h = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
+    KokkosComm::Handle<Kokkos::DefaultExecutionSpace> h =
+        KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
     h.wait();
-    std::cerr << __FILE__ << ":" << __LINE__ << " irecv done\n";
     int errs;
     Kokkos::parallel_reduce(
         policy, KOKKOS_LAMBDA(int i, int j, int &lsum) { lsum += a(i, j) != Scalar(i * a.extent(0) + j); }, errs);
