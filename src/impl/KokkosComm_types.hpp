@@ -107,4 +107,50 @@ MPI_Datatype mpi_type() {
 
 template <typename Scalar>
 inline MPI_Datatype mpi_type_v = mpi_type<Scalar>();
+
+template <KokkosView View>
+MPI_Datatype view_mpi_type(const View &view) {
+#define USE_CACHE
+
+#if defined(USE_CACHE)
+  constexpr int P = 2 * View::rank;
+  using Key       = std::array<int, P>;
+
+  auto key_from = [](const View &v) -> Key {
+    Key key;
+    for (size_t d = 0; d < View::rank; d++) {
+      key[d]     = v.extent(d);
+      key[d + 1] = v.stride(d);
+    }
+    return key;
+  };
+
+  static std::map<Key, MPI_Datatype> cache;
+
+  Key key = key_from(view);
+  if (cache.count(key) > 0) {
+    return cache[key];
+  }
+#endif
+
+  using value_type  = typename View::non_const_value_type;
+  MPI_Datatype type = mpi_type_v<value_type>;
+
+  // This doesn't work for 1D contiguous views into reduce because it
+  // represents the whole 1D view as 1 Hvector, rather than N elements.
+  // FIXME: is there a more generic way to handle this, maybe by treating
+  // the last dimension specially under certain circumstances?
+  for (size_t d = 0; d < KokkosComm::rank<View>(); ++d) {
+    MPI_Datatype newtype;
+    MPI_Type_create_hvector(KokkosComm::extent(view, d) /*count*/, 1 /*block length*/,
+                            KokkosComm::stride(view, d) * sizeof(value_type), type, &newtype);
+    type = newtype;
+  }
+  MPI_Type_commit(&type);
+#if defined(USE_CACHE)
+  cache[key] = type;
+#endif
+  return type;
+}
+
 };  // namespace KokkosComm::Impl

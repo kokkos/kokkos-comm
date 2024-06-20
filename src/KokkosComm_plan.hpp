@@ -16,25 +16,11 @@
 
 #pragma once
 
-#include "KokkosComm_point_to_point.hpp"
-#include "KokkosComm_collective.hpp"
-#include "KokkosComm_version.hpp"
-#include "KokkosComm_isend.hpp"
-#include "KokkosComm_irecv.hpp"
-#include "KokkosComm_recv.hpp"
-#include "KokkosComm_send.hpp"
-#include "KokkosComm_alltoall.hpp"
-#include "KokkosComm_barrier.hpp"
-#include "KokkosComm_concepts.hpp"
-#include "KokkosComm_comm_mode.hpp"
-
-#include <Kokkos_Core.hpp>
-
 namespace KokkosComm {
 
-using Impl::alltoall;
-using Impl::barrier;
-using Impl::recv;
-using Impl::send;
+template <KokkosExecutionSpace ExecSpace, typename CommFunc>
+Mpi::Handle<ExecSpace> plan(const ExecSpace &space, MPI_Comm comm, CommFunc f) {
+  return Mpi::Plan<ExecSpace, CommFunc>(space, comm, f).handle();
+}
 
 }  // namespace KokkosComm

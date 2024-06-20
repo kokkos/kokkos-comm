@@ -49,8 +49,8 @@ void isend_comm_mode_1d_contig() {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::Req req = KokkosComm::isend<IsendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
-    req.wait();
+    KokkosComm::Handle h = KokkosComm::isend<IsendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    h.wait();
   } else if (1 == rank) {
     int src = 0;
     KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);

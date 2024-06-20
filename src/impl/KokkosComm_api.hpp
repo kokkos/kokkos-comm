@@ -16,25 +16,15 @@
 
 #pragma once
 
-#include "KokkosComm_point_to_point.hpp"
-#include "KokkosComm_collective.hpp"
-#include "KokkosComm_version.hpp"
-#include "KokkosComm_isend.hpp"
-#include "KokkosComm_irecv.hpp"
-#include "KokkosComm_recv.hpp"
-#include "KokkosComm_send.hpp"
-#include "KokkosComm_alltoall.hpp"
-#include "KokkosComm_barrier.hpp"
-#include "KokkosComm_concepts.hpp"
-#include "KokkosComm_comm_mode.hpp"
+namespace KokkosComm::Impl {
 
-#include <Kokkos_Core.hpp>
+enum class Api { Irecv, Isend };
 
-namespace KokkosComm {
+// catch-all: no transports implement any APIs
+template <typename Transport, Impl::Api API>
+struct api_avail : public std::false_type {};
 
-using Impl::alltoall;
-using Impl::barrier;
-using Impl::recv;
-using Impl::send;
+template <typename Transport, Impl::Api API>
+constexpr bool api_avail_v = api_avail<Transport, API>::value;
 
-}  // namespace KokkosComm
+}  // namespace KokkosComm::Impl

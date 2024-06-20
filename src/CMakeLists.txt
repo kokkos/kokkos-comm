@@ -6,6 +6,7 @@ target_include_directories(KokkosComm INTERFACE
 )
 target_include_directories(KokkosComm INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/impl>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/mpi>
 )
 target_include_directories(KokkosComm INTERFACE
     $<INSTALL_INTERFACE:include>

@@ -16,25 +16,20 @@
 
 #pragma once
 
-#include "KokkosComm_point_to_point.hpp"
-#include "KokkosComm_collective.hpp"
-#include "KokkosComm_version.hpp"
-#include "KokkosComm_isend.hpp"
-#include "KokkosComm_irecv.hpp"
-#include "KokkosComm_recv.hpp"
-#include "KokkosComm_send.hpp"
-#include "KokkosComm_alltoall.hpp"
-#include "KokkosComm_barrier.hpp"
-#include "KokkosComm_concepts.hpp"
-#include "KokkosComm_comm_mode.hpp"
+#include "KokkosComm_contiguous.hpp"
+#include "KokkosComm_types.hpp"
 
-#include <Kokkos_Core.hpp>
+namespace KokkosComm::Impl {
 
-namespace KokkosComm {
+template <typename HandleTy, KokkosView RecvView>
+void irecv_datatype(HandleTy &h, RecvView rv, int src, int tag) {
+  h.impl_add_pre_comm_fence();
 
-using Impl::alltoall;
-using Impl::barrier;
-using Impl::recv;
-using Impl::send;
+  h.impl_add_comm([&h, rv, src, tag]() {
+    MPI_Request req;
+    MPI_Irecv(KokkosComm::data_handle(rv), 1, view_mpi_type(rv), src, tag, h.mpi_comm(), &req);
+    h.impl_track_mpi_request(req);
+  });
+}
 
-}  // namespace KokkosComm
+}  // namespace KokkosComm::Impl
