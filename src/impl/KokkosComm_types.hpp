@@ -113,21 +113,14 @@ MPI_Datatype view_mpi_type(const View &view) {
 #define USE_CACHE
 
 #if defined(USE_CACHE)
-  constexpr int P = 2 * View::rank;
-  using Key       = std::array<int, P>;
-
-  auto key_from = [](const View &v) -> Key {
-    Key key;
-    for (size_t d = 0; d < View::rank; d++) {
-      key[d]     = v.extent(d);
-      key[d + 1] = v.stride(d);
-    }
-    return key;
-  };
-
+  using Key = std::array<int, 2 * View::rank>;
   static std::map<Key, MPI_Datatype> cache;
 
-  Key key = key_from(view);
+  Key key;
+  for (size_t d = 0; d < View::rank; d++) {
+    key[2 * d]     = view.extent(d);
+    key[2 * d + 1] = view.stride(d);
+  }
   if (cache.count(key) > 0) {
     return cache[key];
   }
