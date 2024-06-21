@@ -26,9 +26,9 @@ void irecv_datatype(HandleTy &h, RecvView rv, int src, int tag) {
   h.impl_add_pre_comm_fence();
 
   h.impl_add_comm([&h, rv, src, tag]() {
-    MPI_Request req;
-    MPI_Irecv(KokkosComm::data_handle(rv), 1, view_mpi_type(rv), src, tag, h.mpi_comm(), &req);
-    h.impl_track_mpi_request(req);
+    Req<Mpi> req;
+    MPI_Irecv(KokkosComm::data_handle(rv), 1, view_mpi_type(rv), src, tag, h.mpi_comm(), &req.mpi_req());
+    h.impl_track_req(req);
   });
 }
 

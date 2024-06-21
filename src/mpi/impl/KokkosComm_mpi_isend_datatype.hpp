@@ -26,9 +26,9 @@ void isend_datatype(HandleTy &h, SendView sv, int dst, int tag) {
   h.impl_add_pre_comm_fence();
 
   h.impl_add_comm([&h, sv, dst, tag]() {
-    MPI_Request req;
-    MPI_Isend(KokkosComm::data_handle(sv), 1, view_mpi_type(sv), dst, tag, h.mpi_comm(), &req);
-    h.impl_track_mpi_request(req);
+    Req<Mpi> req;
+    MPI_Isend(KokkosComm::data_handle(sv), 1, view_mpi_type(sv), dst, tag, h.mpi_comm(), &req.mpi_req());
+    h.impl_track_req(req);
   });
 }
 

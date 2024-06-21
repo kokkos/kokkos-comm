@@ -39,15 +39,19 @@ void isend(Handle<ExecSpace, TRANSPORT> &h, SendView &sv, int dest, int tag) {
 // TODO: can these go in MPI somewhere?
 #if defined(KOKKOSCOMM_TRANSPORT_MPI)
 template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace>
-KokkosComm::Handle<ExecSpace, Mpi> isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
-  return KokkosComm::plan(space, comm,
-                          [=](Handle<ExecSpace, Mpi> &handle) { KokkosComm::isend(handle, sv, dest, tag); });
+Req<Mpi> isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
+  auto reqs =
+      KokkosComm::plan(space, comm, [=](Handle<ExecSpace, Mpi> &handle) { KokkosComm::isend(handle, sv, dest, tag); });
+  assert(reqs.size() == 1 && "Internal KokkosComm developer error");
+  return reqs[0];
 }
 
 template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace>
-KokkosComm::Handle<ExecSpace, Mpi> irecv(const ExecSpace &space, const RecvView &rv, int dest, int tag, MPI_Comm comm) {
-  return KokkosComm::plan(space, comm,
-                          [=](Handle<ExecSpace, Mpi> &handle) { KokkosComm::irecv(handle, rv, dest, tag); });
+Req<Mpi> irecv(const ExecSpace &space, const RecvView &rv, int dest, int tag, MPI_Comm comm) {
+  auto reqs =
+      KokkosComm::plan(space, comm, [=](Handle<ExecSpace, Mpi> &handle) { KokkosComm::irecv(handle, rv, dest, tag); });
+  assert(reqs.size() == 1 && "Internal KokkosComm developer error");
+  return reqs[0];
 }
 
 #endif

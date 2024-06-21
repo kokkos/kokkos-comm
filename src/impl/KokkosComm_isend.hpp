@@ -22,7 +22,6 @@
 
 #include "KokkosComm_concepts.hpp"
 #include "KokkosComm_pack_traits.hpp"
-#include "KokkosComm_request.hpp"
 #include "KokkosComm_traits.hpp"
 #include "KokkosComm_comm_mode.hpp"
 
@@ -46,10 +45,10 @@ void isend(const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Request &re
 }
 
 template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
-KokkosComm::Req isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
+KokkosComm::Req<KokkosComm::Mpi> isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
 
-  KokkosComm::Req req;
+  KokkosComm::Req<KokkosComm::Mpi> req;
 
   using KCT  = KokkosComm::Traits<SendView>;
   using KCPT = KokkosComm::PackTraits<SendView>;

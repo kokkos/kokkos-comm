@@ -46,7 +46,7 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, in
   auto ym1_s = Kokkos::subview(v, make_pair(1, nx + 1), 1, Kokkos::ALL);
   auto ym1_r = Kokkos::subview(v, make_pair(1, nx + 1), 0, Kokkos::ALL);
 
-  KokkosComm::Handle<Space> h = KokkosComm::plan(space, comm, [=](KokkosComm::Handle<Space> &handle) {
+  std::vector<KokkosComm::Req<>> reqs = KokkosComm::plan(space, comm, [=](KokkosComm::Handle<Space> &handle) {
     KokkosComm::isend(handle, xp1_s, get_rank(xp1, ry), 0);
     KokkosComm::isend(handle, xm1_s, get_rank(xm1, ry), 1);
     KokkosComm::isend(handle, yp1_s, get_rank(rx, yp1), 2);
@@ -59,7 +59,7 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, in
   KokkosComm::recv(space, yp1_r, get_rank(rx, yp1), 3, comm);
 
   // wait for comm
-  KokkosComm::wait(h);
+  KokkosComm::wait_all(reqs);
 }
 
 void benchmark_2dhalo(benchmark::State &state) {

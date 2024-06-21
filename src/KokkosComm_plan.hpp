@@ -22,15 +22,18 @@
 
 namespace KokkosComm {
 
-template <Dispatch DISPATCH, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+template <Dispatch TDispatch, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           Transport TRANSPORT = DefaultTransport>
-Handle<ExecSpace, TRANSPORT> plan(const ExecSpace &space, MPI_Comm comm, DISPATCH d) {
-  return Plan<DISPATCH, ExecSpace, TRANSPORT>(space, comm, d).handle();
+std::vector<Req<TRANSPORT>> plan(Handle<ExecSpace, TRANSPORT> &handle, TDispatch d) {
+  return Impl::Plan<TDispatch, ExecSpace, TRANSPORT>(handle, d).reqs;
 }
 
-template <Dispatch DISPATCH, KokkosExecutionSpace ExecSpace, Transport TRANSPORT>
-void plan(Handle<ExecSpace, TRANSPORT> &handle, DISPATCH d) {
-  Plan<DISPATCH, ExecSpace, TRANSPORT>(handle, d);
+template <Dispatch TDispatch, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          Transport TRANSPORT = DefaultTransport>
+std::vector<Req<TRANSPORT>> plan(const ExecSpace &space, MPI_Comm comm, TDispatch d) {
+  Handle<ExecSpace, TRANSPORT> handle(space, comm);
+  auto ret = plan<TDispatch, ExecSpace, TRANSPORT>(handle, d);
+  return ret;
 }
 
 }  // namespace KokkosComm

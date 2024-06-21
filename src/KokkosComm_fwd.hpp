@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "KokkosComm_concepts.hpp"
 #include "KokkosComm_config.hpp"
 
@@ -28,14 +30,17 @@ using FallbackTransport = Mpi;
 #error at least one transport must be defined
 #endif
 
+template <Transport TRANSPORT = DefaultTransport>
+class Req;
+
 template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport>
 class Handle;
 
-template <Dispatch DISPATCH, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
-          Transport TRANSPORT = DefaultTransport>
-class Plan;
-
 namespace Impl {
+
+template <Dispatch TDispatch, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          Transport TRANSPORT = DefaultTransport>
+struct Plan;
 
 template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           Transport TRANSPORT = DefaultTransport>

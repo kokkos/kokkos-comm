@@ -16,26 +16,17 @@
 
 #pragma once
 
-namespace KokkosComm {
+namespace KokkosComm::Impl {
 
-template <Dispatch DISPATCH, KokkosExecutionSpace ExecSpace>
-class Plan<DISPATCH, ExecSpace, Mpi> {
- public:
-  using execution_space = ExecSpace;
-  using handle_type     = Handle<execution_space, Mpi>;
-  Plan(const execution_space &space, MPI_Comm comm, DISPATCH d) : handle_(space, comm) {
-    d(handle_);
-    handle_.impl_run();
+template <Dispatch TDispatch, KokkosExecutionSpace ExecSpace>
+struct Plan<TDispatch, ExecSpace, Mpi> {
+  Plan(Handle<ExecSpace, Mpi> &handle, TDispatch d) {
+    d(handle);
+    handle.impl_run();
+    reqs = handle.impl_reqs();
   }
 
-  Plan(const execution_space &space, DISPATCH d) : Plan(space, MPI_COMM_WORLD, d) {}
-  Plan(MPI_Comm comm, DISPATCH d) : Plan(Kokkos::DefaultExecutionSpace(), comm, d) {}
-  Plan(DISPATCH d) : Plan(Kokkos::DefaultExecutionSpace(), MPI_COMM_WORLD, d) {}
-
-  handle_type handle() const { return handle_; }
-
- private:
-  handle_type handle_;
+  std::vector<Req<Mpi>> reqs;
 };
 
-}  // namespace KokkosComm
+}  // namespace KokkosComm::Impl
