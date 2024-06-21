@@ -59,7 +59,7 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, in
   KokkosComm::recv(space, yp1_r, get_rank(rx, yp1), 3, comm);
 
   // wait for comm
-  h.wait();
+  KokkosComm::wait(h);
 }
 
 void benchmark_2dhalo(benchmark::State &state) {

@@ -31,7 +31,7 @@ namespace KokkosComm {
 - post-wait
 */
 template <KokkosExecutionSpace ExecSpace>
-class Handle<ExecSpace, KokkosComm::Mpi> {
+class Handle<ExecSpace, Mpi> {
  public:
   using execution_space = ExecSpace;
 
@@ -82,20 +82,10 @@ class Handle<ExecSpace, KokkosComm::Mpi> {
     comms_.clear();
   }
 
-  void wait() {
-    MPI_Waitall(reqs_.size(), reqs_.data(), MPI_STATUSES_IGNORE);
-    reqs_.clear();
-    // std::cerr << __FILE__ << ":" << __LINE__ << " MPI_Waitall done\n";
-    for (const auto &f : postWaits_) {
-      f();
-    }
-    // std::cerr << __FILE__ << ":" << __LINE__ << " postWaits_.clear()...\n";
-    postWaits_.clear();
-    // views_.clear();
-    // std::cerr << __FILE__ << ":" << __LINE__ << " wait() done\n";
-  }
-
  private:
+  template <KokkosExecutionSpace ES>
+  friend void wait(Handle<ES, Mpi> &handle);
+
   execution_space space_;
   MPI_Comm comm_;
 
@@ -110,5 +100,19 @@ class Handle<ExecSpace, KokkosComm::Mpi> {
   std::vector<std::function<void()>> postWaits_;
   std::vector<std::shared_ptr<ViewHolderBase>> views_;
 };
+
+template <KokkosExecutionSpace ExecSpace>
+void wait(Handle<ExecSpace, Mpi> &handle) {
+  MPI_Waitall(handle.reqs_.size(), handle.reqs_.data(), MPI_STATUSES_IGNORE);
+  handle.reqs_.clear();
+  // std::cerr << __FILE__ << ":" << __LINE__ << " MPI_Waitall done\n";
+  for (const auto &f : handle.postWaits_) {
+    f();
+  }
+  // std::cerr << __FILE__ << ":" << __LINE__ << " postWaits_.clear()...\n";
+  handle.postWaits_.clear();
+  // views_.clear();
+  // std::cerr << __FILE__ << ":" << __LINE__ << " wait() done\n";
+}
 
 }  // namespace KokkosComm
