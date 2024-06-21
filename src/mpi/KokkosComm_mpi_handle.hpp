@@ -53,7 +53,6 @@ class Handle<ExecSpace, Mpi> {
   void impl_track_req(const Req<Mpi> &req) { reqs_.push_back(req); }
 
   void impl_run() {
-    std::cerr << __FILE__ << ":" << __LINE__ << " impl_run\n";
     for (const auto &f : allocs_) f();
     for (const auto &f : preCopies_) f();
     if (preCommFence_) {

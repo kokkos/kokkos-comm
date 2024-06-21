@@ -64,7 +64,6 @@ class Req<Mpi> {
 };
 
 inline void wait(Req<Mpi> &req) {
-  std::cerr << __FILE__ << ":" << __LINE__ << " wait on " << req.mpi_req() << "\n";
   MPI_Wait(&req.mpi_req(), MPI_STATUS_IGNORE);
   for (auto &f : req.record_->postWaits_) {
     f();
@@ -73,7 +72,6 @@ inline void wait(Req<Mpi> &req) {
 }
 
 inline void wait_all(std::vector<Req<Mpi>> &reqs) {
-  std::cerr << __FILE__ << ":" << __LINE__ << " wait all\n";
   for (Req<Mpi> &req : reqs) {
     wait(req);
   }
