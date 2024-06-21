@@ -16,41 +16,40 @@
 
 #pragma once
 
-#include "KokkosComm_api.hpp"
+#include <Kokkos_Core.hpp>
+
+#include "KokkosComm_fwd.hpp"
 #include "KokkosComm_concepts.hpp"
-#include "KokkosComm_config.hpp"
 #include "KokkosComm_plan.hpp"
 
 namespace KokkosComm {
 
-template <typename Handle, KokkosView RecvView>
-void irecv(Handle &h, RecvView &rv, int src, int tag) {
-  if constexpr (Impl::api_avail_v<SpecialTransport, Impl::Api::Irecv>) {
-    SpecialTransport::irecv(h, rv, src, tag);
-  } else {
-    GenericTransport::irecv(h, rv, src, tag);
-  }
+template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          Transport TRANSPORT = DefaultTransport>
+void irecv(Handle<ExecSpace, TRANSPORT> &h, RecvView &rv, int src, int tag) {
+  Impl::Irecv<RecvView, ExecSpace, TRANSPORT>(h, rv, src, tag);
 }
 
-template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-KokkosComm::Handle<ExecSpace> irecv(const ExecSpace &space, const RecvView &rv, int dest, int tag, MPI_Comm comm) {
-  using MyHandle = KokkosComm::Handle<ExecSpace>;
-  return KokkosComm::plan(space, comm, [=](MyHandle &handle) { KokkosComm::irecv(handle, rv, dest, tag); });
+template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          Transport TRANSPORT = DefaultTransport>
+void isend(Handle<ExecSpace, TRANSPORT> &h, SendView &sv, int dest, int tag) {
+  Impl::Isend<SendView, ExecSpace, TRANSPORT>(h, sv, dest, tag);
 }
 
-template <typename Handle, KokkosView SendView>
-void isend(Handle &h, SendView &sv, int src, int tag) {
-  if constexpr (Impl::api_avail_v<SpecialTransport, Impl::Api::Isend>) {
-    SpecialTransport::isend(h, sv, src, tag);
-  } else {
-    GenericTransport::isend(h, sv, src, tag);
-  }
+// TODO: can these go in MPI somewhere?
+#if defined(KOKKOSCOMM_TRANSPORT_MPI)
+template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace>
+KokkosComm::Handle<ExecSpace, Mpi> isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
+  return KokkosComm::plan(space, comm,
+                          [=](Handle<ExecSpace, Mpi> &handle) { KokkosComm::isend(handle, sv, dest, tag); });
 }
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
-KokkosComm::Handle<ExecSpace> isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
-  using MyHandle = KokkosComm::Handle<ExecSpace>;
-  return KokkosComm::plan(space, comm, [=](MyHandle &handle) { KokkosComm::isend(handle, sv, dest, tag); });
+template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace>
+KokkosComm::Handle<ExecSpace, Mpi> irecv(const ExecSpace &space, const RecvView &rv, int dest, int tag, MPI_Comm comm) {
+  return KokkosComm::plan(space, comm,
+                          [=](Handle<ExecSpace, Mpi> &handle) { KokkosComm::irecv(handle, rv, dest, tag); });
 }
+
+#endif
 
 }  // namespace KokkosComm

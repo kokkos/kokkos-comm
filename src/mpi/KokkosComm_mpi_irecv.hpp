@@ -16,34 +16,37 @@
 
 #pragma once
 
-#include "KokkosComm_concepts.hpp"
-#include "KokkosComm_traits.hpp"
-#include "KokkosComm_types.hpp"
-
 #include "impl/KokkosComm_mpi_irecv_deepcopy.hpp"
 #include "impl/KokkosComm_mpi_irecv_datatype.hpp"
+#include "KokkosComm_mpi.hpp"
 
 namespace KokkosComm {
 
 // low-level API
 template <KokkosView RecvView>
-void irecv(RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Request &req) {
+void irecv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Request &req) {
   Kokkos::Tools::pushRegion("KokkosComm::irecv");
 
   if (KokkosComm::is_contiguous(rv)) {
-    using RecvScalar = typename RecvView::value_type;
+    using RecvScalar = typename RecvView::non_const_value_type;
     MPI_Irecv(KokkosComm::data_handle(rv), KokkosComm::span(rv), Impl::mpi_type_v<RecvScalar>, src, tag, comm, &req);
   } else {
     throw std::runtime_error("Only contiguous irecv viewsupported");
   }
-
   Kokkos::Tools::popRegion();
 }
 
+namespace Impl {
+
+// irecv implementation for Mpi
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-void Mpi::irecv(Mpi::Handle<ExecSpace> &h, const RecvView &rv, int src, int tag) {
-  // Impl::irecv_deepcopy(h, rv, src, tag);
-  Impl::irecv_datatype(h, rv, src, tag);
-}
+struct Irecv<RecvView, ExecSpace, Mpi> {
+  Irecv(Handle<ExecSpace, Mpi> &h, const RecvView &rv, int src, int tag) {
+    // Impl::irecv_deepcopy(h, rv, src, tag);
+    Impl::irecv_datatype(h, rv, src, tag);
+  }
+};
+
+}  // namespace Impl
 
 }  // namespace KokkosComm

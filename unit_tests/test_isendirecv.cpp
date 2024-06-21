@@ -17,7 +17,6 @@
 #include <gtest/gtest.h>
 
 #include "KokkosComm.hpp"
-#include "KokkosComm_irecv.hpp"
 
 #include "view_builder.hpp"
 
@@ -50,14 +49,12 @@ void test_1d(const View1D &a) {
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
 
-    KokkosComm::Handle<Kokkos::DefaultExecutionSpace> h =
-        KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    KokkosComm::Handle<> h = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
     h.wait();
   } else if (1 == rank) {
     int src = 0;
 
-    KokkosComm::Handle<Kokkos::DefaultExecutionSpace> h =
-        KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
+    KokkosComm::Handle<> h = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
     h.wait();
     int errs;
     Kokkos::parallel_reduce(

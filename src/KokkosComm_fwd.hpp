@@ -16,21 +16,34 @@
 
 #pragma once
 
-#include <Kokkos_Core.hpp>
-
-#include "KokkosComm_fwd.hpp"
+#include "KokkosComm_concepts.hpp"
+#include "KokkosComm_config.hpp"
 
 namespace KokkosComm {
+#if defined(KOKKOSCOMM_TRANSPORT_MPI)
+class Mpi;
+using DefaultTransport  = Mpi;
+using FallbackTransport = Mpi;
+#else
+#error at least one transport must be defined
+#endif
+
+template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport>
+class Handle;
 
 template <Dispatch DISPATCH, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           Transport TRANSPORT = DefaultTransport>
-Handle<ExecSpace, TRANSPORT> plan(const ExecSpace &space, MPI_Comm comm, DISPATCH d) {
-  return Plan<DISPATCH, ExecSpace, TRANSPORT>(space, comm, d).handle();
-}
+class Plan;
 
-template <Dispatch DISPATCH, KokkosExecutionSpace ExecSpace, Transport TRANSPORT>
-void plan(Handle<ExecSpace, TRANSPORT> &handle, DISPATCH d) {
-  Plan<DISPATCH, ExecSpace, TRANSPORT>(handle, d);
-}
+namespace Impl {
+
+template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          Transport TRANSPORT = DefaultTransport>
+struct Irecv;
+template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          Transport TRANSPORT = DefaultTransport>
+struct Isend;
+
+}  // namespace Impl
 
 }  // namespace KokkosComm

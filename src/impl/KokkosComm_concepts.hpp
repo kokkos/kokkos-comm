@@ -16,14 +16,30 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include <Kokkos_Core.hpp>
 
 namespace KokkosComm {
+
+namespace Impl {
+
+// fallback - most types are not a KokkosComm transport
+template <typename T>
+struct is_transport : public std::false_type {};
+}  // namespace Impl
 
 template <typename T>
 concept KokkosView = Kokkos::is_view_v<T>;
 
 template <typename T>
 concept KokkosExecutionSpace = Kokkos::is_execution_space_v<T>;
+
+// TODO: a function that takes something convertible to a handle and returns void
+template <typename T>
+concept Dispatch = true;
+
+template <typename T>
+concept Transport = KokkosComm::Impl::is_transport<T>::value;
 
 }  // namespace KokkosComm

@@ -17,6 +17,7 @@
 #pragma once
 
 #include "KokkosComm_contiguous.hpp"
+#include "KokkosComm_types.hpp"
 
 namespace KokkosComm::Impl {
 

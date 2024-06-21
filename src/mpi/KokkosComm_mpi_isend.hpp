@@ -16,12 +16,9 @@
 
 #pragma once
 
-#include "KokkosComm_concepts.hpp"
-#include "KokkosComm_traits.hpp"
-#include "KokkosComm_types.hpp"
-
 #include "impl/KokkosComm_mpi_isend_deepcopy.hpp"
 #include "impl/KokkosComm_mpi_isend_datatype.hpp"
+#include "KokkosComm_mpi.hpp"
 
 namespace KokkosComm {
 
@@ -29,7 +26,6 @@ namespace KokkosComm {
 template <KokkosView SendView>
 void isend(const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Request &req) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
-  using KCT = typename KokkosComm::Traits<SendView>;
 
   if (KokkosComm::is_contiguous(sv)) {
     using SendScalar = typename SendView::non_const_value_type;
@@ -40,10 +36,17 @@ void isend(const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Request &re
   Kokkos::Tools::popRegion();
 }
 
+namespace Impl {
+
+// isend implementation for Mpi
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
-void Mpi::isend(Mpi::Handle<ExecSpace> &h, const SendView &sv, int dest, int tag) {
-  // Impl::isend_deepcopy(h, sv, dest, tag);
-  Impl::isend_datatype(h, sv, dest, tag);
-}
+struct Isend<SendView, ExecSpace, Mpi> {
+  Isend(Handle<ExecSpace, Mpi> &h, const SendView &sv, int src, int tag) {
+    // Impl::isend_deepcopy(h, sv, src, tag);
+    Impl::isend_datatype(h, sv, src, tag);
+  }
+};
+
+}  // namespace Impl
 
 }  // namespace KokkosComm

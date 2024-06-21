@@ -16,14 +16,4 @@
 
 #pragma once
 
-#include "mpi/KokkosComm_mpi.hpp"
-#include "KokkosComm_concepts.hpp"
-
-namespace KokkosComm {
-
-using GenericTransport = ::KokkosComm::Mpi;
-using SpecialTransport = ::KokkosComm::Mpi;
-template <KokkosExecutionSpace ExecSpace>
-using Handle = Mpi::Handle<ExecSpace>;
-
-}  // namespace KokkosComm
+#define KOKKOSCOMM_TRANSPORT_MPI  // TODO: set through CMake

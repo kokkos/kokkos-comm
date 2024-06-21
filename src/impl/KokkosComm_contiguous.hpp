@@ -21,6 +21,7 @@
 #include <Kokkos_Core.hpp>
 
 #include "KokkosComm_concepts.hpp"
+#include "KokkosComm_traits.hpp"
 
 namespace KokkosComm::Impl {
 
