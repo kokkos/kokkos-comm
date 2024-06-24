@@ -20,7 +20,7 @@
 
 #include <gtest/gtest.h>
 
-#include <KokkosComm.hpp>
+#include <KokkosComm_version.hpp>
 #include <Kokkos_Core.hpp>
 
 #include "KokkosComm_include_mpi.hpp"
