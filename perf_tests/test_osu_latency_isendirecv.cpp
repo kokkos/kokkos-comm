@@ -56,7 +56,7 @@ void benchmark_osu_latency_KokkosComm_isendirecv(benchmark::State &state) {
 
   auto space      = Kokkos::DefaultExecutionSpace();
   using view_type = Kokkos::View<char *>;
-  view_type a("", state.range(0));
+  view_type a("A", state.range(0));
 
   while (state.KeepRunning()) {
     do_iteration(state, MPI_COMM_WORLD, osu_latency_Kokkos_Comm_isendirecv<Kokkos::DefaultExecutionSpace, view_type>,
@@ -74,7 +74,7 @@ void benchmark_osu_latency_MPI_isendirecv(benchmark::State &state) {
   }
 
   using view_type = Kokkos::View<char *>;
-  view_type a("", state.range(0));
+  view_type a("A", state.range(0));
 
   while (state.KeepRunning()) {
     do_iteration(state, MPI_COMM_WORLD, osu_latency_MPI_isendirecv<view_type>, rank, a);
