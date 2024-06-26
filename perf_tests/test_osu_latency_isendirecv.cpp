@@ -82,18 +82,13 @@ void benchmark_osu_latency_MPI_isendirecv(benchmark::State &state) {
   state.counters["bytes"] = a.size() * 2;
 }
 
-// BENCHMARK(benchmark_osu_latency_KokkosComm_isendirecv)->UseManualTime()->Unit(benchmark::kMicrosecond)->RangeMultiplier(2)->Range(1,
-// 32 * 1024 * 1024);
-// BENCHMARK(benchmark_osu_latency_MPI_isendirecv)->UseManualTime()->Unit(benchmark::kMicrosecond)->RangeMultiplier(2)->Range(1,
-// 32 * 1024 * 1024);
-
 BENCHMARK(benchmark_osu_latency_KokkosComm_isendirecv)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond)
     ->RangeMultiplier(2)
-    ->Range(1, 1024);
+    ->Range(1, 1000);
 BENCHMARK(benchmark_osu_latency_MPI_isendirecv)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond)
     ->RangeMultiplier(2)
-    ->Range(1, 1024);
+    ->Range(1, 1000);
