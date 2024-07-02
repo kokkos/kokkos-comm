@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <gtest/gtest.h>
+#include <type_traits>
 
 #include "KokkosComm.hpp"
 
@@ -29,9 +30,9 @@ class SendRecv : public testing::Test {
 using ScalarTypes = ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>, Kokkos::complex<double>>;
 TYPED_TEST_SUITE(SendRecv, ScalarTypes);
 
-template <KokkosComm::CommMode SendMode, typename Scalar>
+template <typename SendMode, typename Scalar>
 void send_comm_mode_1d_contig() {
-  if (SendMode == KokkosComm::CommMode::Ready) {
+  if constexpr (std::is_same_v<SendMode, KokkosComm::CommMode::Ready>) {
     GTEST_SKIP() << "Skipping test for ready-mode send";
   }
 
@@ -46,22 +47,20 @@ void send_comm_mode_1d_contig() {
 
   if (0 == rank) {
     int dst = 1;
-    Kokkos::parallel_for(
-        a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::send<SendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    Kokkos::parallel_for(a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
+    KokkosComm::send(SendMode(), Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
   } else if (1 == rank) {
     int src = 0;
     KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
     int errs;
-    Kokkos::parallel_reduce(
-        a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != i; }, errs);
+    Kokkos::parallel_reduce(a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != i; }, errs);
     ASSERT_EQ(errs, 0);
   }
 }
 
-template <KokkosComm::CommMode SendMode, typename Scalar>
+template <typename SendMode, typename Scalar>
 void send_comm_mode_1d_noncontig() {
-  if (SendMode == KokkosComm::CommMode::Ready) {
+  if constexpr (std::is_same_v<SendMode, KokkosComm::CommMode::Ready>) {
     GTEST_SKIP() << "Skipping test for ready-mode send";
   }
 
@@ -74,15 +73,13 @@ void send_comm_mode_1d_noncontig() {
 
   if (0 == rank) {
     int dst = 1;
-    Kokkos::parallel_for(
-        a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::send<SendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    Kokkos::parallel_for(a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
+    KokkosComm::send(SendMode(), Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
   } else if (1 == rank) {
     int src = 0;
     KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
     int errs;
-    Kokkos::parallel_reduce(
-        a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != i; }, errs);
+    Kokkos::parallel_reduce(a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != i; }, errs);
     ASSERT_EQ(errs, 0);
   }
 }

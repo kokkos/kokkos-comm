@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <gtest/gtest.h>
+#include <type_traits>
 
 #include "KokkosComm.hpp"
 
@@ -30,9 +31,9 @@ using ScalarTypes =
     ::testing::Types<float, double, Kokkos::complex<float>, Kokkos::complex<double>, int, unsigned, int64_t, size_t>;
 TYPED_TEST_SUITE(IsendRecv, ScalarTypes);
 
-template <KokkosComm::CommMode IsendMode, typename Scalar>
+template <typename IsendMode, typename Scalar>
 void isend_comm_mode_1d_contig() {
-  if (IsendMode == KokkosComm::CommMode::Ready) {
+  if constexpr (std::is_same_v<IsendMode, KokkosComm::CommMode::Ready>) {
     GTEST_SKIP() << "Skipping test for ready-mode send";
   }
 
@@ -47,23 +48,20 @@ void isend_comm_mode_1d_contig() {
 
   if (0 == rank) {
     int dst = 1;
-    Kokkos::parallel_for(
-        a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::Req req = KokkosComm::isend<IsendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
-    req.wait();
+    Kokkos::parallel_for(a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
+    KokkosComm::isend(IsendMode(), Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD).wait();
   } else if (1 == rank) {
     int src = 0;
     KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
     int errs;
-    Kokkos::parallel_reduce(
-        a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
+    Kokkos::parallel_reduce(a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
     ASSERT_EQ(errs, 0);
   }
 }
 
-template <KokkosComm::CommMode IsendMode, typename Scalar>
+template <typename IsendMode, typename Scalar>
 void isend_comm_mode_1d_noncontig() {
-  if (IsendMode == KokkosComm::CommMode::Ready) {
+  if constexpr (std::is_same_v<IsendMode, KokkosComm::CommMode::Ready>) {
     GTEST_SKIP() << "Skipping test for ready-mode send";
   }
 
@@ -76,16 +74,13 @@ void isend_comm_mode_1d_noncontig() {
 
   if (0 == rank) {
     int dst = 1;
-    Kokkos::parallel_for(
-        a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::Req req = KokkosComm::isend<IsendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
-    req.wait();
+    Kokkos::parallel_for(a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
+    KokkosComm::isend(IsendMode(), Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD).wait();
   } else if (1 == rank) {
     int src = 0;
     KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
     int errs;
-    Kokkos::parallel_reduce(
-        a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
+    Kokkos::parallel_reduce(a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
     ASSERT_EQ(errs, 0);
   }
 }
