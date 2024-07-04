@@ -21,11 +21,11 @@
 #include "test_utils.hpp"
 #include "KokkosComm.hpp"
 
-template <typename Space, typename View>
-void osu_latency_Kokkos_Comm_isendirecv(benchmark::State &, MPI_Comm comm, const Space &space, int rank,
+template <typename Mode, typename Space, typename View>
+void osu_latency_Kokkos_Comm_isendirecv(benchmark::State &, MPI_Comm comm, const Mode &mode, const Space &space, int rank,
                                         const View &v) {
   if (rank == 0) {
-    KokkosComm::Req sendreq = KokkosComm::isend(space, v, 1, 1, comm);
+    KokkosComm::Req sendreq = KokkosComm::isend(mode, space, v, 1, 1, comm);
     sendreq.wait();
   } else if (rank == 1) {
     KokkosComm::Req recvreq = KokkosComm::irecv(v, 0, 1, comm);
@@ -54,13 +54,14 @@ void benchmark_osu_latency_KokkosComm_isendirecv(benchmark::State &state) {
     state.SkipWithError("benchmark_osu_latency_KokkosComm needs exactly 2 ranks");
   }
 
+  auto mode       = KokkosComm::DefaultCommMode();
   auto space      = Kokkos::DefaultExecutionSpace();
   using view_type = Kokkos::View<char *>;
   view_type a("A", state.range(0));
 
   while (state.KeepRunning()) {
-    do_iteration(state, MPI_COMM_WORLD, osu_latency_Kokkos_Comm_isendirecv<Kokkos::DefaultExecutionSpace, view_type>,
-                 space, rank, a);
+    do_iteration(state, MPI_COMM_WORLD, osu_latency_Kokkos_Comm_isendirecv<KokkosComm::DefaultCommMode, Kokkos::DefaultExecutionSpace, view_type>,
+                 mode, space, rank, a);
   }
   state.counters["bytes"] = a.size() * 2;
 }
