@@ -32,7 +32,7 @@ TYPED_TEST_SUITE(SendRecv, ScalarTypes);
 
 template <typename SendMode, typename Scalar>
 void send_comm_mode_1d_contig() {
-  if constexpr (std::is_same_v<SendMode, KokkosComm::CommMode::Ready>) {
+  if constexpr (std::is_same_v<SendMode, KokkosComm::ReadyCommMode>) {
     GTEST_SKIP() << "Skipping test for ready-mode send";
   }
 
@@ -62,7 +62,7 @@ void send_comm_mode_1d_contig() {
 
 template <typename SendMode, typename Scalar>
 void send_comm_mode_1d_noncontig() {
-  if constexpr (std::is_same_v<SendMode, KokkosComm::CommMode::Ready>) {
+  if constexpr (std::is_same_v<SendMode, KokkosComm::ReadyCommMode>) {
     GTEST_SKIP() << "Skipping test for ready-mode send";
   }
 
@@ -89,27 +89,27 @@ void send_comm_mode_1d_noncontig() {
 }
 
 TYPED_TEST(SendRecv, 1D_contig_standard) {
-  send_comm_mode_1d_contig<KokkosComm::CommMode::Standard, typename TestFixture::Scalar>();
+  send_comm_mode_1d_contig<KokkosComm::StandardCommMode, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(SendRecv, 1D_contig_ready) {
-  send_comm_mode_1d_contig<KokkosComm::CommMode::Ready, typename TestFixture::Scalar>();
+  send_comm_mode_1d_contig<KokkosComm::ReadyCommMode, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(SendRecv, 1D_contig_synchronous) {
-  send_comm_mode_1d_contig<KokkosComm::CommMode::Synchronous, typename TestFixture::Scalar>();
+  send_comm_mode_1d_contig<KokkosComm::SynchronousCommMode, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(SendRecv, 1D_noncontig_standard) {
-  send_comm_mode_1d_noncontig<KokkosComm::CommMode::Standard, typename TestFixture::Scalar>();
+  send_comm_mode_1d_noncontig<KokkosComm::StandardCommMode, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(SendRecv, 1D_noncontig_ready) {
-  send_comm_mode_1d_noncontig<KokkosComm::CommMode::Ready, typename TestFixture::Scalar>();
+  send_comm_mode_1d_noncontig<KokkosComm::ReadyCommMode, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(SendRecv, 1D_noncontig_synchronous) {
-  send_comm_mode_1d_noncontig<KokkosComm::CommMode::Synchronous, typename TestFixture::Scalar>();
+  send_comm_mode_1d_noncontig<KokkosComm::SynchronousCommMode, typename TestFixture::Scalar>();
 }
 
 }  // namespace

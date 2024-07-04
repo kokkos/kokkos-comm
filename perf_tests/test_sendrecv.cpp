@@ -38,15 +38,15 @@ void benchmark_sendrecv(benchmark::State &state) {
   }
 
   using Scalar = double;
-  using Mode   = KokkosComm::CommMode::Default;
 
-  auto mode       = Mode();
+  auto mode       = KokkosComm::DefaultCommMode();
   auto space      = Kokkos::DefaultExecutionSpace();
   using view_type = Kokkos::View<Scalar *>;
   view_type a("", 1000000);
 
   while (state.KeepRunning()) {
-    do_iteration(state, MPI_COMM_WORLD, send_recv<Mode, Kokkos::DefaultExecutionSpace, view_type>, mode, space, rank,
+    do_iteration(state, MPI_COMM_WORLD,
+                 send_recv<KokkosComm::DefaultCommMode, Kokkos::DefaultExecutionSpace, view_type>, mode, space, rank,
                  a);
   }
 

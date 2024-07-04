@@ -50,7 +50,7 @@ void test_1d(const View1D &a) {
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
     KokkosComm::Req req =
-        KokkosComm::isend(KokkosComm::CommMode::Default{}, Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+        KokkosComm::isend(KokkosComm::DefaultCommMode(), Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
     req.wait();
   } else if (1 == rank) {
     int src = 0;
@@ -84,7 +84,7 @@ void test_2d(const View2D &a) {
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(int i, int j) { a(i, j) = i * a.extent(0) + j; });
     KokkosComm::Req req =
-        KokkosComm::isend(KokkosComm::CommMode::Default{}, Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+        KokkosComm::isend(KokkosComm::DefaultCommMode(), Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
     req.wait();
   } else if (1 == rank) {
     int src             = 0;
