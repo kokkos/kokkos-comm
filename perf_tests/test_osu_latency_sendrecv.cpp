@@ -22,7 +22,8 @@
 #include "KokkosComm.hpp"
 
 template <typename Mode, typename Space, typename View>
-void osu_latency_Kokkos_Comm_sendrecv(benchmark::State &, MPI_Comm comm, const Mode &mode, const Space &space, int rank, const View &v) {
+void osu_latency_Kokkos_Comm_sendrecv(benchmark::State &, MPI_Comm comm, const Mode &mode, const Space &space, int rank,
+                                      const View &v) {
   if (rank == 0) {
     KokkosComm::send(mode, space, v, 1, 0, comm);
   } else if (rank == 1) {
@@ -55,8 +56,10 @@ void benchmark_osu_latency_KokkosComm_sendrecv(benchmark::State &state) {
   view_type a("A", state.range(0));
 
   while (state.KeepRunning()) {
-    do_iteration(state, MPI_COMM_WORLD, osu_latency_Kokkos_Comm_sendrecv<KokkosComm::DefaultCommMode, Kokkos::DefaultExecutionSpace, view_type>,
-                 mode, space, rank, a);
+    do_iteration(
+        state, MPI_COMM_WORLD,
+        osu_latency_Kokkos_Comm_sendrecv<KokkosComm::DefaultCommMode, Kokkos::DefaultExecutionSpace, view_type>, mode,
+        space, rank, a);
   }
   state.counters["bytes"] = a.size() * 2;
 }
