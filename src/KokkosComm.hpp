@@ -25,7 +25,7 @@
 #include "KokkosComm_alltoall.hpp"
 #include "KokkosComm_barrier.hpp"
 #include "KokkosComm_concepts.hpp"
-#include "KokkosComm_comm_mode.hpp"
+#include "KokkosComm_CommModes.hpp"
 
 #include <Kokkos_Core.hpp>
 

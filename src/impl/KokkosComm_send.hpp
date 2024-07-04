@@ -19,7 +19,7 @@
 #include <Kokkos_Core.hpp>
 
 #include "KokkosComm_pack_traits.hpp"
-#include "KokkosComm_comm_mode.hpp"
+#include "KokkosComm_CommModes.hpp"
 
 // impl
 #include "KokkosComm_include_mpi.hpp"
@@ -40,7 +40,7 @@ void send(const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::popRegion();
 }
 
-template <typename SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
+template <typename SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView>
 void send(const SendMode &, const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
 
@@ -48,18 +48,12 @@ void send(const SendMode &, const ExecSpace &space, const SendView &sv, int dest
 
   auto mpi_send_fn = [](void *mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
                         MPI_Comm mpi_comm) {
-    if constexpr (std::is_same_v<SendMode, CommMode::Standard>) {
+    if constexpr (std::is_same_v<SendMode, StandardCommMode>) {
       MPI_Send(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
-    } else if constexpr (std::is_same_v<SendMode, CommMode::Ready>) {
+    } else if constexpr (std::is_same_v<SendMode, ReadyCommMode>) {
       MPI_Rsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
-    } else if constexpr (std::is_same_v<SendMode, CommMode::Synchronous>) {
+    } else if constexpr (std::is_same_v<SendMode, SynchronousCommMode>) {
       MPI_Ssend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
-    } else {
-#ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
-      MPI_Ssend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
-#else
-      MPI_Send(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
-#endif
     }
   };
 

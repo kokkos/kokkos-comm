@@ -25,7 +25,7 @@
 #include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_request.hpp"
 #include "KokkosComm_traits.hpp"
-#include "KokkosComm_comm_mode.hpp"
+#include "KokkosComm_CommModes.hpp"
 
 // impl
 #include "KokkosComm_include_mpi.hpp"
@@ -46,7 +46,7 @@ void isend(const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Request &re
   Kokkos::Tools::popRegion();
 }
 
-template <typename SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView>
+template <typename SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView>
 KokkosComm::Req isend(const SendMode &, const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
 
@@ -57,18 +57,12 @@ KokkosComm::Req isend(const SendMode &, const ExecSpace &space, const SendView &
 
   auto mpi_isend_fn = [](void *mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
                          MPI_Comm mpi_comm, MPI_Request *mpi_req) {
-    if constexpr (std::is_same_v<SendMode, CommMode::Standard>) {
+    if constexpr (std::is_same_v<SendMode, StandardCommMode>) {
       MPI_Isend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
-    } else if constexpr (std::is_same_v<SendMode, CommMode::Ready>) {
+    } else if constexpr (std::is_same_v<SendMode, ReadyCommMode>) {
       MPI_Irsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
-    } else if constexpr (std::is_same_v<SendMode, CommMode::Synchronous>) {
+    } else if constexpr (std::is_same_v<SendMode, SynchronousCommMode>) {
       MPI_Issend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
-    } else {
-#ifdef KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE
-      MPI_Issend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
-#else
-      MPI_Isend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
-#endif
     }
   };
 
