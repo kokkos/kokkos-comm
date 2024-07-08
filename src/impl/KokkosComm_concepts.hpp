@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "KokkosComm_comm_modes.hpp"
+
 #include <Kokkos_Core.hpp>
 
 namespace KokkosComm {
@@ -25,5 +27,23 @@ concept KokkosView = Kokkos::is_view_v<T>;
 
 template <typename T>
 concept KokkosExecutionSpace = Kokkos::is_execution_space_v<T>;
+
+template <typename T>
+struct is_communication_mode : std::false_type {};
+
+template <>
+struct is_communication_mode<StandardCommMode> : std::true_type {};
+
+template <>
+struct is_communication_mode<SynchronousCommMode> : std::true_type {};
+
+template <>
+struct is_communication_mode<ReadyCommMode> : std::true_type {};
+
+template <typename T>
+inline constexpr bool is_communication_mode_v = is_communication_mode<T>::value;
+
+template <typename T>
+concept CommunicationMode = KokkosComm::is_communication_mode_v<T>;
 
 }  // namespace KokkosComm

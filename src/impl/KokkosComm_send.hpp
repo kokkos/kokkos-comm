@@ -19,28 +19,45 @@
 #include <Kokkos_Core.hpp>
 
 #include "KokkosComm_pack_traits.hpp"
-#include "KokkosComm_CommModes.hpp"
+#include "KokkosComm_concepts.hpp"
+#include "KokkosComm_comm_modes.hpp"
 
 // impl
 #include "KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm::Impl {
 
-template <KokkosView SendView>
-void send(const SendView &sv, int dest, int tag, MPI_Comm comm) {
+template <CommunicationMode SendMode, KokkosView SendView>
+void send(const SendMode &, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
   using KCT = typename KokkosComm::Traits<SendView>;
 
+  auto mpi_send_fn = [](void *mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
+                        MPI_Comm mpi_comm) {
+    if constexpr (std::is_same_v<SendMode, StandardCommMode>) {
+      MPI_Send(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
+    } else if constexpr (std::is_same_v<SendMode, ReadyCommMode>) {
+      MPI_Rsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
+    } else if constexpr (std::is_same_v<SendMode, SynchronousCommMode>) {
+      MPI_Ssend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
+    }
+  };
+
   if (KokkosComm::is_contiguous(sv)) {
     using SendScalar = typename SendView::non_const_value_type;
-    MPI_Send(KokkosComm::data_handle(sv), KokkosComm::span(sv), mpi_type_v<SendScalar>, dest, tag, comm);
+    mpi_send_fn(KokkosComm::data_handle(sv), KokkosComm::span(sv), mpi_type_v<SendScalar>, dest, tag, comm);
   } else {
     throw std::runtime_error("only contiguous views supported for low-level send");
   }
   Kokkos::Tools::popRegion();
 }
 
-template <typename SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView>
+template <KokkosView SendView>
+void send(const SendView &sv, int dest, int tag, MPI_Comm comm) {
+  send(KokkosComm::DefaultCommMode(), sv, dest, tag, comm);
+}
+
+template <CommunicationMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView>
 void send(const SendMode &, const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
 
@@ -67,6 +84,11 @@ void send(const SendMode &, const ExecSpace &space, const SendView &sv, int dest
   }
 
   Kokkos::Tools::popRegion();
+}
+
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
+void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
+  send(KokkosComm::DefaultCommMode(), space, sv, dest, tag, comm);
 }
 
 }  // namespace KokkosComm::Impl
