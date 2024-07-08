@@ -9,25 +9,25 @@ Core
       - ``KokkosComm::``
       - ``Kokkos::View``
     * - ``MPI_Send``
-      - ``send`` or ``send<CommMode::Standard>``
+      - ``send`` or ``send(KokkosComm::DefaultCommMode{}, ...)``
       - ✓
     * - ``MPI_Rsend``
-      - ``send<CommMode::Ready>``
+      - ``send(KokkosComm::ReadyCommMode{}, ...)``
       - ✓
     * - ``MPI_Recv``
       - ``recv``
       - ✓
     * - ``MPI_Ssend``
-      - ``send<CommMode::Synchronous>``
+      - ``send(KokkosComm::SynchronousCommMode{}, ...)``
       - ✓
     * - ``MPI_Isend``
-      - ``isend`` or ``isend<CommMode::Standard>``
+      - ``isend`` or ``isend(KokkosComm::DefaultCommMode{}, ...)``
       - ✓
     * - ``MPI_Irsend``
-      - ``isend<CommMode::Ready>``
+      - ``isend(KokkosComm::ReadyCommMode{}, ...)``
       - ✓
     * - ``MPI_Issend``
-      - ``isend<CommMode::Synchronous>``
+      - ``isend(KokkosComm::SynchronousCommMode{}, ...)``
       - ✓
     * - ``MPI_Reduce``
       - ``reduce``
@@ -36,32 +36,34 @@ Core
 Point-to-point
 --------------
 
-.. cpp:function:: template <KokkosComm::CommMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
+.. cpp:function:: template <CommunicationMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
                   Req KokkosComm::isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
 
     Wrapper for ``MPI_Isend``, ``MPI_Irsend`` and ``MPI_Issend``.
 
+    :param mode: The communication mode to use
     :param space: The execution space to operate in
     :param sv: The data to send
     :param dest: the destination rank
     :param tag: the MPI tag
     :param comm: the MPI communicator
-    :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a synchronous ``MPI_Issend`` if ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` is defined, otherwise defaults to a standard ``MPI_Isend``.
+    :tparam IsendMode: A communication mode to use, one of: ``KokkosComm::DefaultCommMode``, ``KokkosComm::StandardCommMode``, ``KokkosComm::SynchronousCommMode`` or ``KokkosComm::ReadyCommMode`` (modeled with the ``KokkosComm::CommunicationMode`` concept)
     :tparam SendView: A Kokkos::View to send
     :tparam ExecSpace: A Kokkos execution space to operate in
     :returns: A KokkosComm::Req representing the asynchronous communication and any lifetime-extended views.
 
-.. cpp:function:: template <KokkosComm::CommMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
+.. cpp:function:: template <typename SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
                   void KokkosComm::send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
 
     Wrapper for ``MPI_Send``, ``MPI_Rsend`` and ``MPI_Ssend``.
 
+    :param mode: The communication mode to use
     :param space: The execution space to operate in
     :param sv: The data to send
     :param dest: the destination rank
     :param tag: the MPI tag
     :param comm: the MPI communicator
-    :tparam SendMode: A CommMode_ to use. If unspecified, defaults to a synchronous ``MPI_Ssend`` if ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` is defined, otherwise defaults to a standard ``MPI_Send``.
+    :tparam SendMode: A communication mode to use, one of: ``KokkosComm::DefaultCommMode``, ``KokkosComm::StandardCommMode``, ``KokkosComm::SynchronousCommMode`` or ``KokkosComm::ReadyCommMode`` (modeled with the ``KokkosComm::CommunicationMode`` concept)
     :tparam SendView: A Kokkos::View to send
     :tparam ExecSpace: A Kokkos execution space to operate in
 
@@ -116,28 +118,30 @@ Collective
 Related Types
 -------------
 
-.. _CommMode:
+Communication Modes
+^^^^^^^^^^^^^^^^^^^
 
-.. cpp:enum-class:: KokkosComm::CommMode
+Structures to specify the mode of an operation. Buffered mode is not supported.
 
-    A scoped enum to specify the mode of an operation. Buffered mode is not supported.
+.. cpp:struct:: KokkosComm::StandardCommMode
 
-    .. cpp:enumerator:: KokkosComm::CommMode::Standard
+  Let the MPI implementation decides whether outgoing messages will be buffered. Send operations can be started whether or not a matching receive has been started. They may complete before a matching receive is started. Standard mode is non-local: successful completion of the send operation may depend on the occurrence of a matching receive.
 
-      Standard mode: the MPI implementation decides whether outgoing messages will be buffered. Send operations can be started whether or not a matching receive has been started. They may complete before a matching receive is started. Standard mode is non-local: successful completion of the send operation may depend on the occurrence of a matching receive.
+.. cpp:struct:: KokkosComm::SynchronousCommMode
 
-    .. cpp:enumerator:: KokkosComm::CommMode::Ready
+  Send operations complete successfully only if a matching receive is started, and the receive operation has started to receive the message sent.
 
-      Ready mode: Send operations may be started only if the matching receive is already started.
+.. cpp:struct:: KokkosComm::ReadyCommMode
 
-    .. cpp:enumerator:: KokkosComm::CommMode::Synchronous
+  Send operations may be started only if the matching receive is already started.
 
-      Synchronous mode: Send operations complete successfully only if a matching receive is started, and the receive operation has started to receive the message sent.
+.. cpp:struct:: KokkosComm::DefaultCommMode
 
-    .. cpp:enumerator:: KokkosComm::CommMode::Default
+  Default mode aliases ``Standard`` mode, but lets users override the behavior of operations at compile-time using the ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` pre-processor definition. This forces ``Synchronous`` mode for all "default-mode" operations, which can be useful for debugging purposes, e.g., asserting that the communication scheme is correct.
 
-      Default mode is an alias for ``Standard`` mode, but lets users override the behavior of operations at compile-time using the ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` pre-processor define. This forces ``Synchronous`` mode for all "default-mode" operations, which can be useful for debugging purposes, e.g., for asserting that the communication scheme is correct.
 
+Requests
+^^^^^^^^
 
 .. cpp:class:: KokkosComm::Req
 
