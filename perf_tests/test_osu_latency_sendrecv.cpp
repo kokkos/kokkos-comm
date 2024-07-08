@@ -32,7 +32,6 @@ void osu_latency_Kokkos_Comm_sendrecv(benchmark::State &, MPI_Comm comm, const S
 
 template <typename View>
 void osu_latency_MPI_sendrecv(benchmark::State &, MPI_Comm comm, int rank, const View &v) {
-  MPI_Barrier(comm);
   if (rank == 0) {
     MPI_Recv(v.data(), v.size(), KokkosComm::Impl::mpi_type<typename View::value_type>(), 1, 0, comm,
              MPI_STATUS_IGNORE);
