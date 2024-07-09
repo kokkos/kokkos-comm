@@ -125,7 +125,7 @@ Structures to specify the mode of an operation. Buffered mode is not supported.
 
 .. cpp:struct:: KokkosComm::StandardCommMode
 
-  Let the MPI implementation decides whether outgoing messages will be buffered. Send operations can be started whether or not a matching receive has been started. They may complete before a matching receive is started. Standard mode is non-local: successful completion of the send operation may depend on the occurrence of a matching receive.
+  Let the MPI implementation decide whether outgoing messages will be buffered. Send operations can be started whether or not a matching receive has been started. They may complete before a matching receive begins. Standard mode is non-local: successful completion of the send operation may depend on the occurrence of a matching receive.
 
 .. cpp:struct:: KokkosComm::SynchronousCommMode
 
@@ -137,7 +137,7 @@ Structures to specify the mode of an operation. Buffered mode is not supported.
 
 .. cpp:struct:: KokkosComm::DefaultCommMode
 
-  Default mode aliases ``Standard`` mode, but lets users override the behavior of operations at compile-time using the ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` pre-processor definition. This forces ``Synchronous`` mode for all "default-mode" operations, which can be useful for debugging purposes, e.g., asserting that the communication scheme is correct.
+  The default mode is aliased as ``Standard`` but lets users override the behavior of operations at compile-time using the ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` pre-processor definition. The latter forces ``Synchronous`` mode for all "default-mode" operations, which can be helpful for debugging purposes, e.g., asserting that the communication scheme is correct.
 
 
 Requests
