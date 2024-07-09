@@ -30,7 +30,7 @@ class SendRecv : public testing::Test {
 using ScalarTypes = ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>, Kokkos::complex<double>>;
 TYPED_TEST_SUITE(SendRecv, ScalarTypes);
 
-template <CommunicationMode SendMode, typename Scalar>
+template <KokkosComm::CommunicationMode SendMode, typename Scalar>
 void send_comm_mode_1d_contig() {
   if constexpr (std::is_same_v<SendMode, KokkosComm::ReadyCommMode>) {
     GTEST_SKIP() << "Skipping test for ready-mode send";
@@ -60,7 +60,7 @@ void send_comm_mode_1d_contig() {
   }
 }
 
-template <CommunicationMode SendMode, typename Scalar>
+template <KokkosComm::CommunicationMode SendMode, typename Scalar>
 void send_comm_mode_1d_noncontig() {
   if constexpr (std::is_same_v<SendMode, KokkosComm::ReadyCommMode>) {
     GTEST_SKIP() << "Skipping test for ready-mode send";

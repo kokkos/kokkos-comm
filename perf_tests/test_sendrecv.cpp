@@ -18,7 +18,7 @@
 
 #include "KokkosComm.hpp"
 
-template <CommunicationMode Mode, typename Space, typename View>
+template <KokkosComm::CommunicationMode Mode, typename Space, typename View>
 void send_recv(benchmark::State &, MPI_Comm comm, const Mode &mode, const Space &space, int rank, const View &v) {
   if (0 == rank) {
     KokkosComm::send(mode, space, v, 1, 0, comm);

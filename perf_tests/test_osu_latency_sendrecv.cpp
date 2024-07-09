@@ -21,7 +21,7 @@
 #include "test_utils.hpp"
 #include "KokkosComm.hpp"
 
-template <CommunicationMode Mode, typename Space, typename View>
+template <KokkosComm::CommunicationMode Mode, typename Space, typename View>
 void osu_latency_Kokkos_Comm_sendrecv(benchmark::State &, MPI_Comm comm, const Mode &mode, const Space &space, int rank,
                                       const View &v) {
   if (rank == 0) {
