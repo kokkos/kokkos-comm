@@ -31,7 +31,7 @@ using ScalarTypes =
     ::testing::Types<float, double, Kokkos::complex<float>, Kokkos::complex<double>, int, unsigned, int64_t, size_t>;
 TYPED_TEST_SUITE(IsendRecv, ScalarTypes);
 
-template <typename IsendMode, typename Scalar>
+template <CommunicationMode IsendMode, typename Scalar>
 void isend_comm_mode_1d_contig() {
   if constexpr (std::is_same_v<IsendMode, KokkosComm::ReadyCommMode>) {
     GTEST_SKIP() << "Skipping test for ready-mode send";
@@ -61,7 +61,7 @@ void isend_comm_mode_1d_contig() {
   }
 }
 
-template <typename IsendMode, typename Scalar>
+template <CommunicationMode IsendMode, typename Scalar>
 void isend_comm_mode_1d_noncontig() {
   if constexpr (std::is_same_v<IsendMode, KokkosComm::ReadyCommMode>) {
     GTEST_SKIP() << "Skipping test for ready-mode send";

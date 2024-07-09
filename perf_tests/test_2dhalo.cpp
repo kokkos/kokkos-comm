@@ -22,7 +22,7 @@
 
 void noop(benchmark::State, MPI_Comm) {}
 
-template <typename Mode, typename Space, typename View>
+template <CommunicationMode Mode, typename Space, typename View>
 void send_recv(benchmark::State &, MPI_Comm comm, const Mode &mode, const Space &space, int nx, int ny, int rx, int ry,
                int rs, const View &v) {
   // 2D index of nbrs in minus and plus direction (periodic)
