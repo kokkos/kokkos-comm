@@ -35,7 +35,6 @@ void osu_latency_Kokkos_Comm_isendirecv(benchmark::State &, MPI_Comm comm, const
 
 template <typename View>
 void osu_latency_MPI_isendirecv(benchmark::State &, MPI_Comm comm, int rank, const View &v) {
-  MPI_Barrier(comm);
   MPI_Request sendreq, recvreq;
   if (rank == 0) {
     MPI_Irecv(v.data(), v.size(), KokkosComm::Impl::mpi_type<typename View::value_type>(), 1, 0, comm, &recvreq);
@@ -88,10 +87,10 @@ void benchmark_osu_latency_MPI_isendirecv(benchmark::State &state) {
 BENCHMARK(benchmark_osu_latency_KokkosComm_isendirecv)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond)
-    ->RangeMultiplier(2)
-    ->Range(1, 1000);
+    ->RangeMultiplier(8)
+    ->Range(1, 1 << 28);
 BENCHMARK(benchmark_osu_latency_MPI_isendirecv)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond)
-    ->RangeMultiplier(2)
-    ->Range(1, 1000);
+    ->RangeMultiplier(8)
+    ->Range(1, 1 << 28);
