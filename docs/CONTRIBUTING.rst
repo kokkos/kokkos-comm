@@ -27,7 +27,7 @@ Alternatively, you can use docker/podman: (expects $PWD to be the kokkos-comm tr
 .. code-block:: bash
 
   shopt -s globstar
-  podman run -v $PWD:/src xianpengshen/clang-tools:14 clang-format -i {src,unit_tests,perf_tests}/**/*.[ch]pp
+  podman run --rm -v ${PWD}:/src ghcr.io/cwpearson/clang-format-14 clang-format -i {src,unit_tests,perf_tests}/**/*.[ch]pp
 
 
 Behavioral Expectations
