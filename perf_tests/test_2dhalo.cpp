@@ -25,7 +25,7 @@ void noop(benchmark::State, MPI_Comm) {}
 template <typename Space, typename View>
 void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, int ny, int rx, int ry, int rs,
                const View &v) {
-  KokkosComm::Handle<> h{comm};
+  KokkosComm::Handle<> h{space, comm};
 
   // 2D index of nbrs in minus and plus direction (periodic)
   const int xm1 = (rx + rs - 1) % rs;
