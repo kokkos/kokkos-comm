@@ -1,7 +1,7 @@
 # Kokkos Comm
 
 > [!WARNING]
-> UNOFFICIAL MPI interfaces (and more!) for the [Kokkos](https://github.com/kokkos/kokkos) C++ Performance Portability Programming ecosystem
+> EXPERIMENTAL MPI interfaces (and more!) for the [Kokkos](https://github.com/kokkos/kokkos) C++ Performance Portability Programming ecosystem
 
 > [!WARNING]
 > This is a work in progress and is not yet ready for general use.
