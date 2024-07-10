@@ -17,7 +17,6 @@
 #include <gtest/gtest.h>
 
 #include "KokkosComm.hpp"
-#include "KokkosComm_irecv.hpp"
 
 #include "view_builder.hpp"
 
@@ -49,13 +48,13 @@ void test_1d(const View1D &a) {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
-    req.wait();
+
+    KokkosComm::Req<> req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    KokkosComm::wait(req);
   } else if (1 == rank) {
-    int src = 0;
-    MPI_Request req;
-    KokkosComm::irecv(a, src, 0, MPI_COMM_WORLD, req);
-    MPI_Wait(&req, MPI_STATUS_IGNORE);
+    int src               = 0;
+    KokkosComm::Req<> req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
+    KokkosComm::wait(req);
     int errs;
     Kokkos::parallel_reduce(
         a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
@@ -82,12 +81,12 @@ void test_2d(const View2D &a) {
     int dst = 1;
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(int i, int j) { a(i, j) = i * a.extent(0) + j; });
-    KokkosComm::Req req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
-    req.wait();
+    KokkosComm::Req<> req = KokkosComm::isend(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    KokkosComm::wait(req);
   } else if (1 == rank) {
-    int src             = 0;
-    KokkosComm::Req req = KokkosComm::irecv(a, src, 0, MPI_COMM_WORLD);
-    req.wait();
+    int src               = 0;
+    KokkosComm::Req<> req = KokkosComm::irecv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
+    KokkosComm::wait(req);
     int errs;
     Kokkos::parallel_reduce(
         policy, KOKKOS_LAMBDA(int i, int j, int &lsum) { lsum += a(i, j) != Scalar(i * a.extent(0) + j); }, errs);
@@ -100,8 +99,18 @@ TYPED_TEST(IsendIrecv, 1D_contig) {
   test_1d(a);
 }
 
+TYPED_TEST(IsendIrecv, 1D_noncontig) {
+  auto a = ViewBuilder<typename TestFixture::Scalar, 1>::view(noncontig{}, "a", 1013);
+  test_1d(a);
+}
+
 TYPED_TEST(IsendIrecv, 2D_contig) {
   auto a = ViewBuilder<typename TestFixture::Scalar, 2>::view(contig{}, "a", 137, 17);
+  test_2d(a);
+}
+
+TYPED_TEST(IsendIrecv, 2D_noncontig) {
+  auto a = ViewBuilder<typename TestFixture::Scalar, 2>::view(noncontig{}, "a", 137, 17);
   test_2d(a);
 }
 

@@ -18,28 +18,31 @@
 
 #include <type_traits>
 
-#include <Kokkos_Core.hpp>
+#include "KokkosComm_concepts.hpp"
+#include "KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm {
 
-namespace Impl {
+// TODO: not sure what members this thing needs
+struct Mpi {
+  // TODO: just an example
+  static int world_size() {
+    int size;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    return size;
+  }
 
-// fallback - most types are not a KokkosComm transport
-template <typename T>
-struct is_transport : public std::false_type {};
-}  // namespace Impl
+  // TODO: just an example
+  static int world_rank() {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    return rank;
+  }
 
-template <typename T>
-concept KokkosView = Kokkos::is_view_v<T>;
+};  // struct Mpi
 
-template <typename T>
-concept KokkosExecutionSpace = Kokkos::is_execution_space_v<T>;
-
-// TODO: a function that takes something convertible to a handle and returns void
-template <typename T>
-concept Dispatch = true;
-
-template <typename T>
-concept Transport = KokkosComm::Impl::is_transport<T>::value;
+// KokkosComm::Mpi is a KokkosComm::Transport
+template <>
+struct Impl::is_transport<KokkosComm::Mpi> : public std::true_type {};
 
 }  // namespace KokkosComm

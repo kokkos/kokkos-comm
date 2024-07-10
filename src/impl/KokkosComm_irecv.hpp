@@ -21,7 +21,6 @@
 #include <Kokkos_Core.hpp>
 
 #include "KokkosComm_pack_traits.hpp"
-#include "KokkosComm_request.hpp"
 #include "KokkosComm_traits.hpp"
 
 // impl
@@ -45,9 +44,9 @@ void irecv(RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Request &req) {
 }
 
 template <KokkosView RecvView>
-KokkosComm::Req irecv(RecvView &rv, int src, int tag, MPI_Comm comm) {
+KokkosComm::Req<KokkosComm::Mpi> irecv(RecvView &rv, int src, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::irecv");
-  KokkosComm::Req req;
+  KokkosComm::Req<KokkosComm::Mpi> req;
   irecv(rv, src, tag, comm, req.mpi_req());
   return req;
 }

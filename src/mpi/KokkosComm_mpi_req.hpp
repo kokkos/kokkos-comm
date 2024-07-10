@@ -16,14 +16,17 @@
 
 #pragma once
 
-#include <memory>
 #include <vector>
+#include <utility>
 
-#include "KokkosComm_include_mpi.hpp"
+#include "KokkosComm_fwd.hpp"
+
+#include "KokkosComm_mpi.hpp"
 
 namespace KokkosComm {
 
-class Req {
+template <>
+class Req<Mpi> {
   // a type-erased view. Request uses these to keep temporary views alive for
   // the lifetime of "Immediate" MPI operations
   struct ViewHolderBase {
@@ -38,7 +41,7 @@ class Req {
   struct Record {
     Record() : req_(MPI_REQUEST_NULL) {}
     MPI_Request req_;
-    std::vector<std::shared_ptr<ViewHolderBase>> until_waits_;
+    std::vector<std::function<void()>> postWaits_;
   };
 
  public:
@@ -46,19 +49,43 @@ class Req {
 
   MPI_Request &mpi_req() { return record_->req_; }
 
-  void wait() {
-    MPI_Wait(&(record_->req_), MPI_STATUS_IGNORE);
-    record_->until_waits_.clear();  // drop any views we're keeping alive until wait()
-  }
-
   // keep a reference to this view around until wait() is called
   template <typename View>
   void keep_until_wait(const View &v) {
-    record_->until_waits_.push_back(std::make_shared<ViewHolder<View>>(v));
+    record_->postWaits_.push_back([v]() {} /* capture v into a no-op lambda that does nothing*/);
   }
 
  private:
   std::shared_ptr<Record> record_;
+
+  friend void wait(Req<Mpi> &req);
+  friend void wait_all(std::vector<Req<Mpi>> &reqs);
+  friend int wait_any(std::vector<Req<Mpi>> &reqs);
 };
+
+inline void wait(Req<Mpi> &req) {
+  MPI_Wait(&req.mpi_req(), MPI_STATUS_IGNORE);
+  for (auto &f : req.record_->postWaits_) {
+    f();
+  }
+  req.record_->postWaits_.clear();
+}
+
+inline void wait_all(std::vector<Req<Mpi>> &reqs) {
+  for (Req<Mpi> &req : reqs) {
+    wait(req);
+  }
+}
+
+inline int wait_any(std::vector<Req<Mpi>> &reqs) {
+  for (size_t i = 0; i < reqs.size(); ++i) {
+    int completed;
+    MPI_Test(&(reqs[i].mpi_req()), &completed, MPI_STATUS_IGNORE);
+    if (completed) {
+      return true;
+    }
+  }
+  return false;
+}
 
 }  // namespace KokkosComm
