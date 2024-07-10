@@ -22,9 +22,11 @@
 
 void noop(benchmark::State, MPI_Comm) {}
 
-template <KokkosComm::CommunicationMode Mode, typename Space, typename View>
-void send_recv(benchmark::State &, MPI_Comm comm, const Mode &mode, const Space &space, int nx, int ny, int rx, int ry,
-               int rs, const View &v) {
+template <typename Space, typename View>
+void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, int ny, int rx, int ry, int rs,
+               const View &v) {
+  KokkosComm::Handle<> h{comm};
+
   // 2D index of nbrs in minus and plus direction (periodic)
   const int xm1 = (rx + rs - 1) % rs;
   const int ym1 = (ry + rs - 1) % rs;
@@ -46,22 +48,20 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Mode &mode, const Space 
   auto ym1_s = Kokkos::subview(v, make_pair(1, nx + 1), 1, Kokkos::ALL);
   auto ym1_r = Kokkos::subview(v, make_pair(1, nx + 1), 0, Kokkos::ALL);
 
-  std::vector<KokkosComm::Req> reqs;
+  std::vector<KokkosComm::Req<>> reqs;
   // std::cerr << get_rank(rx, ry) << " -> " << get_rank(xp1, ry) << "\n";
-  reqs.push_back(KokkosComm::isend(mode, space, xp1_s, get_rank(xp1, ry), 0, comm));
-  reqs.push_back(KokkosComm::isend(mode, space, xm1_s, get_rank(xm1, ry), 1, comm));
-  reqs.push_back(KokkosComm::isend(mode, space, yp1_s, get_rank(rx, yp1), 2, comm));
-  reqs.push_back(KokkosComm::isend(mode, space, ym1_s, get_rank(rx, ym1), 3, comm));
+  reqs.push_back(KokkosComm::isend(h, xp1_s, get_rank(xp1, ry), 0));
+  reqs.push_back(KokkosComm::isend(h, xm1_s, get_rank(xm1, ry), 1));
+  reqs.push_back(KokkosComm::isend(h, yp1_s, get_rank(rx, yp1), 2));
+  reqs.push_back(KokkosComm::isend(h, ym1_s, get_rank(rx, ym1), 3));
 
-  KokkosComm::recv(space, xm1_r, get_rank(xm1, ry), 0, comm);
-  KokkosComm::recv(space, xp1_r, get_rank(xp1, ry), 1, comm);
-  KokkosComm::recv(space, ym1_r, get_rank(rx, ym1), 2, comm);
-  KokkosComm::recv(space, yp1_r, get_rank(rx, yp1), 3, comm);
+  KokkosComm::mpi::recv(h.space(), xm1_r, get_rank(xm1, ry), 0, h.mpi_comm());
+  KokkosComm::mpi::recv(h.space(), xp1_r, get_rank(xp1, ry), 1, h.mpi_comm());
+  KokkosComm::mpi::recv(h.space(), ym1_r, get_rank(rx, ym1), 2, h.mpi_comm());
+  KokkosComm::mpi::recv(h.space(), yp1_r, get_rank(rx, yp1), 3, h.mpi_comm());
 
   // wait for comm
-  for (KokkosComm::Req &req : reqs) {
-    req.wait();
-  }
+  KokkosComm::wait_all(reqs);
 }
 
 void benchmark_2dhalo(benchmark::State &state) {

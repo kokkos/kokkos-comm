@@ -16,18 +16,33 @@
 
 #pragma once
 
-#include <utility>
+#include <type_traits>
 
-#include <Kokkos_Core.hpp>
-
-#include "KokkosComm_fwd.hpp"
 #include "KokkosComm_concepts.hpp"
+#include "impl/KokkosComm_include_mpi.hpp"
 
 namespace KokkosComm {
 
-template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport>
-void barrier(Handle<ExecSpace, TRANSPORT> &&h) {
-  Impl::Barrier<ExecSpace, TRANSPORT>{std::forward<Handle<ExecSpace, TRANSPORT>>(h)};
-}
+// TODO: not sure what members this thing needs
+struct Mpi {
+  // TODO: just an example
+  static int world_size() {
+    int size;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    return size;
+  }
+
+  // TODO: just an example
+  static int world_rank() {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    return rank;
+  }
+
+};  // struct Mpi
+
+// KokkosComm::Mpi is a KokkosComm::Transport
+template <>
+struct Impl::is_transport<KokkosComm::Mpi> : public std::true_type {};
 
 }  // namespace KokkosComm

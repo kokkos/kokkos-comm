@@ -36,12 +36,10 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_traits.hpp"
-
-// impl
-#include "KokkosComm_include_mpi.hpp"
-#include "KokkosComm_types.hpp"
+#include "impl/KokkosComm_pack_traits.hpp"
+#include "impl/KokkosComm_include_mpi.hpp"
+#include "impl/KokkosComm_types.hpp"
 
 namespace KokkosComm::Impl {
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
@@ -58,7 +56,7 @@ void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount
   // Make sure views are ready
   space.fence("KokkosComm::Impl::alltoall");
 
-  if (KokkosComm::PackTraits<SendView>::needs_pack(sv) || KokkosComm::PackTraits<RecvView>::needs_pack(rv)) {
+  if (!KokkosComm::is_contiguous(sv) || !KokkosComm::is_contiguous(rv)) {
     throw std::runtime_error("alltoall for non-contiguous views not implemented");
   } else {
     int size;
@@ -96,7 +94,7 @@ void alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount
   // Make sure views are ready
   space.fence("KokkosComm::Impl::alltoall");
 
-  if (KokkosComm::PackTraits<RecvView>::needs_pack(rv)) {
+  if (!KokkosComm::is_contiguous(rv)) {
     throw std::runtime_error("alltoall for non-contiguous views not implemented");
   } else {
     int size;

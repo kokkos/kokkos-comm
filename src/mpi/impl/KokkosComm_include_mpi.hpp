@@ -16,26 +16,13 @@
 
 #pragma once
 
-#include <Kokkos_Core.hpp>
+#define KOKKOSCOMM_GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
-#include "KokkosComm_concepts.hpp"
-
-// impl
-#include "KokkosComm_include_mpi.hpp"
-
-namespace KokkosComm::Impl {
-
-inline void barrier(MPI_Comm comm) {
-  Kokkos::Tools::pushRegion("KokkosComm::Impl::barrier");
-  MPI_Barrier(comm);
-  Kokkos::Tools::popRegion();
-}
-
-// a barrier in the provided space. For MPI, we have to fence the space and do a host barrier
-template <KokkosExecutionSpace ExecSpace>
-void barrier(const ExecSpace &space, MPI_Comm comm) {
-  space.fence("KokkosComm::Impl::barrier");
-  barrier(comm);
-}
-
-}  // namespace KokkosComm::Impl
+#if KOKKOSCOMM_GCC_VERSION >= 11400
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#include <mpi.h>
+#pragma GCC diagnostic pop
+#else
+#include <mpi.h>
+#endif

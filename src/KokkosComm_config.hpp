@@ -14,12 +14,6 @@
 //
 //@HEADER
 
-#include <gtest/gtest.h>
+#pragma once
 
-#include "KokkosComm.hpp"
-
-namespace {
-
-TEST(Barrier, 0) { KokkosComm::barrier(KokkosComm::Handle<>{}); }
-
-}  // namespace
+#define KOKKOSCOMM_TRANSPORT_MPI  // TODO: set through CMake

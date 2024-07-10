@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include "impl/KokkosComm_include_mpi.hpp"
+#include "mpi/impl/KokkosComm_include_mpi.hpp"
 
 #include <Kokkos_Core.hpp>
 #include <benchmark/benchmark.h>

@@ -42,7 +42,7 @@ void test_allgather_0d() {
   Kokkos::parallel_for(
       sv.extent(0), KOKKOS_LAMBDA(const int) { sv() = rank; });
 
-  KokkosComm::allgather(Kokkos::DefaultExecutionSpace(), sv, rv, MPI_COMM_WORLD);
+  KokkosComm::mpi::allgather(Kokkos::DefaultExecutionSpace(), sv, rv, MPI_COMM_WORLD);
 
   int errs;
   Kokkos::parallel_reduce(
@@ -67,7 +67,7 @@ void test_allgather_1d_contig() {
   Kokkos::parallel_for(
       sv.extent(0), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
 
-  KokkosComm::allgather(Kokkos::DefaultExecutionSpace(), sv, rv, MPI_COMM_WORLD);
+  KokkosComm::mpi::allgather(Kokkos::DefaultExecutionSpace(), sv, rv, MPI_COMM_WORLD);
 
   int errs;
   Kokkos::parallel_reduce(

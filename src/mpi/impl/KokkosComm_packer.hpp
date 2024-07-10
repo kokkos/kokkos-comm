@@ -21,6 +21,8 @@
 #include "KokkosComm_types.hpp"
 #include "KokkosComm_include_mpi.hpp"
 
+// todo: redo this using KokkosComm_contiguous
+
 namespace KokkosComm::Impl {
 namespace Packer {
 

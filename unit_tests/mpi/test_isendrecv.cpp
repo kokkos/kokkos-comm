@@ -31,29 +31,28 @@ using ScalarTypes =
     ::testing::Types<float, double, Kokkos::complex<float>, Kokkos::complex<double>, int, unsigned, int64_t, size_t>;
 TYPED_TEST_SUITE(IsendRecv, ScalarTypes);
 
-template <KokkosComm::CommunicationMode IsendMode, typename Scalar>
+template <KokkosComm::mpi::CommMode IsendMode, typename Scalar>
 void isend_comm_mode_1d_contig() {
-  if constexpr (std::is_same_v<IsendMode, KokkosComm::ReadyCommMode>) {
+  if (IsendMode == KokkosComm::mpi::CommMode::Ready) {
     GTEST_SKIP() << "Skipping test for ready-mode send";
   }
 
   Kokkos::View<Scalar *> a("a", 1000);
 
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  if (size < 2) {
-    GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
+  KokkosComm::Handle<> h;
+  if (h.size() < 2) {
+    GTEST_SKIP() << "Requires >= 2 ranks (" << h.size() << " provided)";
   }
 
-  if (0 == rank) {
+  if (0 == h.rank()) {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::isend(IsendMode(), Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD).wait();
-  } else if (1 == rank) {
+    KokkosComm::Req req = KokkosComm::mpi::isend<IsendMode>(h, a, dst, 0);
+    KokkosComm::wait(req);
+  } else if (1 == h.rank()) {
     int src = 0;
-    KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
+    KokkosComm::mpi::recv(h.space(), a, src, 0, h.mpi_comm());
     int errs;
     Kokkos::parallel_reduce(
         a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
@@ -61,9 +60,9 @@ void isend_comm_mode_1d_contig() {
   }
 }
 
-template <KokkosComm::CommunicationMode IsendMode, typename Scalar>
+template <KokkosComm::mpi::CommMode IsendMode, typename Scalar>
 void isend_comm_mode_1d_noncontig() {
-  if constexpr (std::is_same_v<IsendMode, KokkosComm::ReadyCommMode>) {
+  if (IsendMode == KokkosComm::mpi::CommMode::Ready) {
     GTEST_SKIP() << "Skipping test for ready-mode send";
   }
 
@@ -71,17 +70,20 @@ void isend_comm_mode_1d_noncontig() {
   Kokkos::View<Scalar **, Kokkos::LayoutRight> b("a", 10, 10);
   auto a = Kokkos::subview(b, Kokkos::ALL, 2);  // take column 2 (non-contiguous)
 
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  KokkosComm::Handle<> h;
+  if (h.size() < 2) {
+    GTEST_SKIP() << "Requires >= 2 ranks (" << h.size() << " provided)";
+  }
 
-  if (0 == rank) {
+  if (0 == h.rank()) {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::isend(IsendMode(), Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD).wait();
-  } else if (1 == rank) {
+    KokkosComm::Req req = KokkosComm::mpi::isend<IsendMode>(h, a, dst, 0);
+    KokkosComm::wait(req);
+  } else if (1 == h.rank()) {
     int src = 0;
-    KokkosComm::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
+    KokkosComm::mpi::recv(h.space(), a, src, 0, h.mpi_comm());
     int errs;
     Kokkos::parallel_reduce(
         a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
@@ -90,27 +92,27 @@ void isend_comm_mode_1d_noncontig() {
 }
 
 TYPED_TEST(IsendRecv, 1D_contig_standard) {
-  isend_comm_mode_1d_contig<KokkosComm::StandardCommMode, typename TestFixture::Scalar>();
+  isend_comm_mode_1d_contig<KokkosComm::mpi::CommMode::Standard, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(IsendRecv, 1D_contig_ready) {
-  isend_comm_mode_1d_contig<KokkosComm::ReadyCommMode, typename TestFixture::Scalar>();
+  isend_comm_mode_1d_contig<KokkosComm::mpi::CommMode::Ready, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(IsendRecv, 1D_contig_synchronous) {
-  isend_comm_mode_1d_contig<KokkosComm::SynchronousCommMode, typename TestFixture::Scalar>();
+  isend_comm_mode_1d_contig<KokkosComm::mpi::CommMode::Synchronous, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(IsendRecv, 1D_noncontig_standard) {
-  isend_comm_mode_1d_noncontig<KokkosComm::StandardCommMode, typename TestFixture::Scalar>();
+  isend_comm_mode_1d_noncontig<KokkosComm::mpi::CommMode::Standard, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(IsendRecv, 1D_noncontig_ready) {
-  isend_comm_mode_1d_noncontig<KokkosComm::ReadyCommMode, typename TestFixture::Scalar>();
+  isend_comm_mode_1d_noncontig<KokkosComm::mpi::CommMode::Ready, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(IsendRecv, 1D_noncontig_synchronous) {
-  isend_comm_mode_1d_noncontig<KokkosComm::SynchronousCommMode, typename TestFixture::Scalar>();
+  isend_comm_mode_1d_noncontig<KokkosComm::mpi::CommMode::Synchronous, typename TestFixture::Scalar>();
 }
 
 }  // namespace

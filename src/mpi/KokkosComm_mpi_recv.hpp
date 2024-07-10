@@ -19,13 +19,11 @@
 #include <Kokkos_Core.hpp>
 
 #include "KokkosComm_concepts.hpp"
-#include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_traits.hpp"
+#include "impl/KokkosComm_pack_traits.hpp"
+#include "impl/KokkosComm_include_mpi.hpp"
 
-// impl
-#include "KokkosComm_include_mpi.hpp"
-
-namespace KokkosComm::Impl {
+namespace KokkosComm::mpi {
 
 template <KokkosView RecvView>
 void recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *status) {
@@ -34,7 +32,8 @@ void recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *statu
 
   if (KokkosComm::is_contiguous(rv)) {
     using ScalarType = typename RecvView::non_const_value_type;
-    MPI_Recv(KokkosComm::data_handle(rv), KokkosComm::span(rv), mpi_type_v<ScalarType>, src, tag, comm, status);
+    MPI_Recv(KokkosComm::data_handle(rv), KokkosComm::span(rv), KokkosComm::Impl::mpi_type_v<ScalarType>, src, tag,
+             comm, status);
   } else {
     throw std::runtime_error("only contiguous views supported for low-level recv");
   }
@@ -48,7 +47,7 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
   using KCT  = KokkosComm::Traits<RecvView>;
   using KCPT = KokkosComm::PackTraits<RecvView>;
 
-  if (KCPT::needs_unpack(rv)) {
+  if (!KokkosComm::is_contiguous(rv)) {
     using Packer = typename KCPT::packer_type;
     using Args   = typename Packer::args_type;
 
@@ -64,4 +63,4 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
 
   Kokkos::Tools::popRegion();
 }
-}  // namespace KokkosComm::Impl
+}  // namespace KokkosComm::mpi

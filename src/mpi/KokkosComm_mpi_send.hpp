@@ -18,14 +18,11 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "KokkosComm_pack_traits.hpp"
-#include "KokkosComm_concepts.hpp"
-#include "KokkosComm_comm_modes.hpp"
+#include "KokkosComm_mpi_commmode.hpp"
+#include "impl/KokkosComm_pack_traits.hpp"
+#include "impl/KokkosComm_include_mpi.hpp"
 
-// impl
-#include "KokkosComm_include_mpi.hpp"
-
-namespace KokkosComm::Impl {
+namespace KokkosComm::mpi {
 
 template <CommunicationMode SendMode, KokkosView SendView>
 void send(const SendMode &, const SendView &sv, int dest, int tag, MPI_Comm comm) {
@@ -45,7 +42,8 @@ void send(const SendMode &, const SendView &sv, int dest, int tag, MPI_Comm comm
 
   if (KokkosComm::is_contiguous(sv)) {
     using SendScalar = typename SendView::non_const_value_type;
-    mpi_send_fn(KokkosComm::data_handle(sv), KokkosComm::span(sv), mpi_type_v<SendScalar>, dest, tag, comm);
+    MPI_Send(KokkosComm::data_handle(sv), KokkosComm::span(sv), KokkosComm::Impl::mpi_type_v<SendScalar>, dest, tag,
+             comm);
   } else {
     throw std::runtime_error("only contiguous views supported for low-level send");
   }
@@ -74,21 +72,16 @@ void send(const SendMode &, const ExecSpace &space, const SendView &sv, int dest
     }
   };
 
-  if (KokkosComm::PackTraits<SendView>::needs_pack(sv)) {
+  if (KokkosComm::is_contiguous(sv)) {
+    using SendScalar = typename SendView::value_type;
+    mpi_send_fn(sv.data(), sv.span(), KokkosComm::Impl::mpi_type_v<SendScalar>, dest, tag, comm);
+  } else {
     auto args = Packer::pack(space, sv);
     space.fence();
     mpi_send_fn(args.view.data(), args.count, args.datatype, dest, tag, comm);
-  } else {
-    using SendScalar = typename SendView::value_type;
-    mpi_send_fn(sv.data(), sv.span(), mpi_type_v<SendScalar>, dest, tag, comm);
   }
 
   Kokkos::Tools::popRegion();
 }
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
-void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
-  send(KokkosComm::DefaultCommMode(), space, sv, dest, tag, comm);
-}
-
-}  // namespace KokkosComm::Impl
+}  // namespace KokkosComm::mpi

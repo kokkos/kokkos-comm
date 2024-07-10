@@ -14,12 +14,28 @@
 //
 //@HEADER
 
-#include <gtest/gtest.h>
+#pragma once
 
-#include "KokkosComm.hpp"
+#include "KokkosComm_concepts.hpp"
 
-namespace {
+namespace KokkosComm {
 
-TEST(Barrier, 0) { KokkosComm::barrier(KokkosComm::Handle<>{}); }
+namespace Impl {
+template <KokkosExecutionSpace ExecSpace, Transport TRANSPORT>
+struct Barrier {
+  Barrier(Handle<ExecSpace, Mpi> &&h) {
+    h.space().fence("KokkosComm::Impl::Barrier");
+    MPI_Barrier(h.mpi_comm());
+  }
+};
+}  // namespace Impl
 
-}  // namespace
+namespace mpi {
+inline void barrier(MPI_Comm comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::mpi::barrier");
+  MPI_Barrier(comm);
+  Kokkos::Tools::popRegion();
+}
+}  // namespace mpi
+
+}  // namespace KokkosComm

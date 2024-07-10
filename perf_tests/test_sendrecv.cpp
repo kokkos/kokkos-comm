@@ -21,11 +21,11 @@
 template <KokkosComm::CommunicationMode Mode, typename Space, typename View>
 void send_recv(benchmark::State &, MPI_Comm comm, const Mode &mode, const Space &space, int rank, const View &v) {
   if (0 == rank) {
-    KokkosComm::send(mode, space, v, 1, 0, comm);
-    KokkosComm::recv(space, v, 1, 0, comm);
+    KokkosComm::mpi::send(space, v, 1, 0, comm);
+    KokkosComm::mpi::recv(space, v, 1, 0, comm);
   } else if (1 == rank) {
-    KokkosComm::recv(space, v, 0, 0, comm);
-    KokkosComm::send(mode, space, v, 0, 0, comm);
+    KokkosComm::mpi::recv(space, v, 0, 0, comm);
+    KokkosComm::mpi::send(space, v, 0, 0, comm);
   }
 }
 

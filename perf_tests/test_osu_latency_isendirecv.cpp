@@ -21,15 +21,15 @@
 #include "test_utils.hpp"
 #include "KokkosComm.hpp"
 
-template <KokkosComm::CommunicationMode Mode, typename Space, typename View>
-void osu_latency_Kokkos_Comm_isendirecv(benchmark::State &, MPI_Comm comm, const Mode &mode, const Space &space,
-                                        int rank, const View &v) {
+template <typename Space, typename View>
+void osu_latency_Kokkos_Comm_isendirecv(benchmark::State &, MPI_Comm comm, const Space &space, int rank,
+                                        const View &v) {
+  KokkosComm::Handle<> h{space, comm};
+
   if (rank == 0) {
-    KokkosComm::Req sendreq = KokkosComm::isend(mode, space, v, 1, 1, comm);
-    sendreq.wait();
+    KokkosComm::wait(KokkosComm::isend(h, v, 1, 1));
   } else if (rank == 1) {
-    KokkosComm::Req recvreq = KokkosComm::irecv(v, 0, 1, comm);
-    recvreq.wait();
+    KokkosComm::wait(KokkosComm::irecv(h, v, 0, 1));
   }
 }
 

@@ -18,14 +18,12 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "KokkosComm_pack_traits.hpp"
 #include "KokkosComm_traits.hpp"
+#include "impl/KokkosComm_pack_traits.hpp"
+#include "impl/KokkosComm_include_mpi.hpp"
+#include "impl/KokkosComm_types.hpp"
 
-// impl
-#include "KokkosComm_include_mpi.hpp"
-#include "KokkosComm_types.hpp"
-
-namespace KokkosComm::Impl {
+namespace KokkosComm::mpi {
 
 template <KokkosView SendView, KokkosView RecvView>
 void reduce(const SendView &sv, const RecvView &rv, MPI_Op op, int root, MPI_Comm comm) {
@@ -35,7 +33,8 @@ void reduce(const SendView &sv, const RecvView &rv, MPI_Op op, int root, MPI_Com
 
   if (SPT::is_contiguous(sv) && RPT::is_contiguous(rv)) {
     using SendScalar = typename SendView::non_const_value_type;
-    MPI_Reduce(SPT::data_handle(sv), RPT::data_handle(rv), SPT::span(sv), mpi_type_v<SendScalar>, op, root, comm);
+    MPI_Reduce(SPT::data_handle(sv), RPT::data_handle(rv), SPT::span(sv), KokkosComm::Impl::mpi_type_v<SendScalar>, op,
+               root, comm);
   } else {
     throw std::runtime_error("only contiguous views supported for low-level reduce");
   }
@@ -55,10 +54,10 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_
   using SendPacker = typename KokkosComm::PackTraits<SendView>::packer_type;
   using RecvPacker = typename KokkosComm::PackTraits<RecvView>::packer_type;
 
-  if (KokkosComm::PackTraits<SendView>::needs_pack(sv)) {
+  if (!KokkosComm::is_contiguous(sv)) {
     auto sendArgs = SendPacker::pack(space, sv);
     space.fence();
-    if ((root == rank) && KokkosComm::PackTraits<RecvView>::needs_unpack(rv)) {
+    if ((root == rank) && !KokkosComm::is_contiguous(rv)) {
       auto recvArgs = RecvPacker::allocate_packed_for(space, "reduce recv", rv);
       space.fence();
       MPI_Reduce(sendArgs.view.data(), recvArgs.view.data(), sendArgs.count, sendArgs.datatype, op, root, comm);
@@ -69,17 +68,17 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_
     }
   } else {
     using SendScalar = typename SendView::value_type;
-    if ((root == rank) && KokkosComm::PackTraits<RecvView>::needs_unpack(rv)) {
+    if ((root == rank) && !KokkosComm::is_contiguous(rv)) {
       auto recvArgs = RecvPacker::allocate_packed_for(space, "reduce recv", rv);
       space.fence();
-      MPI_Reduce(sv.data(), recvArgs.view.data(), sv.span(), mpi_type_v<SendScalar>, op, root, comm);
+      MPI_Reduce(sv.data(), recvArgs.view.data(), sv.span(), KokkosComm::Impl::mpi_type_v<SendScalar>, op, root, comm);
       RecvPacker::unpack_into(space, rv, recvArgs.view);
     } else {
       space.fence();
-      MPI_Reduce(sv.data(), rv.data(), sv.span(), mpi_type_v<SendScalar>, op, root, comm);
+      MPI_Reduce(sv.data(), rv.data(), sv.span(), KokkosComm::Impl::mpi_type_v<SendScalar>, op, root, comm);
     }
   }
 
   Kokkos::Tools::popRegion();
 }
-}  // namespace KokkosComm::Impl
+}  // namespace KokkosComm::mpi
