@@ -19,6 +19,7 @@ API Reference
    api/core
    api/traits
    api/packing
+   api/mpi
 
 Design
 ------

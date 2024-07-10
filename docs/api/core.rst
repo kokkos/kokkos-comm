@@ -1,162 +1,110 @@
 Core
 ====
 
-.. list-table:: MPI API Support
-    :widths: 40 30 15
-    :header-rows: 1
-
-    * - MPI
-      - ``KokkosComm::``
-      - ``Kokkos::View``
-    * - ``MPI_Send``
-      - ``send`` or ``send(KokkosComm::DefaultCommMode{}, ...)``
-      - ✓
-    * - ``MPI_Rsend``
-      - ``send(KokkosComm::ReadyCommMode{}, ...)``
-      - ✓
-    * - ``MPI_Recv``
-      - ``recv``
-      - ✓
-    * - ``MPI_Ssend``
-      - ``send(KokkosComm::SynchronousCommMode{}, ...)``
-      - ✓
-    * - ``MPI_Isend``
-      - ``isend`` or ``isend(KokkosComm::DefaultCommMode{}, ...)``
-      - ✓
-    * - ``MPI_Irsend``
-      - ``isend(KokkosComm::ReadyCommMode{}, ...)``
-      - ✓
-    * - ``MPI_Issend``
-      - ``isend(KokkosComm::SynchronousCommMode{}, ...)``
-      - ✓
-    * - ``MPI_Reduce``
-      - ``reduce``
-      - ✓
-
 Point-to-point
 --------------
 
-.. cpp:function:: template <CommunicationMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
-                  Req KokkosComm::isend(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
+.. cpp:namespace:: KokkosComm
 
-    Wrapper for ``MPI_Isend``, ``MPI_Irsend`` and ``MPI_Issend``.
+.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> isend(Handle<ExecSpace, TRANSPORT> &h, SendView &sv, int dest, int tag)
 
-    :param mode: The communication mode to use
-    :param space: The execution space to operate in
-    :param sv: The data to send
-    :param dest: the destination rank
-    :param tag: the MPI tag
-    :param comm: the MPI communicator
-    :tparam IsendMode: A communication mode to use, one of: ``KokkosComm::DefaultCommMode``, ``KokkosComm::StandardCommMode``, ``KokkosComm::SynchronousCommMode`` or ``KokkosComm::ReadyCommMode`` (modeled with the ``KokkosComm::CommunicationMode`` concept)
-    :tparam SendView: A Kokkos::View to send
-    :tparam ExecSpace: A Kokkos execution space to operate in
-    :returns: A KokkosComm::Req representing the asynchronous communication and any lifetime-extended views.
+  Initiates a non-blocking send operation.
 
-.. cpp:function:: template <typename SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
-                  void KokkosComm::send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm)
+  :tparam SendView: The type of the Kokkos view to send.
+  :tparam ExecSpace: The execution space to use. Defaults to Kokkos::DefaultExecutionSpace.
+  :tparam TRANSPORT: The transport mechanism to use. Defaults to DefaultTransport.
 
-    Wrapper for ``MPI_Send``, ``MPI_Rsend`` and ``MPI_Ssend``.
+  :param h: A handle to the execution space and transport mechanism.
+  :param sv: The Kokkos view to send.
+  :param dest: The destination rank.
+  :param tag: The message tag.
 
-    :param mode: The communication mode to use
-    :param space: The execution space to operate in
-    :param sv: The data to send
-    :param dest: the destination rank
-    :param tag: the MPI tag
-    :param comm: the MPI communicator
-    :tparam SendMode: A communication mode to use, one of: ``KokkosComm::DefaultCommMode``, ``KokkosComm::StandardCommMode``, ``KokkosComm::SynchronousCommMode`` or ``KokkosComm::ReadyCommMode`` (modeled with the ``KokkosComm::CommunicationMode`` concept)
-    :tparam SendView: A Kokkos::View to send
-    :tparam ExecSpace: A Kokkos execution space to operate in
+  :return: A request object for the non-blocking send operation.
 
-.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView RecvView> \
-                  void KokkosComm::recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
+.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> isend(SendView &sv, int dest, int tag)
 
-    MPI_Recv wrapper
+   Initiates a non-blocking send operation using a default handle.
 
-    :param space: The execution space to operate in
-    :param srv: The data to recv
-    :param src: the source rank
-    :param tag: the MPI tag
-    :param comm: the MPI communicator
-    :tparam Recv: A Kokkos::View to send
-    :tparam ExecSpace: A Kokkos execution space to operate in
+   :tparam SendView: The type of the Kokkos view to send.
+   :tparam ExecSpace: The execution space to use. Defaults to Kokkos::DefaultExecutionSpace.
+   :tparam TRANSPORT: The transport mechanism to use. Defaults to DefaultTransport.
+
+   :param sv: The Kokkos view to send.
+   :param dest: The destination rank.
+   :param tag: The message tag.
+
+   :return: A request object for the non-blocking send operation.
+
+   Example usage:
+
+.. literalinclude:: core_isend.cpp
+   :language: cpp
+
+
+
+.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> irecv(Handle<ExecSpace, TRANSPORT> &h, RecvView &rv, int src, int tag)
+
+   Initiates a non-blocking receive operation.
+
+   :tparam RecvView: The type of the Kokkos view for receiving data.
+   :tparam ExecSpace: The execution space where the operation will be performed. Defaults to `Kokkos::DefaultExecutionSpace`.
+   :tparam TRANSPORT: The transport mechanism to be used. Defaults to `DefaultTransport`.
+
+   :param h: A handle to the execution space and transport mechanism.
+   :param rv: The Kokkos view where the received data will be stored.
+   :param src: The source rank from which to receive data.
+   :param tag: The message tag to identify the communication.
+
+   :return: A request object of type `Req<TRANSPORT>` representing the non-blocking receive operation.
+
+   This function initiates a non-blocking receive operation using the specified execution space and transport mechanism. The data will be received into the provided view from the specified source rank and message tag. The function returns a request object that can be used to check the status of the receive operation or to wait for its completion.
+
+   Example usage:
+
+.. literalinclude:: core_irecv.cpp
+   :language: cpp
+
+
+
+
+
+.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> irecv(RecvView &rv, int src, int tag)
+
+   Initiates a non-blocking receive operation using a default handle.
+
+   :tparam RecvView: The type of the Kokkos view for receiving data.
+   :tparam ExecSpace: The execution space where the operation will be performed. Defaults to `Kokkos::DefaultExecutionSpace`.
+   :tparam TRANSPORT: The transport mechanism to be used. Defaults to `DefaultTransport`.
+
+   :param rv: The Kokkos view where the received data will be stored.
+   :param src: The source rank from which to receive data.
+   :param tag: The message tag to identify the communication.
+
+   :return: A request object of type `Req<TRANSPORT>` representing the non-blocking receive operation.
 
 
 Collective
 ----------
 
-.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView> \
-                  void KokkosComm::reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Op op, int root, MPI_Comm comm)
+.. cpp:namespace:: KokkosComm
 
-    MPI_Reduce wrapper
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> void barrier(Handle<ExecSpace, TRANSPORT> &&h)
 
-    :param space: The execution space to operate in
-    :param sv: The data to send
-    :param rv: The view to receive into
-    :param op: The MPI_Op to use in the reduction
-    :param root: The root rank for the reduction
-    :param comm: the MPI communicator
-    :tparam SendView: A Kokkos::View to send
-    :tparam RecvView: A Kokkos::View to recv
-    :tparam ExecSpace: A Kokkos execution space to operate in
+   A function to create a barrier using the given execution space and transport handle.
+
+   :tparam ExecSpace: The execution space to be used. Defaults to `Kokkos::DefaultExecutionSpace`.
+   :tparam TRANSPORT: The transport mechanism to be used. Defaults to `DefaultTransport`.
+   :param h: A handle of type `Handle<ExecSpace, TRANSPORT>` to be forwarded to the barrier implementation.
 
 
-.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView> \
-                  void KokkosComm::allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Comm comm)
-
-    MPI_Allgather wrapper
-
-    :param space: The execution space to operate in
-    :param sv: The data to send
-    :param rv: The view to receive into
-    :param comm: the MPI communicator
-    :tparam SendView: A Kokkos::View to send. Contiguous and rank less than 2.
-    :tparam RecvView: A Kokkos::View to recv. Contiguous and rank 1.
-    :tparam ExecSpace: A Kokkos execution space to operate in
-
-    If ``sv`` is a rank-0 view, the value from the jth rank will be placed in index j of ``rv``.
 
 Related Types
 -------------
 
-Communication Modes
-^^^^^^^^^^^^^^^^^^^
+.. cpp:namespace:: KokkosComm
 
-Structures to specify the mode of an operation. Buffered mode is not supported.
+.. cpp:class:: template <Transport TRANSPORT = DefaultTransport> Req
 
-.. cpp:struct:: KokkosComm::StandardCommMode
+   A template class to handle requests with different transport types.
 
-  Let the MPI implementation decide whether outgoing messages will be buffered. Send operations can be started whether or not a matching receive has been started. They may complete before a matching receive begins. Standard mode is non-local: successful completion of the send operation may depend on the occurrence of a matching receive.
-
-.. cpp:struct:: KokkosComm::SynchronousCommMode
-
-  Send operations complete successfully only if a matching receive is started, and the receive operation has started to receive the message sent.
-
-.. cpp:struct:: KokkosComm::ReadyCommMode
-
-  Send operations may be started only if the matching receive is already started.
-
-.. cpp:struct:: KokkosComm::DefaultCommMode
-
-  The default mode is aliased as ``Standard`` but lets users override the behavior of operations at compile-time using the ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` pre-processor definition. The latter forces ``Synchronous`` mode for all "default-mode" operations, which can be helpful for debugging purposes, e.g., asserting that the communication scheme is correct.
-
-
-Requests
-^^^^^^^^
-
-.. cpp:class:: KokkosComm::Req
-
-    A wrapper around an MPI_Request that can also extend the lifetime of Views.
-
-    .. cpp:function:: MPI_Request &KokkosComm::Req::mpi_req()
-
-        Retrieve a reference to the held MPI_Request.
-
-    .. cpp:function:: void KokkosComm::Req::wait()
-
-        Call MPI_Wait on the held MPI_Request and drop copies of any previous arguments to Req::keep_until_wait().
-
-    .. cpp:function:: template<typename View> \
-                      void KokkosComm::Req::keep_until_wait(const View &v)
-
-        Extend the lifetime of v at least until Req::wait() is called.
-        This is useful to prevent a View from being destroyed during an asynchronous MPI operation.
+   :tparam TRANSPORT: The type of transport. Defaults to :cpp:enumerator:`KokkosComm::DefaultTransport`.
