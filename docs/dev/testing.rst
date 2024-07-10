@@ -53,7 +53,7 @@ Testing the Install
     cmake -S "$COMM_SRC"/unit_tests -B "$COMM_UNIT_TESTS_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DKokkosComm_ROOT="$COMM_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
     echo "==== BUILD UNIT TESTS ===="
-    VERBOSE=1 cmake --build "$COMM_UNIT_TESTS_BUILD" --parallel 4
+    VERBOSE=1 cmake --build "$COMM_UNIT_TESTS_BUILD" --parallel $(nproc)
 
     echo "==== RUN UNIT TESTS ===="
     ctest -V --test-dir "$COMM_UNIT_TESTS_BUILD"
@@ -63,7 +63,7 @@ Testing the Install
     cmake -S "$COMM_SRC"/perf_tests -B "$COMM_PERF_TESTS_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DKokkosComm_ROOT="$COMM_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
     echo "==== BUILD PERF TESTS ===="
-    VERBOSE=1 cmake --build "$COMM_PERF_TESTS_BUILD"  --parallel 4
+    VERBOSE=1 cmake --build "$COMM_PERF_TESTS_BUILD"  --parallel $(nproc)
 
     echo "==== RUN PERF TESTS ===="
     ctest -V --test-dir "$COMM_PERF_TESTS_BUILD"
