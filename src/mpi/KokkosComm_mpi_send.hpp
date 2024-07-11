@@ -24,19 +24,21 @@
 
 namespace KokkosComm::mpi {
 
-template <CommunicationMode SendMode, KokkosView SendView>
-void send(const SendMode &, const SendView &sv, int dest, int tag, MPI_Comm comm) {
+template <KokkosView SendView, CommunicationMode SendMode>
+void send(const SendView &sv, int dest, int tag, MPI_Comm comm, SendMode) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
   using KCT = typename KokkosComm::Traits<SendView>;
 
   auto mpi_send_fn = [](void *mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
                         MPI_Comm mpi_comm) {
-    if constexpr (std::is_same_v<SendMode, StandardCommMode>) {
+    if constexpr (std::is_same_v<SendMode, CommModeStandard>) {
       MPI_Send(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
-    } else if constexpr (std::is_same_v<SendMode, ReadyCommMode>) {
+    } else if constexpr (std::is_same_v<SendMode, CommModeReady>) {
       MPI_Rsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
-    } else if constexpr (std::is_same_v<SendMode, SynchronousCommMode>) {
+    } else if constexpr (std::is_same_v<SendMode, CommModeSynchronous>) {
       MPI_Ssend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
+    } else {
+      static_assert(std::is_void_v<SendMode>, "unexpected communication mode");
     }
   };
 
@@ -50,25 +52,22 @@ void send(const SendMode &, const SendView &sv, int dest, int tag, MPI_Comm comm
   Kokkos::Tools::popRegion();
 }
 
-template <KokkosView SendView>
-void send(const SendView &sv, int dest, int tag, MPI_Comm comm) {
-  send(KokkosComm::DefaultCommMode(), sv, dest, tag, comm);
-}
-
-template <CommunicationMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView>
-void send(const SendMode &, const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode SendMode>
+void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm, SendMode) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
 
   using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
 
   auto mpi_send_fn = [](void *mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
                         MPI_Comm mpi_comm) {
-    if constexpr (std::is_same_v<SendMode, StandardCommMode>) {
+    if constexpr (std::is_same_v<SendMode, CommModeStandard>) {
       MPI_Send(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
-    } else if constexpr (std::is_same_v<SendMode, ReadyCommMode>) {
+    } else if constexpr (std::is_same_v<SendMode, CommModeReady>) {
       MPI_Rsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
-    } else if constexpr (std::is_same_v<SendMode, SynchronousCommMode>) {
+    } else if constexpr (std::is_same_v<SendMode, CommModeSynchronous>) {
       MPI_Ssend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm);
+    } else {
+      static_assert(std::is_void_v<SendMode>, "unexpected communication mode");
     }
   };
 
@@ -82,6 +81,11 @@ void send(const SendMode &, const ExecSpace &space, const SendView &sv, int dest
   }
 
   Kokkos::Tools::popRegion();
+}
+
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
+void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
+  send(space, sv, dest, tag, comm, DefaultCommMode{});
 }
 
 }  // namespace KokkosComm::mpi

@@ -21,6 +21,8 @@
 
 namespace {
 
+using namespace KokkosComm::mpi;
+
 template <typename T>
 class MpiSendRecv : public testing::Test {
  public:
@@ -30,9 +32,9 @@ class MpiSendRecv : public testing::Test {
 using ScalarTypes = ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>, Kokkos::complex<double>>;
 TYPED_TEST_SUITE(MpiSendRecv, ScalarTypes);
 
-template <KokkosComm::mpi::CommMode SendMode, typename Scalar>
+template <CommunicationMode SendMode, typename Scalar>
 void send_comm_mode_1d_contig() {
-  if (SendMode == KokkosComm::mpi::CommMode::Ready) {
+  if constexpr (std::is_same_v<SendMode, CommModeReady>) {
     GTEST_SKIP() << "Skipping test for ready-mode send";
   }
 
@@ -49,7 +51,7 @@ void send_comm_mode_1d_contig() {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::mpi::send<SendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    KokkosComm::mpi::send(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD, SendMode{});
   } else if (1 == rank) {
     int src = 0;
     KokkosComm::mpi::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
@@ -60,9 +62,9 @@ void send_comm_mode_1d_contig() {
   }
 }
 
-template <KokkosComm::mpi::CommMode SendMode, typename Scalar>
+template <CommunicationMode SendMode, typename Scalar>
 void send_comm_mode_1d_noncontig() {
-  if (SendMode == KokkosComm::mpi::CommMode::Ready) {
+  if constexpr (std::is_same_v<SendMode, CommModeReady>) {
     GTEST_SKIP() << "Skipping test for ready-mode send";
   }
 
@@ -77,7 +79,7 @@ void send_comm_mode_1d_noncontig() {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::mpi::send<SendMode>(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD);
+    KokkosComm::mpi::send(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD, SendMode{});
   } else if (1 == rank) {
     int src = 0;
     KokkosComm::mpi::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
@@ -89,27 +91,25 @@ void send_comm_mode_1d_noncontig() {
 }
 
 TYPED_TEST(MpiSendRecv, 1D_contig_standard) {
-  send_comm_mode_1d_contig<KokkosComm::mpi::CommMode::Standard, typename TestFixture::Scalar>();
+  send_comm_mode_1d_contig<CommModeStandard, typename TestFixture::Scalar>();
 }
 
-TYPED_TEST(MpiSendRecv, 1D_contig_ready) {
-  send_comm_mode_1d_contig<KokkosComm::mpi::CommMode::Ready, typename TestFixture::Scalar>();
-}
+TYPED_TEST(MpiSendRecv, 1D_contig_ready) { send_comm_mode_1d_contig<CommModeReady, typename TestFixture::Scalar>(); }
 
 TYPED_TEST(MpiSendRecv, 1D_contig_synchronous) {
-  send_comm_mode_1d_contig<KokkosComm::mpi::CommMode::Synchronous, typename TestFixture::Scalar>();
+  send_comm_mode_1d_contig<CommModeSynchronous, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(MpiSendRecv, 1D_noncontig_standard) {
-  send_comm_mode_1d_noncontig<KokkosComm::mpi::CommMode::Standard, typename TestFixture::Scalar>();
+  send_comm_mode_1d_noncontig<CommModeStandard, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(MpiSendRecv, 1D_noncontig_ready) {
-  send_comm_mode_1d_noncontig<KokkosComm::mpi::CommMode::Ready, typename TestFixture::Scalar>();
+  send_comm_mode_1d_noncontig<CommModeReady, typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(MpiSendRecv, 1D_noncontig_synchronous) {
-  send_comm_mode_1d_noncontig<KokkosComm::mpi::CommMode::Synchronous, typename TestFixture::Scalar>();
+  send_comm_mode_1d_noncontig<CommModeSynchronous, typename TestFixture::Scalar>();
 }
 
 }  // namespace

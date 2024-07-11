@@ -82,14 +82,12 @@ void benchmark_2dhalo(benchmark::State &state) {
   const int ry = rank / rs;
 
   if (rank < rs * rs) {
-    auto mode  = KokkosComm::DefaultCommMode();
     auto space = Kokkos::DefaultExecutionSpace();
     // grid of elements, each with 3 properties, and a radius-1 halo
     grid_type grid("", nx + 2, ny + 2, nprops);
     while (state.KeepRunning()) {
-      do_iteration(state, MPI_COMM_WORLD,
-                   send_recv<KokkosComm::DefaultCommMode, Kokkos::DefaultExecutionSpace, grid_type>, mode, space, nx,
-                   ny, rx, ry, rs, grid);
+      do_iteration(state, MPI_COMM_WORLD, send_recv<Kokkos::DefaultExecutionSpace, grid_type>, space, nx, ny, rx, ry,
+                   rs, grid);
     }
   } else {
     while (state.KeepRunning()) {

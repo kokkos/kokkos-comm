@@ -63,7 +63,6 @@ void benchmark_osu_latency_Kokkos_Comm_mpi_sendrecv(benchmark::State &state) {
     state.SkipWithError("benchmark_osu_latency_KokkosComm needs exactly 2 ranks");
   }
 
-  auto mode       = KokkosComm::DefaultCommMode();
   auto space      = Kokkos::DefaultExecutionSpace();
   using view_type = Kokkos::View<char *>;
   view_type a("A", state.range(0));

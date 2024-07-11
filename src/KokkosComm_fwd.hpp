@@ -33,7 +33,8 @@ using FallbackCommunicationSpace = Mpi;
 template <CommunicationSpace CommSpace = DefaultCommunicationSpace>
 class Req;
 
-template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace>
+template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 class Handle;
 
 namespace Impl {
@@ -44,7 +45,8 @@ struct Recv;
 template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
 struct Send;
-template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace>
+template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 struct Barrier;
 
 }  // namespace Impl

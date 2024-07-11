@@ -18,14 +18,14 @@
 
 #include "KokkosComm.hpp"
 
-template <KokkosComm::CommunicationMode Mode, typename Space, typename View>
-void send_recv(benchmark::State &, MPI_Comm comm, const Mode &mode, const Space &space, int rank, const View &v) {
+template <KokkosComm::mpi::CommunicationMode Mode, typename Space, typename View>
+void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int rank, const View &v) {
   if (0 == rank) {
-    KokkosComm::mpi::send(space, v, 1, 0, comm);
+    KokkosComm::mpi::send(space, v, 1, 0, comm, Mode{});
     KokkosComm::mpi::recv(space, v, 1, 0, comm);
   } else if (1 == rank) {
     KokkosComm::mpi::recv(space, v, 0, 0, comm);
-    KokkosComm::mpi::send(space, v, 0, 0, comm);
+    KokkosComm::mpi::send(space, v, 0, 0, comm, Mode{});
   }
 }
 
@@ -39,15 +39,13 @@ void benchmark_sendrecv(benchmark::State &state) {
 
   using Scalar = double;
 
-  auto mode       = KokkosComm::DefaultCommMode();
+  using Mode      = KokkosComm::mpi::DefaultCommMode;
   auto space      = Kokkos::DefaultExecutionSpace();
   using view_type = Kokkos::View<Scalar *>;
   view_type a("", 1000000);
 
   while (state.KeepRunning()) {
-    do_iteration(state, MPI_COMM_WORLD,
-                 send_recv<KokkosComm::DefaultCommMode, Kokkos::DefaultExecutionSpace, view_type>, mode, space, rank,
-                 a);
+    do_iteration(state, MPI_COMM_WORLD, send_recv<Mode, Kokkos::DefaultExecutionSpace, view_type>, space, rank, a);
   }
 
   state.SetBytesProcessed(sizeof(Scalar) * state.iterations() * a.size() * 2);
