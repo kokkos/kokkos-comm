@@ -22,9 +22,9 @@
 
 void noop(benchmark::State, MPI_Comm) {}
 
-template <typename Space, typename View>
-void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, int ny, int rx, int ry, int rs,
-               const View &v) {
+template <KokkosComm::CommunicationMode Mode, typename Space, typename View>
+void send_recv(benchmark::State &, MPI_Comm comm, const Mode &mode, const Space &space, int nx, int ny, int rx, int ry,
+               int rs, const View &v) {
   // 2D index of nbrs in minus and plus direction (periodic)
   const int xm1 = (rx + rs - 1) % rs;
   const int ym1 = (ry + rs - 1) % rs;
@@ -48,10 +48,10 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, in
 
   std::vector<KokkosComm::Req> reqs;
   // std::cerr << get_rank(rx, ry) << " -> " << get_rank(xp1, ry) << "\n";
-  reqs.push_back(KokkosComm::isend(space, xp1_s, get_rank(xp1, ry), 0, comm));
-  reqs.push_back(KokkosComm::isend(space, xm1_s, get_rank(xm1, ry), 1, comm));
-  reqs.push_back(KokkosComm::isend(space, yp1_s, get_rank(rx, yp1), 2, comm));
-  reqs.push_back(KokkosComm::isend(space, ym1_s, get_rank(rx, ym1), 3, comm));
+  reqs.push_back(KokkosComm::isend(mode, space, xp1_s, get_rank(xp1, ry), 0, comm));
+  reqs.push_back(KokkosComm::isend(mode, space, xm1_s, get_rank(xm1, ry), 1, comm));
+  reqs.push_back(KokkosComm::isend(mode, space, yp1_s, get_rank(rx, yp1), 2, comm));
+  reqs.push_back(KokkosComm::isend(mode, space, ym1_s, get_rank(rx, ym1), 3, comm));
 
   KokkosComm::recv(space, xm1_r, get_rank(xm1, ry), 0, comm);
   KokkosComm::recv(space, xp1_r, get_rank(xp1, ry), 1, comm);
@@ -82,12 +82,14 @@ void benchmark_2dhalo(benchmark::State &state) {
   const int ry = rank / rs;
 
   if (rank < rs * rs) {
+    auto mode  = KokkosComm::DefaultCommMode();
     auto space = Kokkos::DefaultExecutionSpace();
     // grid of elements, each with 3 properties, and a radius-1 halo
     grid_type grid("", nx + 2, ny + 2, nprops);
     while (state.KeepRunning()) {
-      do_iteration(state, MPI_COMM_WORLD, send_recv<Kokkos::DefaultExecutionSpace, grid_type>, space, nx, ny, rx, ry,
-                   rs, grid);
+      do_iteration(state, MPI_COMM_WORLD,
+                   send_recv<KokkosComm::DefaultCommMode, Kokkos::DefaultExecutionSpace, grid_type>, mode, space, nx,
+                   ny, rx, ry, rs, grid);
     }
   } else {
     while (state.KeepRunning()) {

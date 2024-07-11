@@ -22,6 +22,8 @@
 
 #include "KokkosComm_concepts.hpp"
 
+#include <type_traits>
+
 namespace KokkosComm {
 
 template <typename T>
