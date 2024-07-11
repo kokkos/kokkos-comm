@@ -41,8 +41,8 @@ struct Mpi {
 
 };  // struct Mpi
 
-// KokkosComm::Mpi is a KokkosComm::Transport
+// KokkosComm::Mpi is a KokkosComm::CommunicationSpace
 template <>
-struct Impl::is_transport<KokkosComm::Mpi> : public std::true_type {};
+struct Impl::is_communication_space<KokkosComm::Mpi> : public std::true_type {};
 
 }  // namespace KokkosComm

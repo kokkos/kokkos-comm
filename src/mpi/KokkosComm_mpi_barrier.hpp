@@ -21,7 +21,7 @@
 namespace KokkosComm {
 
 namespace Impl {
-template <KokkosExecutionSpace ExecSpace, Transport TRANSPORT>
+template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
 struct Barrier {
   Barrier(Handle<ExecSpace, Mpi> &&h) {
     h.space().fence("KokkosComm::Impl::Barrier");

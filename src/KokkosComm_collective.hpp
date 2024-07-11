@@ -25,9 +25,9 @@
 
 namespace KokkosComm {
 
-template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport>
-void barrier(Handle<ExecSpace, TRANSPORT> &&h) {
-  Impl::Barrier<ExecSpace, TRANSPORT>{std::forward<Handle<ExecSpace, TRANSPORT>>(h)};
+template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace>
+void barrier(Handle<ExecSpace, CommSpace> &&h) {
+  Impl::Barrier<ExecSpace, CommSpace>{std::forward<Handle<ExecSpace, CommSpace>>(h)};
 }
 
 }  // namespace KokkosComm

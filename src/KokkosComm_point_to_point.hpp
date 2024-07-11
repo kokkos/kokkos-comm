@@ -24,27 +24,27 @@
 namespace KokkosComm {
 
 template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
-          Transport TRANSPORT = DefaultTransport>
-Req<TRANSPORT> recv(Handle<ExecSpace, TRANSPORT> &h, RecvView &rv, int src, int tag) {
-  return Impl::Recv<RecvView, ExecSpace, TRANSPORT>::execute(h, rv, src, tag);
+          CommunicationSpace CommSpace = DefaultCommunicationSpace>
+Req<CommSpace> recv(Handle<ExecSpace, CommSpace> &h, RecvView &rv, int src, int tag) {
+  return Impl::Recv<RecvView, ExecSpace, CommSpace>::execute(h, rv, src, tag);
 }
 
 template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
-          Transport TRANSPORT = DefaultTransport>
-Req<TRANSPORT> recv(RecvView &rv, int src, int tag) {
-  return recv<RecvView, ExecSpace, TRANSPORT>(Handle<ExecSpace, TRANSPORT>{}, rv, src, tag);
+          CommunicationSpace CommSpace = DefaultCommunicationSpace>
+Req<CommSpace> recv(RecvView &rv, int src, int tag) {
+  return recv<RecvView, ExecSpace, CommSpace>(Handle<ExecSpace, CommSpace>{}, rv, src, tag);
 }
 
 template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
-          Transport TRANSPORT = DefaultTransport>
-Req<TRANSPORT> send(Handle<ExecSpace, TRANSPORT> &h, SendView &sv, int dest, int tag) {
-  return Impl::Send<SendView, ExecSpace, TRANSPORT>::execute(h, sv, dest, tag);
+          CommunicationSpace CommSpace = DefaultCommunicationSpace>
+Req<CommSpace> send(Handle<ExecSpace, CommSpace> &h, SendView &sv, int dest, int tag) {
+  return Impl::Send<SendView, ExecSpace, CommSpace>::execute(h, sv, dest, tag);
 }
 
 template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
-          Transport TRANSPORT = DefaultTransport>
-Req<TRANSPORT> send(SendView &sv, int dest, int tag) {
-  return send<SendView, ExecSpace, TRANSPORT>(Handle<ExecSpace, TRANSPORT>{}, sv, dest, tag);
+          CommunicationSpace CommSpace = DefaultCommunicationSpace>
+Req<CommSpace> send(SendView &sv, int dest, int tag) {
+  return send<SendView, ExecSpace, CommSpace>(Handle<ExecSpace, CommSpace>{}, sv, dest, tag);
 }
 
 }  // namespace KokkosComm

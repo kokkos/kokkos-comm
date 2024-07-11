@@ -25,7 +25,7 @@ namespace KokkosComm {
 namespace Impl {
 // fallback - most types are not a KokkosComm transport
 template <typename T>
-struct is_transport : public std::false_type {};
+struct is_communication_space : public std::false_type {};
 }  // namespace Impl
 
 template <typename T>
@@ -35,6 +35,6 @@ template <typename T>
 concept KokkosExecutionSpace = Kokkos::is_execution_space_v<T>;
 
 template <typename T>
-concept Transport = KokkosComm::Impl::is_transport<T>::value;
+concept CommunicationSpace = KokkosComm::Impl::is_communication_space<T>::value;
 
 }  // namespace KokkosComm

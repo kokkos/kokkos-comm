@@ -24,27 +24,27 @@
 namespace KokkosComm {
 #if defined(KOKKOSCOMM_ENABLE_MPI)
 class Mpi;
-using DefaultTransport  = Mpi;
-using FallbackTransport = Mpi;
+using DefaultCommunicationSpace  = Mpi;
+using FallbackCommunicationSpace = Mpi;
 #else
 #error at least one transport must be defined
 #endif
 
-template <Transport TRANSPORT = DefaultTransport>
+template <CommunicationSpace CommSpace = DefaultCommunicationSpace>
 class Req;
 
-template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport>
+template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace>
 class Handle;
 
 namespace Impl {
 
 template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
-          Transport TRANSPORT = DefaultTransport>
+          CommunicationSpace CommSpace = DefaultCommunicationSpace>
 struct Recv;
 template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
-          Transport TRANSPORT = DefaultTransport>
+          CommunicationSpace CommSpace = DefaultCommunicationSpace>
 struct Send;
-template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport>
+template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace>
 struct Barrier;
 
 }  // namespace Impl
