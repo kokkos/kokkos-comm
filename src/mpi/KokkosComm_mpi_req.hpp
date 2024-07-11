@@ -51,11 +51,12 @@ class Req<Mpi> {
   MPI_Request &mpi_request() { return record_->req_; }
 
   // keep a reference to this view around until wait() is called
-  // TODO: no-op if unmanaged
   template <typename View>
   void extend_view_lifetime(const View &v) {
-    // capture a copy of v into a no-op lambda
-    record_->postWaits_.push_back([v]() {} /* capture v into a no-op lambda that does nothing*/);
+    // unmanaged views don't own the underlying buffer, so no need to extend lifetime
+    if (v.use_count() != 0) {
+      record_->postWaits_.push_back([v]() {});
+    }
   }
 
   void call_after_mpi_wait(std::function<void()> &&f) { record_->postWaits_.push_back(f); }
