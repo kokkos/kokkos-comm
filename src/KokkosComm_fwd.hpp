@@ -22,7 +22,7 @@
 #include "KokkosComm_config.hpp"
 
 namespace KokkosComm {
-#if defined(KOKKOSCOMM_TRANSPORT_MPI)
+#if defined(KOKKOSCOMM_ENABLE_MPI)
 class Mpi;
 using DefaultTransport  = Mpi;
 using FallbackTransport = Mpi;

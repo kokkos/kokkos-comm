@@ -9,3 +9,4 @@ target_include_directories(KokkosComm INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(KokkosComm INTERFACE MPI::MPI_CXX Kokkos::kokkos)
+

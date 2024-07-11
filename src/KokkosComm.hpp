@@ -20,7 +20,7 @@
 
 // transport declarations
 // TODO: could probably be moved to a per-transport file to be included
-#if defined(KOKKOSCOMM_TRANSPORT_MPI)
+#if defined(KOKKOSCOMM_ENABLE_MPI)
 #include "mpi/KokkosComm_mpi.hpp"
 #include "mpi/KokkosComm_mpi_send.hpp"
 #include "mpi/KokkosComm_mpi_allgather.hpp"
@@ -34,8 +34,6 @@
 #else
 #error at least one transport must be defined
 #endif
-
-#include "KokkosComm_version.hpp"
 
 #include "KokkosComm_concepts.hpp"
 #include "KokkosComm_point_to_point.hpp"
