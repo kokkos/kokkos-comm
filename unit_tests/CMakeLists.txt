@@ -36,7 +36,7 @@ endif()
 # Kokkos Comm tests
 set(KOKKOSCOMM_TEST_SOURCES)
 list(APPEND KOKKOSCOMM_TEST_SOURCES test_main.cpp
-  test_isendirecv.cpp
+  test_sendrecv.cpp
   test_barrier.cpp
 
 )

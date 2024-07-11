@@ -21,9 +21,9 @@
 namespace KokkosComm {
 
 namespace Impl {
-// irecv implementation for Mpi
+// Recv implementation for Mpi
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-struct Irecv<RecvView, ExecSpace, Mpi> {
+struct Recv<RecvView, ExecSpace, Mpi> {
   static Req<Mpi> execute(Handle<ExecSpace, Mpi> &h, const RecvView &rv, int src, int tag) {
     using KCT    = KokkosComm::Traits<RecvView>;
     using KCPT   = KokkosComm::PackTraits<RecvView>;

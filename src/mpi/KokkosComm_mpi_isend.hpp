@@ -63,9 +63,9 @@ Req<Mpi> isend_impl(Handle<ExecSpace, Mpi> &h, const SendView &sv, int dest, int
   return req;
 }
 
-// Implementation of KokkosComm::Isend
+// Implementation of KokkosComm::Send
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
-struct Isend<SendView, ExecSpace, Mpi> {
+struct Send<SendView, ExecSpace, Mpi> {
   static Req<Mpi> execute(Handle<ExecSpace, Mpi> &h, const SendView &sv, int dest, int tag) {
     return isend_impl<mpi::CommMode::Standard, ExecSpace, SendView>(h, sv, dest, tag);
   }

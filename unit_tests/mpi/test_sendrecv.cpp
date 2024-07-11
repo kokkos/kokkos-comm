@@ -22,13 +22,13 @@
 namespace {
 
 template <typename T>
-class SendRecv : public testing::Test {
+class MpiSendRecv : public testing::Test {
  public:
   using Scalar = T;
 };
 
 using ScalarTypes = ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>, Kokkos::complex<double>>;
-TYPED_TEST_SUITE(SendRecv, ScalarTypes);
+TYPED_TEST_SUITE(MpiSendRecv, ScalarTypes);
 
 template <KokkosComm::mpi::CommMode SendMode, typename Scalar>
 void send_comm_mode_1d_contig() {
@@ -88,27 +88,27 @@ void send_comm_mode_1d_noncontig() {
   }
 }
 
-TYPED_TEST(SendRecv, 1D_contig_standard) {
+TYPED_TEST(MpiSendRecv, 1D_contig_standard) {
   send_comm_mode_1d_contig<KokkosComm::mpi::CommMode::Standard, typename TestFixture::Scalar>();
 }
 
-TYPED_TEST(SendRecv, 1D_contig_ready) {
+TYPED_TEST(MpiSendRecv, 1D_contig_ready) {
   send_comm_mode_1d_contig<KokkosComm::mpi::CommMode::Ready, typename TestFixture::Scalar>();
 }
 
-TYPED_TEST(SendRecv, 1D_contig_synchronous) {
+TYPED_TEST(MpiSendRecv, 1D_contig_synchronous) {
   send_comm_mode_1d_contig<KokkosComm::mpi::CommMode::Synchronous, typename TestFixture::Scalar>();
 }
 
-TYPED_TEST(SendRecv, 1D_noncontig_standard) {
+TYPED_TEST(MpiSendRecv, 1D_noncontig_standard) {
   send_comm_mode_1d_noncontig<KokkosComm::mpi::CommMode::Standard, typename TestFixture::Scalar>();
 }
 
-TYPED_TEST(SendRecv, 1D_noncontig_ready) {
+TYPED_TEST(MpiSendRecv, 1D_noncontig_ready) {
   send_comm_mode_1d_noncontig<KokkosComm::mpi::CommMode::Ready, typename TestFixture::Scalar>();
 }
 
-TYPED_TEST(SendRecv, 1D_noncontig_synchronous) {
+TYPED_TEST(MpiSendRecv, 1D_noncontig_synchronous) {
   send_comm_mode_1d_noncontig<KokkosComm::mpi::CommMode::Synchronous, typename TestFixture::Scalar>();
 }
 

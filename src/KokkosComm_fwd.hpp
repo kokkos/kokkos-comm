@@ -40,10 +40,10 @@ namespace Impl {
 
 template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           Transport TRANSPORT = DefaultTransport>
-struct Irecv;
+struct Recv;
 template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           Transport TRANSPORT = DefaultTransport>
-struct Isend;
+struct Send;
 template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport>
 struct Barrier;
 

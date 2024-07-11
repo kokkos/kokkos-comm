@@ -20,11 +20,11 @@ int tag = 42;
 KokkosComm::Handle<> handle; // Same as Handle<Execspace, Transport>
 
 // Initiate a non-blocking send with a handle
-auto req1 = isend(handle, data, dest, tag);
+auto req1 = send(handle, data, dest, tag);
 
 // Initiate a non-blocking send with a default handle
-auto req2 = isend(data, dest, tag);
+auto req2 = send(data, dest, tag);
 
 // Wait for the requests to complete (assuming a wait function exists)
-req1.wait();
-req2.wait();
+KokkosComm::wait(req1);
+KokkosComm::wait(req2);

@@ -23,14 +23,14 @@
 namespace {
 
 template <typename T>
-class IsendIrecv : public testing::Test {
+class SendRecv : public testing::Test {
  public:
   using Scalar = T;
 };
 
 using ScalarTypes =
     ::testing::Types<float, double, Kokkos::complex<float>, Kokkos::complex<double>, int, unsigned, int64_t, size_t>;
-TYPED_TEST_SUITE(IsendIrecv, ScalarTypes);
+TYPED_TEST_SUITE(SendRecv, ScalarTypes);
 
 template <KokkosComm::KokkosView View1D>
 void test_1d(const View1D &a) {
@@ -46,12 +46,10 @@ void test_1d(const View1D &a) {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::Req req = KokkosComm::isend(h, a, dst, 0);
-    KokkosComm::wait(req);
+    KokkosComm::wait(KokkosComm::send(h, a, dst, 0));
   } else if (1 == h.rank()) {
-    int src             = 0;
-    KokkosComm::Req req = KokkosComm::irecv(h, a, src, 0);
-    KokkosComm::wait(req);
+    int src = 0;
+    KokkosComm::wait(KokkosComm::recv(h, a, src, 0));
     int errs;
     Kokkos::parallel_reduce(
         a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
@@ -76,12 +74,10 @@ void test_2d(const View2D &a) {
     int dst = 1;
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(int i, int j) { a(i, j) = i * a.extent(0) + j; });
-    KokkosComm::Req req = KokkosComm::isend(h, a, dst, 0);
-    KokkosComm::wait(req);
+    KokkosComm::wait(KokkosComm::send(h, a, dst, 0));
   } else if (1 == h.rank()) {
-    int src             = 0;
-    KokkosComm::Req req = KokkosComm::irecv(h, a, src, 0);
-    KokkosComm::wait(req);
+    int src = 0;
+    KokkosComm::wait(KokkosComm::recv(h, a, src, 0));
     int errs;
     Kokkos::parallel_reduce(
         policy, KOKKOS_LAMBDA(int i, int j, int &lsum) { lsum += a(i, j) != Scalar(i * a.extent(0) + j); }, errs);
@@ -89,12 +85,12 @@ void test_2d(const View2D &a) {
   }
 }
 
-TYPED_TEST(IsendIrecv, 1D_contig) {
+TYPED_TEST(SendRecv, 1D_contig) {
   auto a = ViewBuilder<typename TestFixture::Scalar, 1>::view(contig{}, "a", 1013);
   test_1d(a);
 }
 
-TYPED_TEST(IsendIrecv, 2D_contig) {
+TYPED_TEST(SendRecv, 2D_contig) {
   auto a = ViewBuilder<typename TestFixture::Scalar, 2>::view(contig{}, "a", 137, 17);
   test_2d(a);
 }

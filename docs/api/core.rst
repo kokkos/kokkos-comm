@@ -6,9 +6,12 @@ Point-to-point
 
 .. cpp:namespace:: KokkosComm
 
-.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> isend(Handle<ExecSpace, TRANSPORT> &h, SendView &sv, int dest, int tag)
+.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> send(Handle<ExecSpace, TRANSPORT> &h, SendView &sv, int dest, int tag)
 
   Initiates a non-blocking send operation.
+
+  .. warning::
+    This is not a blocking operation despite being named like ``MPI_Send``.
 
   :tparam SendView: The type of the Kokkos view to send.
   :tparam ExecSpace: The execution space to use. Defaults to Kokkos::DefaultExecutionSpace.
@@ -21,9 +24,12 @@ Point-to-point
 
   :return: A request object for the non-blocking send operation.
 
-.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> isend(SendView &sv, int dest, int tag)
+.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> send(SendView &sv, int dest, int tag)
 
    Initiates a non-blocking send operation using a default handle.
+
+   .. warning::
+     This is not a blocking operation despite being named like ``MPI_Send``.
 
    :tparam SendView: The type of the Kokkos view to send.
    :tparam ExecSpace: The execution space to use. Defaults to Kokkos::DefaultExecutionSpace.
@@ -37,14 +43,17 @@ Point-to-point
 
    Example usage:
 
-.. literalinclude:: core_isend.cpp
+.. literalinclude:: core_send.cpp
    :language: cpp
 
 
 
-.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> irecv(Handle<ExecSpace, TRANSPORT> &h, RecvView &rv, int src, int tag)
+.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> recv(Handle<ExecSpace, TRANSPORT> &h, RecvView &rv, int src, int tag)
 
    Initiates a non-blocking receive operation.
+
+   .. warning::
+     This is not a blocking operation despite being named like ``MPI_Recv``.
 
    :tparam RecvView: The type of the Kokkos view for receiving data.
    :tparam ExecSpace: The execution space where the operation will be performed. Defaults to `Kokkos::DefaultExecutionSpace`.
@@ -61,16 +70,19 @@ Point-to-point
 
    Example usage:
 
-.. literalinclude:: core_irecv.cpp
+.. literalinclude:: core_recv.cpp
    :language: cpp
 
 
 
 
 
-.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> irecv(RecvView &rv, int src, int tag)
+.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> recv(RecvView &rv, int src, int tag)
 
    Initiates a non-blocking receive operation using a default handle.
+
+   .. warning::
+     This is not a blocking operation despite being named like ``MPI_Recv``.
 
    :tparam RecvView: The type of the Kokkos view for receiving data.
    :tparam ExecSpace: The execution space where the operation will be performed. Defaults to `Kokkos::DefaultExecutionSpace`.
