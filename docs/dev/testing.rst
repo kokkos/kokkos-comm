@@ -38,9 +38,11 @@ Testing the Install
     cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
 
     echo "==== CFG KOKKOS COMM ===="
+    rm -rf "$COMM_BUILD"
     cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKokkosComm_ENABLE_TESTS=OFF -DKokkosComm_ENABLE_PERFTESTS=OFF -DCMAKE_INSTALL_PREFIX="$COMM_INSTALL"
 
     echo "==== BUILD & INSTALL KOKKOS COMM ===="
+    rm -rf "$COMM_INSTALL"
     VERBOSE=1 cmake --build "$COMM_BUILD" --target install
 
     echo "==== REMOVE KOKKOS COMM BUILD FILES ===="
