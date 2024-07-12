@@ -55,7 +55,7 @@ class Req {
   template <typename View>
   void keep_until_wait(const View &v) {
     // unmanaged views don't own the underlying buffer, so no need to extend lifetime
-    if constexpr (!View::memory_traits::is_unmanaged) {
+    if (v.use_count() != 0) {
       record_->until_waits_.push_back(std::make_shared<ViewHolder<View>>(v));
     }
   }
