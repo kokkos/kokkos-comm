@@ -1,11 +1,14 @@
 name: clang-format check
-run-name: clang-format check
+
+# only run most recent workflow in branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 on:
   pull_request:
     paths-ignore:
     - README.md
-    - 'docs/**'
     types: [ opened, reopened, synchronize ]
 
 permissions: read-all

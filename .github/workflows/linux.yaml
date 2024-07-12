@@ -1,5 +1,10 @@
 name: Linux
-run-name: Linux
+
+# only run most recent workflow in branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     paths-ignore:
