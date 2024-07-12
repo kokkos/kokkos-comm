@@ -54,7 +54,10 @@ class Req {
   // keep a reference to this view around until wait() is called
   template <typename View>
   void keep_until_wait(const View &v) {
-    record_->until_waits_.push_back(std::make_shared<ViewHolder<View>>(v));
+    // unmanaged views don't own the underlying buffer, so no need to extend lifetime
+    if (v.use_count() != 0) {
+      record_->until_waits_.push_back(std::make_shared<ViewHolder<View>>(v));
+    }
   }
 
  private:
