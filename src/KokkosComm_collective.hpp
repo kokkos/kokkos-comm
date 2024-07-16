@@ -18,10 +18,10 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "KokkosComm_concepts.hpp"
-#include "KokkosComm_alltoall.hpp"
-#include "KokkosComm_reduce.hpp"
-#include "KokkosComm_allgather.hpp"
+#include "impl/KokkosComm_concepts.hpp"
+#include "impl/KokkosComm_alltoall.hpp"
+#include "impl/KokkosComm_reduce.hpp"
+#include "impl/KokkosComm_allgather.hpp"
 
 namespace KokkosComm {
 

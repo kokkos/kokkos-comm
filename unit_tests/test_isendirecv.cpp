@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 
 #include "KokkosComm.hpp"
-#include "KokkosComm_irecv.hpp"
+#include "impl/KokkosComm_irecv.hpp"
 
 #include "view_builder.hpp"
 

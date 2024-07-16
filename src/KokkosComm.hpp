@@ -18,13 +18,13 @@
 
 #include "KokkosComm_config.hpp"
 #include "KokkosComm_collective.hpp"
-#include "KokkosComm_isend.hpp"
-#include "KokkosComm_irecv.hpp"
-#include "KokkosComm_recv.hpp"
-#include "KokkosComm_send.hpp"
-#include "KokkosComm_alltoall.hpp"
-#include "KokkosComm_barrier.hpp"
-#include "KokkosComm_concepts.hpp"
+#include "impl/KokkosComm_isend.hpp"
+#include "impl/KokkosComm_irecv.hpp"
+#include "impl/KokkosComm_recv.hpp"
+#include "impl/KokkosComm_send.hpp"
+#include "impl/KokkosComm_alltoall.hpp"
+#include "impl/KokkosComm_barrier.hpp"
+#include "impl/KokkosComm_concepts.hpp"
 #include "KokkosComm_comm_modes.hpp"
 
 #include <Kokkos_Core.hpp>

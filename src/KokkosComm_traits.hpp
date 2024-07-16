@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "KokkosComm_concepts.hpp"
+#include "impl/KokkosComm_concepts.hpp"
 
 #include <type_traits>
 

@@ -27,8 +27,6 @@ message(STATUS "Kokkos Comm: MPI_CXX_LIBRARIES =           ${MPI_CXX_LIBRARIES}"
 include(cmake/flags.cmake)
 add_subdirectory(src)
 kokkoscomm_add_cxx_flags(TARGET KokkosComm INTERFACE)
-message(STATUS ${KOKKOSCOMM_PUBLIC_HEADERS})
-set_target_properties(KokkosComm PROPERTIES PUBLIC_HEADER "${KOKKOSCOMM_PUBLIC_HEADERS}")
 
 ## Version config file
 set(KOKKOSCOMM_VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR} CACHE STRING "" FORCE)
@@ -75,6 +73,12 @@ install(
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+# install the include tree
+install(
+    DIRECTORY "src/"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.hpp")
+# install the configured files
 install(
     DIRECTORY "${PROJECT_BINARY_DIR}/src/"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
