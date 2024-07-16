@@ -25,10 +25,7 @@ template <typename Scalar>
 MPI_Datatype mpi_type() {
   using T = std::decay_t<Scalar>;
 
-  if constexpr (std::is_same_v<T, std::byte>)
-    return MPI_BYTE;
-
-  else if constexpr (std::is_same_v<T, char>)
+  if constexpr (std::is_same_v<T, char>)
     return MPI_CHAR;
   else if constexpr (std::is_same_v<T, unsigned char>)
     return MPI_UNSIGNED_CHAR;
@@ -98,6 +95,9 @@ MPI_Datatype mpi_type() {
     return MPI_COMPLEX;
   else if constexpr (std::is_same_v<T, Kokkos::complex<double>>)
     return MPI_DOUBLE_COMPLEX;
+
+  else if constexpr (std::is_trivially_copyable_v<T>)
+    return MPI_BYTE;
 
   else {
     static_assert(std::is_void_v<T>, "mpi_type not implemented");
