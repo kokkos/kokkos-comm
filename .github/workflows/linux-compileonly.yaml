@@ -66,5 +66,5 @@ jobs:
           cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
       - name: Build Kokkos Comm
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DCMAKE_CXX_COMPILER="$KOKKOS_SRC/bin/nvcc_wrapper" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release
+          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DCMAKE_CXX_COMPILER="$KOKKOS_SRC/bin/nvcc_wrapper" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release -DKokkosComm_ENABLE_TESTS=ON -DKokkosComm_ENABLE_PERFTESTS=ON
           VERBOSE=1 cmake --build "$COMM_BUILD"
