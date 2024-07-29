@@ -29,6 +29,12 @@ Alternatively, you can use docker/podman: (expects $PWD to be the kokkos-comm tr
   shopt -s globstar
   podman run -v $PWD:/src xianpengshen/clang-tools:14 clang-format -i {src,unit_tests,perf_tests}/**/*.[ch]pp
 
+Site-Specific Documentation
+---------------------------
+
+These sites may be non-public and usually require credentials or affiliation at the institution to access.
+
+* `Sandia National Laboratories <https://gitlab-ex.sandia.gov/cwpears/kokkos-comm-internal/-/wikis/home>`_
 
 Behavioral Expectations
 -----------------------
