@@ -14,12 +14,24 @@
 //
 //@HEADER
 
-#include <gtest/gtest.h>
+#pragma once
 
-#include "KokkosComm/KokkosComm.hpp"
+#include "KokkosComm/traits.hpp"
+#include "KokkosComm/concepts.hpp"
 
-namespace {
+#include "packer.hpp"
 
-TEST(Barrier, 0) { KokkosComm::barrier(KokkosComm::Handle<>{}); }
+namespace KokkosComm {
 
-}  // namespace
+template <typename T>
+struct PackTraits {
+  static_assert(std::is_void_v<T>, "KokkosComm::PackTraits not specialized for requested type");
+};
+
+/*! \brief This can be specialized to do custom behavior for a particular view*/
+template <KokkosView View>
+struct PackTraits<View> {
+  using packer_type = Impl::Packer::DeepCopy<View>;
+};
+
+}  // namespace KokkosComm

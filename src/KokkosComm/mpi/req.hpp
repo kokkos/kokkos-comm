@@ -20,9 +20,9 @@
 #include <utility>
 #include <functional>
 
-#include "KokkosComm_fwd.hpp"
+#include "KokkosComm/fwd.hpp"
 
-#include "KokkosComm_mpi.hpp"
+#include "mpi.hpp"
 
 namespace KokkosComm {
 

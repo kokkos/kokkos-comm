@@ -19,7 +19,7 @@
 // (NBCL), The Ohio State University.
 
 #include "test_utils.hpp"
-#include "KokkosComm.hpp"
+#include "KokkosComm/KokkosComm.hpp"
 
 template <typename Space, typename View>
 void osu_latency_Kokkos_Comm_sendrecv(benchmark::State &, MPI_Comm, KokkosComm::Handle<> &h, const View &v) {

@@ -16,22 +16,19 @@
 
 #pragma once
 
-#include "KokkosComm_traits.hpp"
-#include "KokkosComm_concepts.hpp"
+#include <utility>
 
-#include "KokkosComm_packer.hpp"
+#include <Kokkos_Core.hpp>
+
+#include "fwd.hpp"
+#include "concepts.hpp"
 
 namespace KokkosComm {
 
-template <typename T>
-struct PackTraits {
-  static_assert(std::is_void_v<T>, "KokkosComm::PackTraits not specialized for requested type");
-};
-
-/*! \brief This can be specialized to do custom behavior for a particular view*/
-template <KokkosView View>
-struct PackTraits<View> {
-  using packer_type = Impl::Packer::DeepCopy<View>;
-};
+template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          CommunicationSpace CommSpace   = DefaultCommunicationSpace>
+void barrier(Handle<ExecSpace, CommSpace> &&h) {
+  Impl::Barrier<ExecSpace, CommSpace>{std::forward<Handle<ExecSpace, CommSpace>>(h)};
+}
 
 }  // namespace KokkosComm

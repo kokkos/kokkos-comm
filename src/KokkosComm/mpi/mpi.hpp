@@ -16,26 +16,33 @@
 
 #pragma once
 
-#include "KokkosComm_concepts.hpp"
+#include <type_traits>
+
+#include "../concepts.hpp"
+#include "impl/include_mpi.hpp"
 
 namespace KokkosComm {
 
-namespace Impl {
-template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
-struct Barrier {
-  Barrier(Handle<ExecSpace, Mpi> &&h) {
-    h.space().fence("KokkosComm::Impl::Barrier");
-    MPI_Barrier(h.mpi_comm());
+// TODO: not sure what members this thing needs
+struct Mpi {
+  // TODO: just an example
+  static int world_size() {
+    int size;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    return size;
   }
-};
-}  // namespace Impl
 
-namespace mpi {
-inline void barrier(MPI_Comm comm) {
-  Kokkos::Tools::pushRegion("KokkosComm::mpi::barrier");
-  MPI_Barrier(comm);
-  Kokkos::Tools::popRegion();
-}
-}  // namespace mpi
+  // TODO: just an example
+  static int world_rank() {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    return rank;
+  }
+
+};  // struct Mpi
+
+// KokkosComm::Mpi is a KokkosComm::CommunicationSpace
+template <>
+struct Impl::is_communication_space<KokkosComm::Mpi> : public std::true_type {};
 
 }  // namespace KokkosComm

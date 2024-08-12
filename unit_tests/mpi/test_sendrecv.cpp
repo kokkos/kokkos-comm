@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 #include <type_traits>
 
-#include "KokkosComm.hpp"
+#include "KokkosComm/KokkosComm.hpp"
 
 namespace {
 

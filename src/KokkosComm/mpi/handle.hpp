@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include "KokkosComm_fwd.hpp"
+#include "KokkosComm/fwd.hpp"
 
-#include "KokkosComm_mpi_req.hpp"
+#include "req.hpp"
 
 namespace KokkosComm {
 

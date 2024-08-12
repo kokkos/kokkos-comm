@@ -18,10 +18,10 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "KokkosComm_concepts.hpp"
-#include "KokkosComm_traits.hpp"
-#include "impl/KokkosComm_pack_traits.hpp"
-#include "impl/KokkosComm_include_mpi.hpp"
+#include "KokkosComm/concepts.hpp"
+#include "KokkosComm/traits.hpp"
+#include "impl/pack_traits.hpp"
+#include "impl/include_mpi.hpp"
 
 namespace KokkosComm::mpi {
 

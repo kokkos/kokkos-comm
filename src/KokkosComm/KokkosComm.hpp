@@ -16,28 +16,28 @@
 
 #pragma once
 
-#include "KokkosComm_fwd.hpp"
+#include "fwd.hpp"
 
 // transport declarations
 // TODO: could probably be moved to a per-transport file to be included
 #if defined(KOKKOSCOMM_ENABLE_MPI)
-#include "mpi/KokkosComm_mpi.hpp"
-#include "mpi/KokkosComm_mpi_send.hpp"
-#include "mpi/KokkosComm_mpi_allgather.hpp"
-#include "mpi/KokkosComm_mpi_alltoall.hpp"
-#include "mpi/KokkosComm_mpi_barrier.hpp"
-#include "mpi/KokkosComm_mpi_handle.hpp"
-#include "mpi/KokkosComm_mpi_irecv.hpp"
-#include "mpi/KokkosComm_mpi_isend.hpp"
-#include "mpi/KokkosComm_mpi_recv.hpp"
-#include "mpi/KokkosComm_mpi_reduce.hpp"
+#include "mpi/mpi.hpp"
+#include "mpi/send.hpp"
+#include "mpi/allgather.hpp"
+#include "mpi/alltoall.hpp"
+#include "mpi/barrier.hpp"
+#include "mpi/handle.hpp"
+#include "mpi/irecv.hpp"
+#include "mpi/isend.hpp"
+#include "mpi/recv.hpp"
+#include "mpi/reduce.hpp"
 #else
 #error at least one transport must be defined
 #endif
 
-#include "KokkosComm_concepts.hpp"
-#include "KokkosComm_point_to_point.hpp"
-#include "KokkosComm_collective.hpp"
+#include "concepts.hpp"
+#include "point_to_point.hpp"
+#include "collective.hpp"
 
 #include <Kokkos_Core.hpp>
 

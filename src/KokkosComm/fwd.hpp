@@ -18,7 +18,7 @@
 
 #include <vector>
 
-#include "KokkosComm_concepts.hpp"
+#include "concepts.hpp"
 #include "KokkosComm_config.hpp"
 
 namespace KokkosComm {

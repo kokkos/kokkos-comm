@@ -18,9 +18,9 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "KokkosComm_mpi_commmode.hpp"
-#include "impl/KokkosComm_pack_traits.hpp"
-#include "impl/KokkosComm_include_mpi.hpp"
+#include "commmode.hpp"
+#include "impl/pack_traits.hpp"
+#include "impl/include_mpi.hpp"
 
 namespace KokkosComm::mpi {
 

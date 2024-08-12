@@ -15,14 +15,14 @@
 //@HEADER
 
 /*! \brief Defines a common interface for Kokkos::View-like types
-    \file KokkosComm_traits.hpp
+    \file traits.hpp
 */
 
 #pragma once
 
 #include <type_traits>
 
-#include "KokkosComm_concepts.hpp"
+#include "concepts.hpp"
 
 namespace KokkosComm {
 
