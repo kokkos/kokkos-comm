@@ -6,7 +6,7 @@ Point-to-point
 
 .. cpp:namespace:: KokkosComm
 
-.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> send(Handle<ExecSpace, TRANSPORT> &h, SendView &sv, int dest, int tag)
+.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> send(Handle<ExecSpace, TRANSPORT> &h, SendView &sv, int dest)
 
   Initiates a non-blocking send operation.
 
@@ -20,11 +20,10 @@ Point-to-point
   :param h: A handle to the execution space and transport mechanism.
   :param sv: The Kokkos view to send.
   :param dest: The destination rank.
-  :param tag: The message tag.
 
   :return: A request object for the non-blocking send operation.
 
-.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> send(SendView &sv, int dest, int tag)
+.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> send(SendView &sv, int dest)
 
    Initiates a non-blocking send operation using a default handle.
 
@@ -37,7 +36,6 @@ Point-to-point
 
    :param sv: The Kokkos view to send.
    :param dest: The destination rank.
-   :param tag: The message tag.
 
    :return: A request object for the non-blocking send operation.
 
@@ -48,7 +46,7 @@ Point-to-point
 
 
 
-.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> recv(Handle<ExecSpace, TRANSPORT> &h, RecvView &rv, int src, int tag)
+.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> recv(Handle<ExecSpace, TRANSPORT> &h, RecvView &rv, int src)
 
    Initiates a non-blocking receive operation.
 
@@ -62,7 +60,6 @@ Point-to-point
    :param h: A handle to the execution space and transport mechanism.
    :param rv: The Kokkos view where the received data will be stored.
    :param src: The source rank from which to receive data.
-   :param tag: The message tag to identify the communication.
 
    :return: A request object of type `Req<TRANSPORT>` representing the non-blocking receive operation.
 
@@ -77,7 +74,7 @@ Point-to-point
 
 
 
-.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> recv(RecvView &rv, int src, int tag)
+.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, Transport TRANSPORT = DefaultTransport> Req<TRANSPORT> recv(RecvView &rv, int src)
 
    Initiates a non-blocking receive operation using a default handle.
 
@@ -90,7 +87,6 @@ Point-to-point
 
    :param rv: The Kokkos view where the received data will be stored.
    :param src: The source rank from which to receive data.
-   :param tag: The message tag to identify the communication.
 
    :return: A request object of type `Req<TRANSPORT>` representing the non-blocking receive operation.
 

@@ -50,15 +50,15 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, in
 
   std::vector<KokkosComm::Req<>> reqs;
   // std::cerr << get_rank(rx, ry) << " -> " << get_rank(xp1, ry) << "\n";
-  reqs.push_back(KokkosComm::send(h, xp1_s, get_rank(xp1, ry), 0));
-  reqs.push_back(KokkosComm::send(h, xm1_s, get_rank(xm1, ry), 1));
-  reqs.push_back(KokkosComm::send(h, yp1_s, get_rank(rx, yp1), 2));
-  reqs.push_back(KokkosComm::send(h, ym1_s, get_rank(rx, ym1), 3));
+  reqs.push_back(KokkosComm::send(h, xp1_s, get_rank(xp1, ry)));
+  reqs.push_back(KokkosComm::send(h, xm1_s, get_rank(xm1, ry)));
+  reqs.push_back(KokkosComm::send(h, yp1_s, get_rank(rx, yp1)));
+  reqs.push_back(KokkosComm::send(h, ym1_s, get_rank(rx, ym1)));
 
-  reqs.push_back(KokkosComm::recv(h, xm1_r, get_rank(xm1, ry), 0));
-  reqs.push_back(KokkosComm::recv(h, xp1_r, get_rank(xp1, ry), 1));
-  reqs.push_back(KokkosComm::recv(h, ym1_r, get_rank(rx, ym1), 2));
-  reqs.push_back(KokkosComm::recv(h, yp1_r, get_rank(rx, yp1), 3));
+  reqs.push_back(KokkosComm::recv(h, xm1_r, get_rank(xm1, ry)));
+  reqs.push_back(KokkosComm::recv(h, xp1_r, get_rank(xp1, ry)));
+  reqs.push_back(KokkosComm::recv(h, ym1_r, get_rank(rx, ym1)));
+  reqs.push_back(KokkosComm::recv(h, yp1_r, get_rank(rx, yp1)));
 
   // wait for comm
   KokkosComm::wait_all(reqs);

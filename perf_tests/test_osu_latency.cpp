@@ -24,9 +24,9 @@
 template <typename Space, typename View>
 void osu_latency_Kokkos_Comm_sendrecv(benchmark::State &, MPI_Comm, KokkosComm::Handle<> &h, const View &v) {
   if (h.rank() == 0) {
-    KokkosComm::wait(KokkosComm::send(h, v, 1, 1));
+    KokkosComm::wait(KokkosComm::send(h, v, 1));
   } else if (h.rank() == 1) {
-    KokkosComm::wait(KokkosComm::recv(h, v, 0, 1));
+    KokkosComm::wait(KokkosComm::recv(h, v, 0));
   }
 }
 

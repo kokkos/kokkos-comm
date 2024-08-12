@@ -46,10 +46,10 @@ void test_1d(const View1D &a) {
     int dst = 1;
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
-    KokkosComm::wait(KokkosComm::send(h, a, dst, 0));
+    KokkosComm::wait(KokkosComm::send(h, a, dst));
   } else if (1 == h.rank()) {
     int src = 0;
-    KokkosComm::wait(KokkosComm::recv(h, a, src, 0));
+    KokkosComm::wait(KokkosComm::recv(h, a, src));
     int errs;
     Kokkos::parallel_reduce(
         a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
@@ -74,10 +74,10 @@ void test_2d(const View2D &a) {
     int dst = 1;
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(int i, int j) { a(i, j) = i * a.extent(0) + j; });
-    KokkosComm::wait(KokkosComm::send(h, a, dst, 0));
+    KokkosComm::wait(KokkosComm::send(h, a, dst));
   } else if (1 == h.rank()) {
     int src = 0;
-    KokkosComm::wait(KokkosComm::recv(h, a, src, 0));
+    KokkosComm::wait(KokkosComm::recv(h, a, src));
     int errs;
     Kokkos::parallel_reduce(
         policy, KOKKOS_LAMBDA(int i, int j, int &lsum) { lsum += a(i, j) != Scalar(i * a.extent(0) + j); }, errs);

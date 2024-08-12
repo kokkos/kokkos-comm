@@ -20,6 +20,7 @@
 
 #include "KokkosComm_mpi.hpp"
 #include "impl/KokkosComm_types.hpp"
+#include "impl/KokkosComm_tags.hpp"
 #include "KokkosComm_mpi_commmode.hpp"
 
 namespace KokkosComm {
@@ -62,8 +63,8 @@ Req<Mpi> isend_impl(Handle<ExecSpace, Mpi> &h, const SendView &sv, int dest, int
 // Implementation of KokkosComm::Send
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
 struct Send<SendView, ExecSpace, Mpi> {
-  static Req<Mpi> execute(Handle<ExecSpace, Mpi> &h, const SendView &sv, int dest, int tag) {
-    return isend_impl<ExecSpace, SendView>(h, sv, dest, tag, mpi::DefaultCommMode{});
+  static Req<Mpi> execute(Handle<ExecSpace, Mpi> &h, const SendView &sv, int dest) {
+    return isend_impl<ExecSpace, SendView>(h, sv, dest, POINTTOPOINT_TAG, mpi::DefaultCommMode{});
   }
 };
 
