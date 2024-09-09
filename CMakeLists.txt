@@ -6,11 +6,13 @@ project(KokkosComm VERSION 0.0.2)
 
 option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" OFF)
 option(KokkosComm_ENABLE_TESTS "Build KokkosComm perf tests" OFF)
+option(KokkosComm_ENABLE_MPI "Build KokkosComm with MPI transport" ON)
 
 
 ## resolve options
 set(KOKKOSCOMM_ENABLE_PERFTESTS ${KokkosComm_ENABLE_PERFTESTS} CACHE BOOL "" FORCE)
 set(KOKKOSCOMM_ENABLE_TESTS ${KokkosComm_ENABLE_TESTS} CACHE BOOL "" FORCE)
+set(KOKKOSCOMM_ENABLE_MPI ${KokkosComm_ENABLE_MPI} CACHE BOOL "" FORCE)
 
 find_package(Kokkos REQUIRED)
 find_package(MPI REQUIRED)

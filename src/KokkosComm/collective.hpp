@@ -16,8 +16,19 @@
 
 #pragma once
 
-#define KOKKOSCOMM_VERSION_MAJOR @KOKKOSCOMM_VERSION_MAJOR@
-#define KOKKOSCOMM_VERSION_MINOR @KOKKOSCOMM_VERSION_MINOR@
-#define KOKKOSCOMM_VERSION_PATCH @KOKKOSCOMM_VERSION_PATCH@
+#include <utility>
 
-#cmakedefine KOKKOSCOMM_ENABLE_MPI
+#include <Kokkos_Core.hpp>
+
+#include "fwd.hpp"
+#include "concepts.hpp"
+
+namespace KokkosComm {
+
+template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          CommunicationSpace CommSpace   = DefaultCommunicationSpace>
+void barrier(Handle<ExecSpace, CommSpace> &&h) {
+  Impl::Barrier<ExecSpace, CommSpace>{std::forward<Handle<ExecSpace, CommSpace>>(h)};
+}
+
+}  // namespace KokkosComm

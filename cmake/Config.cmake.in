@@ -8,6 +8,8 @@ include(CMakeFindDependencyMacro)
 find_dependency(MPI)
 find_dependency(Kokkos)
 
+set(KOKKOSCOMM_ENABLE_MPI @KOKKOSCOMM_ENABLE_MPI@)
+
 ## FIXME: do we need this?
 set(KokkosComm_INCLUDE_DIR   "@CMAKE_INSTALL_FULL_INCLUDEDIR@" )
 set(KokkosComm_DATA_DIR   "@CMAKE_INSTALL_PREFIX@/@RELATIVE_DATA_INSTALL_DIR@" )

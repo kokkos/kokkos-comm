@@ -16,8 +16,26 @@
 
 #pragma once
 
-#define KOKKOSCOMM_VERSION_MAJOR @KOKKOSCOMM_VERSION_MAJOR@
-#define KOKKOSCOMM_VERSION_MINOR @KOKKOSCOMM_VERSION_MINOR@
-#define KOKKOSCOMM_VERSION_PATCH @KOKKOSCOMM_VERSION_PATCH@
+#include "KokkosComm/concepts.hpp"
 
-#cmakedefine KOKKOSCOMM_ENABLE_MPI
+namespace KokkosComm {
+
+namespace Impl {
+template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
+struct Barrier {
+  Barrier(Handle<ExecSpace, Mpi> &&h) {
+    h.space().fence("KokkosComm::Impl::Barrier");
+    MPI_Barrier(h.mpi_comm());
+  }
+};
+}  // namespace Impl
+
+namespace mpi {
+inline void barrier(MPI_Comm comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::mpi::barrier");
+  MPI_Barrier(comm);
+  Kokkos::Tools::popRegion();
+}
+}  // namespace mpi
+
+}  // namespace KokkosComm

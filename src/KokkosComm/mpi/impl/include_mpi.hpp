@@ -16,8 +16,13 @@
 
 #pragma once
 
-#define KOKKOSCOMM_VERSION_MAJOR @KOKKOSCOMM_VERSION_MAJOR@
-#define KOKKOSCOMM_VERSION_MINOR @KOKKOSCOMM_VERSION_MINOR@
-#define KOKKOSCOMM_VERSION_PATCH @KOKKOSCOMM_VERSION_PATCH@
+#define KOKKOSCOMM_GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
-#cmakedefine KOKKOSCOMM_ENABLE_MPI
+#if KOKKOSCOMM_GCC_VERSION >= 11400
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#include <mpi.h>
+#pragma GCC diagnostic pop
+#else
+#include <mpi.h>
+#endif

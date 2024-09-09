@@ -3,7 +3,6 @@
 # To get started with mdBook see: https://rust-lang.github.io/mdBook/index.html
 #
 name: Deploy sphinx site to Pages
-run-name: Deploy sphinx site to Pages
 
 on:
   # Runs on pushes targeting the default branch

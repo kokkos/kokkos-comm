@@ -23,7 +23,7 @@
 #include <KokkosComm_config.hpp>
 #include <Kokkos_Core.hpp>
 
-#include "impl/KokkosComm_include_mpi.hpp"
+#include "KokkosComm/mpi/impl/include_mpi.hpp"
 
 class MpiEnvironment : public ::testing::Environment {
  public:

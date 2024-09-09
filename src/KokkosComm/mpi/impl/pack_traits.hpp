@@ -16,8 +16,22 @@
 
 #pragma once
 
-#define KOKKOSCOMM_VERSION_MAJOR @KOKKOSCOMM_VERSION_MAJOR@
-#define KOKKOSCOMM_VERSION_MINOR @KOKKOSCOMM_VERSION_MINOR@
-#define KOKKOSCOMM_VERSION_PATCH @KOKKOSCOMM_VERSION_PATCH@
+#include "KokkosComm/traits.hpp"
+#include "KokkosComm/concepts.hpp"
 
-#cmakedefine KOKKOSCOMM_ENABLE_MPI
+#include "packer.hpp"
+
+namespace KokkosComm {
+
+template <typename T>
+struct PackTraits {
+  static_assert(std::is_void_v<T>, "KokkosComm::PackTraits not specialized for requested type");
+};
+
+/*! \brief This can be specialized to do custom behavior for a particular view*/
+template <KokkosView View>
+struct PackTraits<View> {
+  using packer_type = Impl::Packer::DeepCopy<View>;
+};
+
+}  // namespace KokkosComm

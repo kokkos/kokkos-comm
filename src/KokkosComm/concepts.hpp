@@ -16,8 +16,25 @@
 
 #pragma once
 
-#define KOKKOSCOMM_VERSION_MAJOR @KOKKOSCOMM_VERSION_MAJOR@
-#define KOKKOSCOMM_VERSION_MINOR @KOKKOSCOMM_VERSION_MINOR@
-#define KOKKOSCOMM_VERSION_PATCH @KOKKOSCOMM_VERSION_PATCH@
+#include <type_traits>
 
-#cmakedefine KOKKOSCOMM_ENABLE_MPI
+#include <Kokkos_Core.hpp>
+
+namespace KokkosComm {
+
+namespace Impl {
+// fallback - most types are not a KokkosComm transport
+template <typename T>
+struct is_communication_space : public std::false_type {};
+}  // namespace Impl
+
+template <typename T>
+concept KokkosView = Kokkos::is_view_v<T>;
+
+template <typename T>
+concept KokkosExecutionSpace = Kokkos::is_execution_space_v<T>;
+
+template <typename T>
+concept CommunicationSpace = KokkosComm::Impl::is_communication_space<T>::value;
+
+}  // namespace KokkosComm
