@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "concepts.hpp"
-#include "KokkosComm_config.hpp"
+#include <KokkosComm/config.hpp>
 
 namespace KokkosComm {
 #if defined(KOKKOSCOMM_ENABLE_MPI)
