@@ -23,7 +23,9 @@ target_sources(
     test_2dhalo.cpp
     test_osu_latency.cpp
 )
-kokkoscomm_add_cxx_flags(TARGET perf-test-main)
+if(KOKKOSCOMM_ENABLE_TESTS)
+  kokkoscomm_add_cxx_flags(TARGET perf-test-main)
+endif()
 target_link_libraries(
   perf-test-main
   KokkosComm::KokkosComm

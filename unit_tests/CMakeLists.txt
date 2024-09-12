@@ -87,7 +87,9 @@ target_sources(
     mpi/test_reduce.cpp
     mpi/test_allgather.cpp
 )
-kokkoscomm_add_cxx_flags(TARGET test-main)
+if(KOKKOSCOMM_ENABLE_TESTS)
+  kokkoscomm_add_cxx_flags(TARGET test-main)
+endif()
 target_link_libraries(
   test-main
   PRIVATE
