@@ -21,7 +21,7 @@ project(
   VERSION 0.2.0
   LANGUAGES
     CXX
-  DESCRIPTION "Performance tests for the KokkosComm experimental communication layer"
+  DESCRIPTION "Performance tests for the KokkosComm experimental communication interfaces"
 )
 
 enable_testing()

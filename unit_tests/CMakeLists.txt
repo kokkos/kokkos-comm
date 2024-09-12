@@ -21,7 +21,7 @@ project(
   VERSION 0.2.0
   LANGUAGES
     CXX
-  DESCRIPTION "Unit tests for the KokkosComm experimental communication layer"
+  DESCRIPTION "Unit tests for the KokkosComm experimental communication interfaces"
 )
 
 enable_testing()
