@@ -21,60 +21,76 @@ include(${PROJECT_SOURCE_DIR}/cmake/flags.cmake)
 add_library(KokkosComm INTERFACE)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
 
+# Public headers
 target_sources(
   KokkosComm
   INTERFACE
-    FILE_SET ${TARGET_LIBRARY}_public_headers
+    FILE_SET kokkoscomm_public_headers
     TYPE HEADERS
     BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-    FILES
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/KokkosComm.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/collective.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/concepts.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/fwd.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/point_to_point.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/traits.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/config.hpp # Generated at configuration-time
+    FILES KokkosComm.hpp collective.hpp concepts.hpp fwd.hpp point_to_point.hpp traits.hpp
 )
+
+# Implementation detail headers
 target_sources(
   KokkosComm
-  PRIVATE
-    FILE_SET ${TARGET_LIBRARY}_impl_headers
+  INTERFACE
+    FILE_SET kokkoscomm_impl_headers
     TYPE HEADERS
     BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-    FILES ${PROJECT_SOURCE_DIR}/src/KokkosComm/impl/KokkosComm_contiguous.hpp
+    FILES impl/KokkosComm_contiguous.hpp
+)
+
+if(KOKKOSCOMM_ENABLE_MPI)
+  # Public MPI headers
+  target_sources(
+    KokkosComm
+    INTERFACE
+      FILE_SET kokkoscomm_mpi_headers
+      TYPE HEADERS
+      BASE_DIRS ${PROJECT_SOURCE_DIR}/src
+      FILES
+        mpi/mpi.hpp
+        mpi/allgather.hpp
+        mpi/alltoall.hpp
+        mpi/barrier.hpp
+        mpi/commmode.hpp
+        mpi/handle.hpp
+        mpi/irecv.hpp
+        mpi/isend.hpp
+        mpi/recv.hpp
+        mpi/reduce.hpp
+        mpi/req.hpp
+        mpi/send.hpp
+  )
+
+  # Implementation detail MPI headers
+  target_sources(
+    KokkosComm
+    INTERFACE
+      FILE_SET kokkoscomm_mpi_impl_headers
+      TYPE HEADERS
+      BASE_DIRS ${PROJECT_SOURCE_DIR}/src
+      FILES mpi/impl/include_mpi.hpp mpi/impl/pack_traits.hpp mpi/impl/packer.hpp mpi/impl/tags.hpp mpi/impl/types.hpp
+  )
+endif()
+
+# Generate version config header
+set(KOKKOSCOMM_VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR} CACHE STRING "" FORCE)
+set(KOKKOSCOMM_VERSION_MINOR ${CMAKE_PROJECT_VERSION_MINOR} CACHE STRING "" FORCE)
+set(KOKKOSCOMM_VERSION_PATCH ${CMAKE_PROJECT_VERSION_PATCH} CACHE STRING "" FORCE)
+configure_file(
+  ${PROJECT_SOURCE_DIR}/cmake/KokkosComm_config.hpp.in
+  ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp
+  @ONLY
 )
 target_sources(
   KokkosComm
   INTERFACE
-    FILE_SET ${TARGET_LIBRARY}_mpi_headers
+    FILE_SET kokkoscomm_config_headers
     TYPE HEADERS
-    BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-    FILES
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/mpi.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/allgather.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/alltoall.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/barrier.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/commmode.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/handle.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/irecv.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/isend.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/recv.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/reduce.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/req.hpp
-      ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/send.hpp
-)
-target_sources(
-  KokkosComm
-  PRIVATE
-    FILE_SET ${TARGET_LIBRARY}_mpi_impl_headers
-    TYPE HEADERS
-    BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-    FILES ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/impl/include_mpi.hpp
-    FILES ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/impl/pack_traits.hpp
-    FILES ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/impl/packer.hpp
-    FILES ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/impl/tags.hpp
-    FILES ${PROJECT_SOURCE_DIR}/src/KokkosComm/mpi/impl/types.hpp
+    BASE_DIRS ${CMAKE_BINARY_DIR}/src
+    FILES ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp
 )
 
 # Compile flags & features
@@ -82,34 +98,26 @@ kokkoscomm_add_cxx_flags(TARGET KokkosComm INTERFACE)
 
 # Linking
 target_link_libraries(KokkosComm INTERFACE Kokkos::kokkos)
-if(DEFINED KOKKOSCOMM_ENABLE_MPI)
+if(KOKKOSCOMM_ENABLE_MPI)
   target_link_libraries(KokkosComm INTERFACE MPI::MPI_CXX)
 endif()
 
 # -- PACKAGING -- #
 include(GNUInstallDirs)
 
-# Generate version header file
-set(KOKKOSCOMM_VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR} CACHE STRING "" FORCE)
-set(KOKKOSCOMM_VERSION_MINOR ${CMAKE_PROJECT_VERSION_MINOR} CACHE STRING "" FORCE)
-set(KOKKOSCOMM_VERSION_PATCH ${CMAKE_PROJECT_VERSION_PATCH} CACHE STRING "" FORCE)
-configure_file(
-  ${PROJECT_SOURCE_DIR}/cmake/KokkosComm_config.hpp.in
-  ${PROJECT_SOURCE_DIR}/src/KokkosComm/config.hpp
-  @ONLY
-)
-
-# Install all headers
+# Install library
 install(
   TARGETS
     ${PROJECT_NAME}
   EXPORT KokkosCommTargets
   FILE_SET
-  ${TARGET_LIBRARY}_public_headers
+  kokkoscomm_public_headers
   FILE_SET
-  ${TARGET_LIBRARY}_impl_headers
+  kokkoscomm_impl_headers
   FILE_SET
-  ${TARGET_LIBRARY}_mpi_headers
+  kokkoscomm_mpi_headers
   FILE_SET
-  ${TARGET_LIBRARY}_mpi_impl_headers
+  kokkoscomm_mpi_impl_headers
+  FILE_SET
+  kokkoscomm_config_headers
 )
