@@ -26,6 +26,7 @@ project(
     CXX
   VERSION 0.2.0
   DESCRIPTION "Experimental MPI interfaces (and more!) for the Kokkos C++ Performance Portability Programming ecosystem"
+  HOMEPAGE_URL "https://kokkos.org/kokkos-comm/"
 )
 
 option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" OFF)
@@ -38,16 +39,8 @@ set(KOKKOSCOMM_ENABLE_TESTS ${KokkosComm_ENABLE_TESTS} CACHE BOOL "" FORCE)
 set(KOKKOSCOMM_ENABLE_MPI ${KokkosComm_ENABLE_MPI} CACHE BOOL "" FORCE)
 
 find_package(Kokkos REQUIRED)
-message(STATUS "[KokkosComm] Kokkos_VERSION:              ${Kokkos_VERSION}")
-if(DEFINED KOKKOSCOMM_ENABLE_MPI)
+if(KOKKOSCOMM_ENABLE_MPI)
   find_package(MPI REQUIRED)
-  message(STATUS "[KokkosComm] MPI_VERSION:                 ${MPI_VERSION}")
-  message(STATUS "[KokkosComm] MPI_CXX_COMPILER:            ${MPI_CXX_COMPILER}")
-  message(STATUS "[KokkosComm] MPI_CXX_COMPILE_OPTIONS:     ${MPI_CXX_COMPILE_OPTIONS}")
-  message(STATUS "[KokkosComm] MPI_CXX_COMPILE_DEFINITIONS: ${MPI_CXX_COMPILE_DEFINITIONS}")
-  message(STATUS "[KokkosComm] MPI_CXX_INCLUDE_DIRS:        ${MPI_CXX_INCLUDE_DIRS}")
-  message(STATUS "[KokkosComm] MPI_CXX_LINK_FLAGS:          ${MPI_CXX_LINK_FLAGS}")
-  message(STATUS "[KokkosComm] MPI_CXX_LIBRARIES:           ${MPI_CXX_LIBRARIES}")
 endif()
 
 add_subdirectory(src)
@@ -77,18 +70,16 @@ write_basic_package_version_file(
   ARCH_INDEPENDENT # KokkosComm is a header-only library
 )
 
-# Install CMake package config & version files
+# Install CMake package files
 install(
   FILES
     ${PROJECT_BINARY_DIR}/cmake/${PROJECT_NAME}/${PROJECT_NAME}Config.cmake
     ${PROJECT_BINARY_DIR}/cmake/${PROJECT_NAME}/${PROJECT_NAME}Version.cmake
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
-
-# Install KokkosComm library
 install(
   EXPORT KokkosCommTargets
   FILE KokkosCommTargets.cmake
   NAMESPACE ${PROJECT_NAME}::
-  DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
