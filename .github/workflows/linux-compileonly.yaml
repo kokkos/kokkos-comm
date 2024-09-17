@@ -35,13 +35,13 @@ jobs:
         shell: bash # for shopt -s dotglob, which also moves hidden files
         run: |
           shopt -s dotglob && mv "$GITHUB_WORKSPACE"/* ${{ github.workspace }}
+      - name: Install packages
+        run: |
+          apt-get update && apt-get install -y wget git
       - name: Install CMake
         run: |
           wget https://github.com/Kitware/CMake/releases/download/v3.23.5/cmake-3.23.5-linux-x86_64.tar.gz
           sudo tar -C /usr/local --strip-components=1 -xf cmake-3.23.5-linux-x86_64.tar.gz
-      - name: Install packages
-        run: |
-          apt-get update && apt-get install -y wget git
       # Build a CUDA-enabled OpenMPI. This is probably not necessary for a compile-only test.
       - name: Download MPI
         run: |
