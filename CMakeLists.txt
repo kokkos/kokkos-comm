@@ -53,6 +53,17 @@ endif()
 
 # -- PACKAGING -- #
 include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+
+# Generate version config header
+set(KOKKOSCOMM_VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR} CACHE STRING "" FORCE)
+set(KOKKOSCOMM_VERSION_MINOR ${CMAKE_PROJECT_VERSION_MINOR} CACHE STRING "" FORCE)
+set(KOKKOSCOMM_VERSION_PATCH ${CMAKE_PROJECT_VERSION_PATCH} CACHE STRING "" FORCE)
+configure_file(
+  ${PROJECT_SOURCE_DIR}/cmake/KokkosComm_config.hpp.in
+  ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp
+  @ONLY
+)
 
 # Generate package config file
 configure_package_config_file(
