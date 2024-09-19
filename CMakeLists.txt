@@ -57,15 +57,15 @@ include(CMakePackageConfigHelpers)
 # Generate package config file
 configure_package_config_file(
   ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
-  ${PROJECT_BINARY_DIR}/cmake/${PROJECT_NAME}/${PROJECT_NAME}Config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
   NO_SET_AND_CHECK_MACRO
   NO_CHECK_REQUIRED_COMPONENTS_MACRO
 )
 
 # Generate package version file
 write_basic_package_version_file(
-  ${PROJECT_BINARY_DIR}/cmake/${PROJECT_NAME}/${PROJECT_NAME}Version.cmake
+  ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake
   COMPATIBILITY SameMajorVersion
   ARCH_INDEPENDENT # KokkosComm is a header-only library
 )
@@ -73,13 +73,13 @@ write_basic_package_version_file(
 # Install CMake package files
 install(
   FILES
-    ${PROJECT_BINARY_DIR}/cmake/${PROJECT_NAME}/${PROJECT_NAME}Config.cmake
-    ${PROJECT_BINARY_DIR}/cmake/${PROJECT_NAME}/${PROJECT_NAME}Version.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+    ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake
+    ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
 )
 install(
   EXPORT KokkosCommTargets
   FILE KokkosCommTargets.cmake
-  NAMESPACE ${PROJECT_NAME}::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  NAMESPACE KokkosComm::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
 )
