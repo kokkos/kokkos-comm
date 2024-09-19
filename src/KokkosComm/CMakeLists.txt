@@ -16,8 +16,6 @@
 
 set(TARGET_LIBRARY kokkoscomm)
 
-include(${PROJECT_SOURCE_DIR}/cmake/flags.cmake)
-
 add_library(KokkosComm INTERFACE)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
 
@@ -39,6 +37,16 @@ target_sources(
     TYPE HEADERS
     BASE_DIRS ${PROJECT_SOURCE_DIR}/src
     FILES impl/KokkosComm_contiguous.hpp
+)
+
+# Configuration header
+target_sources(
+  KokkosComm
+  INTERFACE
+    FILE_SET kokkoscomm_config_headers
+    TYPE HEADERS
+    BASE_DIRS ${CMAKE_BINARY_DIR}/src
+    FILES ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp
 )
 
 if(KOKKOSCOMM_ENABLE_MPI)
@@ -75,31 +83,44 @@ if(KOKKOSCOMM_ENABLE_MPI)
   )
 endif()
 
-target_sources(
-  KokkosComm
-  INTERFACE
-    FILE_SET kokkoscomm_config_headers
-    TYPE HEADERS
-    BASE_DIRS ${CMAKE_BINARY_DIR}/src
-    FILES ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp
-)
+# --- COMPILE FLAGS --- #
+include(CheckCXXCompilerFlag)
 
-# Compile flags & features
-kokkoscomm_add_cxx_flags(TARGET KokkosComm INTERFACE)
+macro(kokkoscomm_check_and_add_compile_options)
+  set(target ${ARGV0})
+  set(flag ${ARGV1})
+
+  check_cxx_compiler_flag(${flag} HAS_${flag})
+  if(HAS_${flag})
+    target_compile_options(${target} INTERFACE ${flag})
+  endif()
+endmacro()
+
+# KokkosComm is a C++20 project
+add_library(KokkosCommFlags INTERFACE)
+add_library(KokkosComm::KokkosCommFlags ALIAS KokkosCommFlags)
+target_compile_features(KokkosCommFlags INTERFACE cxx_std_20)
+set_target_properties(KokkosCommFlags PROPERTIES CXX_EXTENSIONS OFF)
+
+kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wall)
+kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wextra)
+kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wshadow)
+kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wpedantic)
+kokkoscomm_check_and_add_compile_options(KokkosCommFlags -pedantic)
+kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wcast-align)
+kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wformat=2)
+kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wmissing-include-dirs)
+kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wno-gnu-zero-variadic-macro-arguments)
 
 # Linking
-target_link_libraries(KokkosComm INTERFACE Kokkos::kokkos)
+target_link_libraries(KokkosComm INTERFACE KokkosComm::KokkosCommFlags Kokkos::kokkos)
 if(KOKKOSCOMM_ENABLE_MPI)
   target_link_libraries(KokkosComm INTERFACE MPI::MPI_CXX)
 endif()
 
-# -- PACKAGING -- #
-include(GNUInstallDirs)
-
 # Install library
 install(
-  TARGETS
-    ${PROJECT_NAME}
+  TARGETS KokkosComm KokkosCommFlags
   EXPORT KokkosCommTargets
   FILE_SET
   kokkoscomm_public_headers
