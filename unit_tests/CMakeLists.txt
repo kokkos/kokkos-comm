@@ -86,6 +86,7 @@ target_sources(
     mpi/test_alltoall.cpp
     mpi/test_reduce.cpp
     mpi/test_allgather.cpp
+    mpi/test_waitany.cpp
 )
 target_link_libraries(
   test-main
