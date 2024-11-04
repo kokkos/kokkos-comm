@@ -82,7 +82,7 @@ if(KOKKOSCOMM_ENABLE_MPI)
 endif()
 
 # --- COMPILE FLAGS --- #
-src(CheckCXXCompilerFlag)
+include(CheckCXXCompilerFlag)
 
 macro(kokkoscomm_check_and_add_compile_options)
   set(target ${ARGV0})
