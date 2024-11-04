@@ -16,13 +16,12 @@
 
 #pragma once
 
+#include <KokkosComm/fwd.hpp>
+#include <KokkosComm/mpi/mpi.hpp>
+
 #include <vector>
 #include <utility>
 #include <functional>
-
-#include "KokkosComm/fwd.hpp"
-
-#include "mpi.hpp"
 
 namespace KokkosComm {
 

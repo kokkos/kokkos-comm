@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "include_mpi.hpp"
+#include <KokkosComm/mpi/impl/include_mpi.hpp>
 
 #include <Kokkos_Core.hpp>
 

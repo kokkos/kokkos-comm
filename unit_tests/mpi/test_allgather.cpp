@@ -14,9 +14,9 @@
 //
 //@HEADER
 
-#include <gtest/gtest.h>
+#include <KokkosComm/KokkosComm.hpp>
 
-#include "KokkosComm/KokkosComm.hpp"
+#include <gtest/gtest.h>
 
 namespace {
 
@@ -39,14 +39,12 @@ void test_allgather_0d() {
   Kokkos::View<Scalar *> rv("rv", size);
 
   // fill send buffer
-  Kokkos::parallel_for(
-      sv.extent(0), KOKKOS_LAMBDA(const int) { sv() = rank; });
+  Kokkos::parallel_for(sv.extent(0), KOKKOS_LAMBDA(const int) { sv() = rank; });
 
   KokkosComm::mpi::allgather(Kokkos::DefaultExecutionSpace(), sv, rv, MPI_COMM_WORLD);
 
   int errs;
-  Kokkos::parallel_reduce(
-      rv.extent(0), KOKKOS_LAMBDA(const int &src, int &lsum) { lsum += rv(src) != src; }, errs);
+  Kokkos::parallel_reduce(rv.extent(0), KOKKOS_LAMBDA(const int &src, int &lsum) { lsum += rv(src) != src; }, errs);
   EXPECT_EQ(errs, 0);
 }
 
@@ -64,8 +62,7 @@ void test_allgather_1d_contig() {
   Kokkos::View<Scalar *> rv("rv", size * nContrib);
 
   // fill send buffer
-  Kokkos::parallel_for(
-      sv.extent(0), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
+  Kokkos::parallel_for(sv.extent(0), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
 
   KokkosComm::mpi::allgather(Kokkos::DefaultExecutionSpace(), sv, rv, MPI_COMM_WORLD);
 

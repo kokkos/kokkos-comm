@@ -14,10 +14,11 @@
 //
 //@HEADER
 
-#include <gtest/gtest.h>
-#include <type_traits>
+#include <KokkosComm/KokkosComm.hpp>
 
-#include "KokkosComm/KokkosComm.hpp"
+#include <gtest/gtest.h>
+
+#include <type_traits>
 
 namespace {
 
@@ -49,15 +50,13 @@ void send_comm_mode_1d_contig() {
 
   if (0 == rank) {
     int dst = 1;
-    Kokkos::parallel_for(
-        a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
+    Kokkos::parallel_for(a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
     KokkosComm::mpi::send(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD, SendMode{});
   } else if (1 == rank) {
     int src = 0;
     KokkosComm::mpi::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
     int errs;
-    Kokkos::parallel_reduce(
-        a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != i; }, errs);
+    Kokkos::parallel_reduce(a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != i; }, errs);
     ASSERT_EQ(errs, 0);
   }
 }
@@ -77,15 +76,13 @@ void send_comm_mode_1d_noncontig() {
 
   if (0 == rank) {
     int dst = 1;
-    Kokkos::parallel_for(
-        a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
+    Kokkos::parallel_for(a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
     KokkosComm::mpi::send(Kokkos::DefaultExecutionSpace(), a, dst, 0, MPI_COMM_WORLD, SendMode{});
   } else if (1 == rank) {
     int src = 0;
     KokkosComm::mpi::recv(Kokkos::DefaultExecutionSpace(), a, src, 0, MPI_COMM_WORLD);
     int errs;
-    Kokkos::parallel_reduce(
-        a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != i; }, errs);
+    Kokkos::parallel_reduce(a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != i; }, errs);
     ASSERT_EQ(errs, 0);
   }
 }

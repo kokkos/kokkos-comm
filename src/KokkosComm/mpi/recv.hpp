@@ -16,12 +16,12 @@
 
 #pragma once
 
-#include <Kokkos_Core.hpp>
+#include <KokkosComm/concepts.hpp>
+#include <KokkosComm/traits.hpp>
+#include <KokkosComm/mpi/impl/pack_traits.hpp>
+#include <KokkosComm/mpi/impl/include_mpi.hpp>
 
-#include "KokkosComm/concepts.hpp"
-#include "KokkosComm/traits.hpp"
-#include "impl/pack_traits.hpp"
-#include "impl/include_mpi.hpp"
+#include <Kokkos_Core.hpp>
 
 namespace KokkosComm::mpi {
 

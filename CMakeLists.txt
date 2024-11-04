@@ -43,7 +43,7 @@ if(KOKKOSCOMM_ENABLE_MPI)
   find_package(MPI REQUIRED)
 endif()
 
-add_subdirectory(src)
+add_subdirectory(src/KokkosComm)
 if(KOKKOSCOMM_ENABLE_TESTS)
   add_subdirectory(unit_tests)
 endif()

@@ -18,8 +18,8 @@
 
 #include <type_traits>
 
-#include "../concepts.hpp"
-#include "impl/include_mpi.hpp"
+#include <KokkosComm/concepts.hpp>
+#include <KokkosComm/mpi/impl/include_mpi.hpp>
 
 namespace KokkosComm {
 

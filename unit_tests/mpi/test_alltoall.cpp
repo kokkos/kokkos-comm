@@ -14,9 +14,9 @@
 //
 //@HEADER
 
-#include <gtest/gtest.h>
+#include <KokkosComm/KokkosComm.hpp>
 
-#include "KokkosComm/KokkosComm.hpp"
+#include <gtest/gtest.h>
 
 namespace {
 
@@ -41,8 +41,7 @@ void test_alltoall_1d_contig() {
   Kokkos::View<Scalar *> rv("rv", size * nContrib);
 
   // fill send buffer
-  Kokkos::parallel_for(
-      sv.extent(0), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
+  Kokkos::parallel_for(sv.extent(0), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
 
   KokkosComm::Impl::alltoall(Kokkos::DefaultExecutionSpace(), sv, nContrib, rv, nContrib, MPI_COMM_WORLD);
 
@@ -71,8 +70,7 @@ void test_alltoall_1d_inplace_contig() {
   Kokkos::View<Scalar *> rv("rv", size * nContrib);
 
   // fill send buffer
-  Kokkos::parallel_for(
-      rv.extent(0), KOKKOS_LAMBDA(const int i) { rv(i) = rank + i; });
+  Kokkos::parallel_for(rv.extent(0), KOKKOS_LAMBDA(const int i) { rv(i) = rank + i; });
 
   KokkosComm::Impl::alltoall(Kokkos::DefaultExecutionSpace(), rv, nContrib, MPI_COMM_WORLD);
 
