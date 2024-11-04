@@ -20,8 +20,8 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "concepts.hpp"
-#include "traits.hpp"
+#include <KokkosComm/concepts.hpp>
+#include <KokkosComm/traits.hpp>
 
 namespace KokkosComm::Impl {
 

@@ -15,8 +15,7 @@
 //@HEADER
 
 #include "test_utils.hpp"
-
-#include "KokkosComm/KokkosComm.hpp"
+#include <KokkosComm/KokkosComm.hpp>
 
 template <KokkosComm::mpi::CommunicationMode Mode, typename Space, typename View>
 void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int rank, const View &v) {

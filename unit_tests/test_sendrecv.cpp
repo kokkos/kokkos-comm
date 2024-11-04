@@ -14,11 +14,10 @@
 //
 //@HEADER
 
-#include <gtest/gtest.h>
-
-#include "KokkosComm/KokkosComm.hpp"
-
 #include "view_builder.hpp"
+#include <KokkosComm/KokkosComm.hpp>
+
+#include <gtest/gtest.h>
 
 namespace {
 
@@ -44,15 +43,13 @@ void test_1d(const View1D &a) {
 
   if (0 == h.rank()) {
     int dst = 1;
-    Kokkos::parallel_for(
-        a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
+    Kokkos::parallel_for(a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; });
     KokkosComm::wait(KokkosComm::send(h, a, dst));
   } else if (1 == h.rank()) {
     int src = 0;
     KokkosComm::wait(KokkosComm::recv(h, a, src));
     int errs;
-    Kokkos::parallel_reduce(
-        a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
+    Kokkos::parallel_reduce(a.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += a(i) != Scalar(i); }, errs);
     ASSERT_EQ(errs, 0);
   }
 }
@@ -72,8 +69,7 @@ void test_2d(const View2D &a) {
 
   if (0 == h.rank()) {
     int dst = 1;
-    Kokkos::parallel_for(
-        policy, KOKKOS_LAMBDA(int i, int j) { a(i, j) = i * a.extent(0) + j; });
+    Kokkos::parallel_for(policy, KOKKOS_LAMBDA(int i, int j) { a(i, j) = i * a.extent(0) + j; });
     KokkosComm::wait(KokkosComm::send(h, a, dst));
   } else if (1 == h.rank()) {
     int src = 0;

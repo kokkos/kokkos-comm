@@ -46,7 +46,7 @@ if(KOKKOSCOMM_ENABLE_MPI)
 endif()
 kokkoscomm_set_mpi_vendor_variables()
 
-add_subdirectory(src)
+add_subdirectory(src/KokkosComm)
 if(KOKKOSCOMM_ENABLE_TESTS)
   enable_testing() # so we can run ctest at the top-level build dir
   add_subdirectory(unit_tests)

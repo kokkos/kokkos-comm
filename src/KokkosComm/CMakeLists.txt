@@ -14,8 +14,6 @@
 #
 #@HEADER
 
-set(TARGET_LIBRARY kokkoscomm)
-
 add_library(KokkosComm INTERFACE)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
 
@@ -79,12 +77,12 @@ if(KOKKOSCOMM_ENABLE_MPI)
       FILE_SET kokkoscomm_mpi_impl_headers
       TYPE HEADERS
       BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-      FILES mpi/impl/include_mpi.hpp mpi/impl/pack_traits.hpp mpi/impl/packer.hpp mpi/impl/tags.hpp mpi/impl/types.hpp
+      FILES mpi/impl/src_mpi.hpp mpi/impl/pack_traits.hpp mpi/impl/packer.hpp mpi/impl/tags.hpp mpi/impl/types.hpp
   )
 endif()
 
 # --- COMPILE FLAGS --- #
-include(CheckCXXCompilerFlag)
+src(CheckCXXCompilerFlag)
 
 macro(kokkoscomm_check_and_add_compile_options)
   set(target ${ARGV0})
@@ -109,7 +107,7 @@ kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wpedantic)
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -pedantic)
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wcast-align)
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wformat=2)
-kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wmissing-include-dirs)
+kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wmissing-src-dirs)
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wno-gnu-zero-variadic-macro-arguments)
 
 # Linking

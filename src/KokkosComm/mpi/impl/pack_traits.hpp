@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include "KokkosComm/traits.hpp"
-#include "KokkosComm/concepts.hpp"
+#include <KokkosComm/traits.hpp>
+#include <KokkosComm/concepts.hpp>
 
-#include "packer.hpp"
+#include <KokkosComm/mpi/impl/packer.hpp>
 
 namespace KokkosComm {
 
