@@ -16,11 +16,10 @@
 
 #pragma once
 
-#include <chrono>
-
 #include <benchmark/benchmark.h>
+#include <mpi.h>
 
-#include "KokkosComm/mpi/impl/include_mpi.hpp"
+#include <chrono>
 
 // F is a function that takes (state, MPI_Comm, args...)
 template <typename F, typename... Args>

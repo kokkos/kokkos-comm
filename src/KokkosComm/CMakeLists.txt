@@ -14,8 +14,6 @@
 #
 #@HEADER
 
-set(TARGET_LIBRARY kokkoscomm)
-
 add_library(KokkosComm INTERFACE)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
 
@@ -109,7 +107,7 @@ kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wpedantic)
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -pedantic)
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wcast-align)
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wformat=2)
-kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wmissing-include-dirs)
+kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wmissing-src-dirs)
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wno-gnu-zero-variadic-macro-arguments)
 
 # Linking

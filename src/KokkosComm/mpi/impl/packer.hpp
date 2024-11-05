@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include "KokkosComm/concepts.hpp"
-#include "KokkosComm/traits.hpp"
-#include "types.hpp"
-#include "include_mpi.hpp"
+#include <KokkosComm/concepts.hpp>
+#include <KokkosComm/traits.hpp>
+#include <KokkosComm/mpi/impl/types.hpp>
+#include <KokkosComm/mpi/impl/include_mpi.hpp>
 
 // todo: redo this using KokkosComm_contiguous
 

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "KokkosComm/concepts.hpp"
+#include <KokkosComm/concepts.hpp>
 
 namespace KokkosComm {
 

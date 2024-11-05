@@ -15,8 +15,7 @@
 //@HEADER
 
 #include "test_utils.hpp"
-
-#include "KokkosComm/KokkosComm.hpp"
+#include <KokkosComm/KokkosComm.hpp>
 
 #include <iostream>
 

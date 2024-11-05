@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include <type_traits>
+#include <KokkosComm/concepts.hpp>
 
-#include "concepts.hpp"
+#include <type_traits>
 
 namespace KokkosComm {
 

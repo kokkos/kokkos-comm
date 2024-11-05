@@ -16,14 +16,13 @@
 
 // https://google.github.io/googletest/advanced.html
 
-#include <sstream>
-
-#include <gtest/gtest.h>
-
 #include <KokkosComm/config.hpp>
-#include <Kokkos_Core.hpp>
 
-#include "KokkosComm/mpi/impl/include_mpi.hpp"
+#include <Kokkos_Core.hpp>
+#include <gtest/gtest.h>
+#include <mpi.h>
+
+#include <sstream>
 
 class MpiEnvironment : public ::testing::Environment {
  public:
