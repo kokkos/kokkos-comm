@@ -64,68 +64,14 @@ class Req<Mpi> {
  private:
   std::shared_ptr<Record> record_;
 
-  template <KokkosExecutionSpace ExecSpace>
-  friend void wait(const ExecSpace &space, Req<Mpi> req);
-  friend void wait(Req<Mpi> req);
-  template <KokkosExecutionSpace ExecSpace>
-  friend void wait_all(const ExecSpace &space, std::vector<Req<Mpi>> &reqs);
-  friend void wait_all(std::vector<Req<Mpi>> &reqs);
-  template <KokkosExecutionSpace ExecSpace>
-  friend int wait_any(const ExecSpace &space, std::vector<Req<Mpi>> &reqs);
-  friend int wait_any(std::vector<Req<Mpi>> &reqs);
+  template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
+  friend struct KokkosComm::Impl::Wait;
+
+  template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
+  friend struct KokkosComm::Impl::WaitAll;
+
+  template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
+  friend struct KokkosComm::Impl::WaitAny;
 };
-
-template <KokkosExecutionSpace ExecSpace>
-void wait(const ExecSpace &space, Req<Mpi> req) {
-  /* Semantically this only guarantees that `space` is waiting for request to complete. For the MPI host API, we have no
-   * choice but to fence the space before waiting on the host.*/
-  space.fence();
-  MPI_Wait(&req.mpi_request(), MPI_STATUS_IGNORE);
-  for (auto &f : req.record_->postWaits_) {
-    f();
-  }
-  req.record_->postWaits_.clear();
-}
-
-inline void wait(Req<Mpi> req) { wait(Kokkos::DefaultExecutionSpace(), req); }
-
-template <KokkosExecutionSpace ExecSpace>
-void wait_all(const ExecSpace &space, std::vector<Req<Mpi>> &reqs) {
-  space.fence();
-  for (Req<Mpi> &req : reqs) {
-    MPI_Wait(&req.mpi_request(), MPI_STATUS_IGNORE);
-    for (auto &f : req.record_->postWaits_) {
-      f();
-    }
-    req.record_->postWaits_.clear();
-  }
-}
-
-inline void wait_all(std::vector<Req<Mpi>> &reqs) { wait_all(Kokkos::DefaultExecutionSpace(), reqs); }
-
-template <KokkosExecutionSpace ExecSpace>
-int wait_any(const ExecSpace &space, std::vector<Req<Mpi>> &reqs) {
-  if (reqs.empty()) {
-    return -1;
-  }
-
-  space.fence();
-  while (true) {  // wait until something is done
-    for (size_t i = 0; i < reqs.size(); ++i) {
-      int completed;
-      Req<Mpi> &req = reqs[i];
-      MPI_Test(&(req.mpi_request()), &completed, MPI_STATUS_IGNORE);
-      if (completed) {
-        for (auto &f : req.record_->postWaits_) {
-          f();
-        }
-        req.record_->postWaits_.clear();
-        return i;
-      }
-    }
-  }
-}
-
-inline int wait_any(std::vector<Req<Mpi>> &reqs) { return wait_any(Kokkos::DefaultExecutionSpace(), reqs); }
 
 }  // namespace KokkosComm
