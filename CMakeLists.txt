@@ -45,9 +45,11 @@ endif()
 
 add_subdirectory(src)
 if(KOKKOSCOMM_ENABLE_TESTS)
+  enable_testing() # so we can run ctest at the top-level build dir
   add_subdirectory(unit_tests)
 endif()
 if(KOKKOSCOMM_ENABLE_PERFTESTS)
+  enable_testing() # so we can run ctest at the top-level build dir
   add_subdirectory(perf_tests)
 endif()
 
