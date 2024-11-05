@@ -64,34 +64,14 @@ class Req<Mpi> {
  private:
   std::shared_ptr<Record> record_;
 
-  friend void wait(Req<Mpi> req);
-  friend void wait_all(std::vector<Req<Mpi>> &reqs);
-  friend int wait_any(std::vector<Req<Mpi>> &reqs);
+  template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
+  friend struct KokkosComm::Impl::Wait;
+
+  template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
+  friend struct KokkosComm::Impl::WaitAll;
+
+  template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
+  friend struct KokkosComm::Impl::WaitAny;
 };
-
-inline void wait(Req<Mpi> req) {
-  MPI_Wait(&req.mpi_request(), MPI_STATUS_IGNORE);
-  for (auto &f : req.record_->postWaits_) {
-    f();
-  }
-  req.record_->postWaits_.clear();
-}
-
-inline void wait_all(std::vector<Req<Mpi>> &reqs) {
-  for (Req<Mpi> &req : reqs) {
-    wait(req);
-  }
-}
-
-inline int wait_any(std::vector<Req<Mpi>> &reqs) {
-  for (size_t i = 0; i < reqs.size(); ++i) {
-    int completed;
-    MPI_Test(&(reqs[i].mpi_request()), &completed, MPI_STATUS_IGNORE);
-    if (completed) {
-      return true;
-    }
-  }
-  return false;
-}
 
 }  // namespace KokkosComm

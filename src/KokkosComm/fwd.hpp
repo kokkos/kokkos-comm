@@ -49,6 +49,15 @@ template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 struct Barrier;
 
+template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
+struct Wait;
+
+template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
+struct WaitAll;
+
+template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
+struct WaitAny;
+
 }  // namespace Impl
 
 }  // namespace KokkosComm
