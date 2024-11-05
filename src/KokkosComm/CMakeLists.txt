@@ -26,7 +26,7 @@ target_sources(
     FILE_SET kokkoscomm_public_headers
     TYPE HEADERS
     BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-    FILES KokkosComm.hpp collective.hpp concepts.hpp fwd.hpp point_to_point.hpp traits.hpp
+    FILES KokkosComm.hpp collective.hpp concepts.hpp fwd.hpp point_to_point.hpp traits.hpp wait.hpp
 )
 
 # Implementation detail headers
