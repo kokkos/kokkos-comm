@@ -16,18 +16,23 @@
 
 #pragma once
 
-#include <vector>
-
-#include "concepts.hpp"
+#include <KokkosComm/concepts.hpp>
 #include <KokkosComm/config.hpp>
 
 namespace KokkosComm {
+
 #if defined(KOKKOSCOMM_ENABLE_MPI)
 class Mpi;
 using DefaultCommunicationSpace  = Mpi;
 using FallbackCommunicationSpace = Mpi;
 #else
 #error at least one transport must be defined
+#endif
+
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
+class Nccl;
+using DefaultCommunicationSpace  = Nccl;
+using FallbackCommunicationSpace = Mpi;
 #endif
 
 template <CommunicationSpace CommSpace = DefaultCommunicationSpace>

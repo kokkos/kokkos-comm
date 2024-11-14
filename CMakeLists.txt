@@ -32,15 +32,20 @@ project(
 option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" OFF)
 option(KokkosComm_ENABLE_TESTS "Build KokkosComm tests" OFF)
 option(KokkosComm_ENABLE_MPI "Build KokkosComm with MPI transport" ON)
+option(KokkosComm_ENABLE_NCCL "Build KokkosComm with NCCL transport" OFF)
 
 # Resolve options
 set(KOKKOSCOMM_ENABLE_PERFTESTS ${KokkosComm_ENABLE_PERFTESTS} CACHE BOOL "" FORCE)
 set(KOKKOSCOMM_ENABLE_TESTS ${KokkosComm_ENABLE_TESTS} CACHE BOOL "" FORCE)
 set(KOKKOSCOMM_ENABLE_MPI ${KokkosComm_ENABLE_MPI} CACHE BOOL "" FORCE)
+set(KOKKOSCOMM_ENABLE_NCCL ${KokkosComm_ENABLE_NCCL} CACHE BOOL "" FORCE)
 
 find_package(Kokkos REQUIRED)
 if(KOKKOSCOMM_ENABLE_MPI)
   find_package(MPI REQUIRED)
+endif()
+if(KOKKOSCOMM_ENABLE_NCCL)
+  # TODO: how to find NCCL?
 endif()
 
 add_subdirectory(src)
