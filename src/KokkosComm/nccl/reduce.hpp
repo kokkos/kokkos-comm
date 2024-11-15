@@ -18,12 +18,14 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/reduction_op.hpp>
 #include <KokkosComm/nccl/impl/pack_traits.hpp>
 #include <KokkosComm/nccl/impl/types.hpp>
 
 #include <Kokkos_Core.hpp>
+#include <nccl.h>
 
-namespace KokkosComm::Experimental::nccl {
+namespace KokkosComm::Experimental::nccl::Impl {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
 void reduce(const ExecSpace& space, const SendView &sv, const RecvView &rv, ncclOp_t op, int root, ncclComm_t comm) {
@@ -32,8 +34,24 @@ void reduce(const ExecSpace& space, const SendView &sv, const RecvView &rv, nccl
   using RPT = KokkosComm::PackTraits<RecvView>;
 
   if (SPT::is_contiguous(sv) && RPT::is_contiguous(rv)) {
+template <typename RedOp>
+constexpr auto reduction_op() -> ncclRedOp_t {
+  if constexpr (std::is_same_v<RedOp, ReductionOp::Maximum>) {
+    return ncclMax;
+  } else if constexpr (std::is_same_v<RedOp, ReductionOp::Minimum>) {
+    return ncclMin;
+  } else if constexpr (std::is_same_v<RedOp, ReductionOp::Sum>) {
+    return ncclSum;
+  } else if constexpr (std::is_same_v<RedOp, ReductionOp::Product>) {
+    return ncclProd;
+  } else if constexpr (std::is_same_v<RedOp, ReductionOp::Average>) {
+    return ncclAvg;
   } else {
     throw std::runtime_error("only contiguous views supported for low-level reduce");
+    {
+      static_assert(std::is_void_v<RedOp>, "NCCL reduction operator not implemented");
+      return ncclMax; // unreachable
+    }
   }
   Kokkos::Tools::popRegion();
 }
@@ -80,4 +98,4 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, nccl
 
   Kokkos::Tools::popRegion();
 }
-}  // namespace KokkosComm::mpi
+}  // namespace KokkosComm::Experimental::nccl::Impl
