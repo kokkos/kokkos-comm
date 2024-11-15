@@ -39,7 +39,7 @@ class Handle<ExecSpace, Nccl> {
   using size_type       = int;
 
   explicit Handle(const execution_space &space, ncclComm_t comm) : space_(space), comm_(comm) {}
-  explicit Handle(ncclComm_t comm) : Handle(Kokkos::DefaultExecutionSpace{}, comm) {}
+  explicit Handle(ncclComm_t comm) : Handle(execution_space{}, comm) {}
 
   // NOTE: Do we want to allow users creating a NCCL Handle without providing the communicator?
   // This would require us initializing it manually, which is a lot more work than for initializing MPI.

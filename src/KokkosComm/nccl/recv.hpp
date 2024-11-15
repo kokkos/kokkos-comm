@@ -21,7 +21,6 @@
 #include <KokkosComm/nccl/impl/pack_traits.hpp>
 
 #include <Kokkos_Core.hpp>
-
 #include <nccl.h>
 
 namespace KokkosComm::Experimental::nccl::Impl {
@@ -30,17 +29,16 @@ template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 void recv(const ExecSpace &space, RecvView &rv, int src, ncclComm_t comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
 
-  using KCT    = KokkosComm::Traits<RecvView>;
-  using KCPT   = KokkosComm::PackTraits<RecvView>;
-  using Packer = typename KCPT::packer_type;
-  using Args   = typename Packer::args_type;
-
   if (KokkosComm::is_contiguous(rv)) {
     using RecvScalar = typename RecvView::value_type;
-    ncclRecv(rv.data(), rv.span(), KokkosComm::Experimental::nccl::Impl::datatype_v<RecvScalar>, src, comm, space.cuda_stream());
+    ncclRecv(rv.data(), rv.span(), datatype_v<RecvScalar>, src, comm, space.cuda_stream());
   } else {
-    Args args = Packer::allocate_packed_for(space, "packed", rv);
+    using Packer = typename Impl::PackTraits<RecvView>::packer_type;
+    auto args = Packer::pack(space, rv);
+    // TODO: consider using a private stream pool in order to avoid synchronizing the underlying stream (which may not
+    // be empty and have in-flight communications we don't want to wait on)
     space.fence(); // make sure allocation is complete before receiving
+
     ncclRecv(KokkosComm::data_handle(args.view), args.count, args.datatype, src, comm, space.cuda_stream());
     Packer::unpack_into(space, rv, args.view);
   }
@@ -48,4 +46,4 @@ void recv(const ExecSpace &space, RecvView &rv, int src, ncclComm_t comm) {
   Kokkos::Tools::popRegion();
 }
 
-}  // namespace KokkosComm::Experimental::nccl
+}  // namespace KokkosComm::Experimental::nccl::Impl

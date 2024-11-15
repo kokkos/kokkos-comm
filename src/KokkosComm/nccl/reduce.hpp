@@ -17,7 +17,6 @@
 #pragma once
 
 #include <KokkosComm/concepts.hpp>
-#include <KokkosComm/traits.hpp>
 #include <KokkosComm/reduction_op.hpp>
 #include <KokkosComm/nccl/impl/pack_traits.hpp>
 #include <KokkosComm/nccl/impl/types.hpp>
@@ -27,13 +26,6 @@
 
 namespace KokkosComm::Experimental::nccl::Impl {
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-void reduce(const ExecSpace& space, const SendView &sv, const RecvView &rv, ncclOp_t op, int root, ncclComm_t comm) {
-  Kokkos::Tools::pushRegion("KokkosComm::Impl::reduce");
-  using SPT = KokkosComm::PackTraits<SendView>;
-  using RPT = KokkosComm::PackTraits<RecvView>;
-
-  if (SPT::is_contiguous(sv) && RPT::is_contiguous(rv)) {
 template <typename RedOp>
 constexpr auto reduction_op() -> ncclRedOp_t {
   if constexpr (std::is_same_v<RedOp, ReductionOp::Maximum>) {
@@ -47,28 +39,22 @@ constexpr auto reduction_op() -> ncclRedOp_t {
   } else if constexpr (std::is_same_v<RedOp, ReductionOp::Average>) {
     return ncclAvg;
   } else {
-    throw std::runtime_error("only contiguous views supported for low-level reduce");
     {
       static_assert(std::is_void_v<RedOp>, "NCCL reduction operator not implemented");
       return ncclMax; // unreachable
     }
   }
-  Kokkos::Tools::popRegion();
 }
 
+template <typename Scalar>
+inline constexpr ncclRedOp_t reduction_op_v = reduction_op<Scalar>();
+
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, ncclOp_t op, int root, ncclComm_t comm) {
-  Kokkos::Tools::pushRegion("KokkosComm::Impl::reduce");
+void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, ncclRedOp_t op, int root, int rank, ncclComm_t comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::Impl::reduce");
 
-  // TODO: We should refactor this to use our generic `Handle<NCCL>` and retrieve the rank with it
-  const int rank = [=]() -> int {
-    int _r;
-    ncclCommUserRank(comm, &_r);
-    return _r;
-  }();
-
-  using SendPacker = typename KokkosComm::PackTraits<SendView>::packer_type;
-  using RecvPacker = typename KokkosComm::PackTraits<RecvView>::packer_type;
+  using SendPacker = typename PackTraits<SendView>::packer_type;
+  using RecvPacker = typename PackTraits<RecvView>::packer_type;
 
   if (!KokkosComm::is_contiguous(sv)) {
     auto send_args = SendPacker::pack(space, sv);
@@ -78,7 +64,7 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, nccl
       space.fence();
       using SendScalar = typename SendView::non_const_value_type;
       ncclReduce(send_args.view.data(), recv_args.view.data(), send_args.count, send_args.datatype, op, root, comm, space.cuda_stream());
-      RecvPacker::unpack_into(space, rv, recvArgs.view);
+      RecvPacker::unpack_into(space, rv, recv_args.view);
     } else {
       space.fence(); // is this fence necessary?
       ncclReduce(send_args.view.data(), rv.data(), send_args.count, send_args.datatype, op, root, comm, space.cuda_stream());
@@ -89,7 +75,7 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, nccl
       auto recv_args = RecvPacker::allocate_packed_for(space, "reduce recv", rv);
       space.fence();
       ncclReduce(sv.data(), recv_args.view.data(), sv.span(), KokkosComm::Experimental::nccl::Impl::datatype_v<SendScalar>, op, root, comm, space.cuda_stream());
-      RecvPacker::unpack_into(space, rv, recvArgs.view);
+      RecvPacker::unpack_into(space, rv, recv_args.view);
     } else {
       space.fence(); // is this fence necessary?
       ncclReduce(sv.data(), rv.data(), sv.span(), KokkosComm::Experimental::nccl::Impl::datatype_v<SendScalar>, op, root, comm, space.cuda_stream());
