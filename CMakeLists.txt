@@ -22,8 +22,7 @@ cmake_minimum_required(VERSION 3.23)
 
 project(
   KokkosComm
-  LANGUAGES
-    CXX
+  LANGUAGES CXX
   VERSION 0.2.0
   DESCRIPTION "Experimental MPI interfaces (and more!) for the Kokkos C++ Performance Portability Programming ecosystem"
   HOMEPAGE_URL "https://kokkos.org/kokkos-comm/"
@@ -45,7 +44,7 @@ if(KOKKOSCOMM_ENABLE_MPI)
   find_package(MPI REQUIRED)
 endif()
 if(KOKKOSCOMM_ENABLE_NCCL)
-  # TODO: how to find NCCL?
+  find_package(NCCL REQUIRED)
 endif()
 
 add_subdirectory(src)

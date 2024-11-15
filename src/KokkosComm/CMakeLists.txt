@@ -89,14 +89,7 @@ if(KOKKOSCOMM_ENABLE_NCCL)
       FILE_SET kokkoscomm_nccl_headers
       TYPE HEADERS
       BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-      FILES
-        nccl/nccl.hpp
-        nccl/handle.hpp
-        nccl/req.hpp
-        nccl/send.hpp
-        nccl/recv.hpp
-        nccl/allgather.hpp
-        nccl/reduce.hpp
+      FILES nccl/nccl.hpp nccl/handle.hpp nccl/req.hpp nccl/send.hpp nccl/recv.hpp nccl/allgather.hpp nccl/reduce.hpp
   )
 
   # Implementation detail NCCL headers
@@ -146,25 +139,18 @@ if(KOKKOSCOMM_ENABLE_MPI)
 endif()
 if(KOKKOSCOMM_ENABLE_NCCL)
   # TODO: determine if this is the right way to link with NCCL
-  target_link_libraries(KokkosComm INTERFACE MPI::MPI_CXX nccl)
+  target_link_libraries(KokkosComm INTERFACE MPI::MPI_CXX ${NCCL_LIBRARIES})
 endif()
 
 # Install library
 install(
   TARGETS KokkosComm KokkosCommFlags
   EXPORT KokkosCommTargets
-  FILE_SET
-  kokkoscomm_public_headers
-  FILE_SET
-  kokkoscomm_impl_headers
-  FILE_SET
-  kokkoscomm_mpi_headers
-  FILE_SET
-  kokkoscomm_mpi_impl_headers
-  FILE_SET
-  kokkoscomm_nccl_headers
-  FILE_SET
-  kokkoscomm_nccl_impl_headers
-  FILE_SET
-  kokkoscomm_config_headers
+  FILE_SET kokkoscomm_public_headers
+  FILE_SET kokkoscomm_impl_headers
+  FILE_SET kokkoscomm_mpi_headers
+  FILE_SET kokkoscomm_mpi_impl_headers
+  FILE_SET kokkoscomm_nccl_headers
+  FILE_SET kokkoscomm_nccl_impl_headers
+  FILE_SET kokkoscomm_config_headers
 )
