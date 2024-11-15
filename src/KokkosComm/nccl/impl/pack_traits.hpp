@@ -33,4 +33,4 @@ struct PackTraits<View> {
   using packer_type = Packer::DeepCopy<View>;
 };
 
-}  // namespace KokkosComm
+}  // namespace KokkosComm::Experimental::nccl::Impl

@@ -36,7 +36,6 @@ using FallbackCommunicationSpace = Mpi;
 #error at least one transport must be defined
 #endif
 
-
 template <CommunicationSpace CommSpace = DefaultCommunicationSpace>
 class Req;
 

@@ -32,6 +32,6 @@ struct BinaryOr {};
 struct MaximumLoc {};
 struct MinimumLoc {};
 
-} // namespace ReductionOp
+}  // namespace ReductionOp
 
-} // namespace KokkosComm
+}  // namespace KokkosComm

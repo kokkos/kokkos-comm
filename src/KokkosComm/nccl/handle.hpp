@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include 
+#include
 #include <KokkosComm/fwd.hpp>
 #include <KokkosComm/nccl/nccl.hpp>
 
@@ -45,7 +45,7 @@ class Handle<ExecSpace, Nccl> {
   // This would require us initializing it manually, which is a lot more work than for initializing MPI.
   //
   // Commenting it out for now.
-  //Handle() : Handle(Kokkos::DefaultExecutionSpace{}, ) {}
+  // Handle() : Handle(Kokkos::DefaultExecutionSpace{}, ) {}
 
   auto get_inner() -> ncclComm_t & { return comm_; }
   auto space() const -> const execution_space & { return space_; }

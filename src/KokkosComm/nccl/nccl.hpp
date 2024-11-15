@@ -18,7 +18,7 @@
 
 #include <KokkosComm/concepts.hpp>
 
-#include <Kokkos_Core_fwd.hpp> // Kokkos::Cuda
+#include <Kokkos_Core_fwd.hpp>  // Kokkos::Cuda
 #include <nccl.h>
 
 #include <type_traits>
@@ -27,13 +27,13 @@ namespace KokkosComm::Experimental {
 
 struct Nccl {
   using communication_space = Nccl;
-  using execution_space = Kokkos::Cuda;
-  using datatype_type = ncclDataType_t;
-  using reduction_op_type = ncclRedOp_t;
+  using execution_space     = Kokkos::Cuda;
+  using datatype_type       = ncclDataType_t;
+  using reduction_op_type   = ncclRedOp_t;
 };
 
 // Nccl is a KokkosComm::CommunicationSpace
 template <>
 struct KokkosComm::Impl::is_communication_space<Nccl> : public std::true_type {};
 
-} // namespace KokkosComm::Experimental
+}  // namespace KokkosComm::Experimental

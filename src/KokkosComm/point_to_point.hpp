@@ -53,17 +53,17 @@ Req<CommSpace> send(SendView &sv, int dest) {
 namespace Experimental {
 
 template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::Cuda, CommunicationSpace CommSpace = Nccl>
-auto send(const Handle<ExecSpace, CommSpace>& h, const SendView& sv, int dest) -> Req<Nccl> {
+auto send(const Handle<ExecSpace, CommSpace> &h, const SendView &sv, int dest) -> Req<Nccl> {
   nccl::Impl::send(h.space(), sv, dest, h.get_inner());
   return Req<Nccl>(h.space.cuda_stream());
 }
 
 template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::Cuda, CommunicationSpace CommSpace = Nccl>
-auto recv(const Handle<ExecSpace, CommSpace>& h, const RecvView& sv, int dest) -> Req<Nccl> {
+auto recv(const Handle<ExecSpace, CommSpace> &h, const RecvView &sv, int dest) -> Req<Nccl> {
   nccl::Impl::recv(h.space(), sv, dest, h.get_inner());
   return Req<Nccl>(h.space.cuda_stream());
 }
 
-} // namespace Experimental
+}  // namespace Experimental
 
-} // namespace KokkosComm
+}  // namespace KokkosComm

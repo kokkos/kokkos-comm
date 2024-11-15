@@ -57,4 +57,4 @@ ncclDataType_t datatype() {
 template <typename Scalar>
 inline ncclDataType_t datatype_v = datatype<Scalar>();
 
-};  // namespace KokkosComm::Experimental::ncll::Impl
+};  // namespace KokkosComm::Experimental::nccl::Impl

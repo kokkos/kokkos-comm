@@ -34,10 +34,10 @@ void recv(const ExecSpace &space, RecvView &rv, int src, ncclComm_t comm) {
     ncclRecv(rv.data(), rv.span(), datatype_v<RecvScalar>, src, comm, space.cuda_stream());
   } else {
     using Packer = typename Impl::PackTraits<RecvView>::packer_type;
-    auto args = Packer::pack(space, rv);
+    auto args    = Packer::pack(space, rv);
     // TODO: consider using a private stream pool in order to avoid synchronizing the underlying stream (which may not
     // be empty and have in-flight communications we don't want to wait on)
-    space.fence(); // make sure allocation is complete before receiving
+    space.fence();  // make sure allocation is complete before receiving
 
     ncclRecv(KokkosComm::data_handle(args.view), args.count, args.datatype, src, comm, space.cuda_stream());
     Packer::unpack_into(space, rv, args.view);

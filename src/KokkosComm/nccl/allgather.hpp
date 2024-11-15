@@ -43,8 +43,9 @@ void allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, n
 
     throw std::runtime_error("allgather for non-contiguous views not implemented");
   } else {
-    constexpr auto count = KokkosComm::span(sv); // all ranks recv `nranks * count`
-    ncclAllGather(KokkosComm::data_handle(sv), KokkosComm::data_handle(rv), count, datatype_v<SendScalar>, comm, space.cuda_stream());
+    constexpr auto count = KokkosComm::span(sv);  // all ranks recv `nranks * count`
+    ncclAllGather(KokkosComm::data_handle(sv), KokkosComm::data_handle(rv), count, datatype_v<SendScalar>, comm,
+                  space.cuda_stream());
   }
 
   Kokkos::Tools::popRegion();
