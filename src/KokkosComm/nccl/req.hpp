@@ -42,12 +42,15 @@ class Req<Nccl> {
 
   struct Record {
     Record() : req_() {}
+    explicit Record(cudaStream_t stream) : req_(stream) {}
+
     cudaStream_t req_;
     std::vector<std::function<void()>> postWaits_;
   };
 
  public:
   Req() : record_(std::make_shared<Record>()) {}
+  explicit Req(cudaStream_t stream) : record_(stream) {}
 
   auto get_inner() -> cudaStream_t & { return record_->req_; }
 
