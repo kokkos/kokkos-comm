@@ -23,13 +23,15 @@
 namespace KokkosComm::Experimental::nccl::Impl {
 
 template <typename Scalar>
-ncclDatatype_t datatype() {
+ncclDataType_t datatype() {
   using T = std::decay_t<Scalar>;
 
   if constexpr (std::is_same_v<T, char>) {
     return ncclChar;
   } else if constexpr (std::is_same_v<T, std::int8_t>) {
     return ncclInt8;
+  } else if constexpr (std::is_same_v<T, std::uint8_t>) {
+    return ncclUint8;
   } else if constexpr (std::is_same_v<T, int>) {
     return ncclInt;
   } else if constexpr (std::is_same_v<T, std::int32_t>) {
@@ -53,6 +55,6 @@ ncclDatatype_t datatype() {
 }
 
 template <typename Scalar>
-inline ncclDatatype_t datatype_v = datatype<Scalar>();
+inline ncclDataType_t datatype_v = datatype<Scalar>();
 
 };  // namespace KokkosComm::Experimental::ncll::Impl
