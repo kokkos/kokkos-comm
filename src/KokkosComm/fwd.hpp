@@ -18,6 +18,7 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/config.hpp>
+#include <KokkosComm/reduction_op.hpp>
 
 namespace KokkosComm {
 
@@ -46,13 +47,29 @@ namespace Impl {
 template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
 struct Recv;
+
 template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
 struct Send;
+
 template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 struct Barrier;
 
 }  // namespace Impl
+
+// Allgather and Reduce are currently experimental functions
+namespace Experimental::Impl {
+
+template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          CommunicationSpace CommSpace = DefaultCommunicationSpace>
+struct AllGather;
+
+template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp,
+          KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          CommunicationSpace CommSpace   = DefaultCommunicationSpace>
+struct Reduce;
+
+}  // namespace Experimental::Impl
 
 }  // namespace KokkosComm

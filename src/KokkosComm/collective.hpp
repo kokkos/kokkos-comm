@@ -17,14 +17,10 @@
 #pragma once
 
 #include <KokkosComm/fwd.hpp>
-#include <KokkosComm/concepts.hpp>
-#include <KokkosComm/nccl/reduce.hpp>
 
-#include <Kokkos_Core.hpp>
+#include <Kokkos_Core_fwd.hpp>
 
 #include <utility>
-#include "KokkosComm/nccl/allgather.hpp"
-#include "KokkosComm/nccl/nccl.hpp"
 
 namespace KokkosComm {
 
@@ -36,18 +32,17 @@ void barrier(Handle<ExecSpace, CommSpace>&& h) {
 
 namespace Experimental {
 
-template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::Cuda,
-          CommunicationSpace CommSpace = KokkosComm::Experimental::Nccl, KokkosComm::ReductionOp RedOp>
-auto reduce(const Handle<ExecSpace, CommSpace>& h, const SendView& sv, RecvView& rv, int root) -> Req<Nccl> {
-  nccl::Impl::reduce(h.space(), sv, rv, nccl::Impl::reduction_op_v<RedOp>, root, h.rank(), h.get_inner());
-  return Req<Nccl>(h.space().cuda_stream());
+template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp,
+          KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          CommunicationSpace CommSpace   = DefaultCommunicationSpace>
+auto reduce(Handle<ExecSpace, CommSpace>& h, const SendView& sv, RecvView& rv, int root) -> Req<CommSpace> {
+  return Impl::Reduce<SendView, RecvView, RedOp, ExecSpace, CommSpace>(h, sv, rv, root);
 }
 
-template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::Cuda,
-          CommunicationSpace CommSpace = KokkosComm::Experimental::Nccl>
-auto allgather(const Handle<ExecSpace, CommSpace>& h, const SendView& sv, RecvView& rv) -> Req<Nccl> {
-  nccl::Impl::allgather(h.space(), sv, rv, h.get_inner());
-  return Req<Nccl>(h.space().cuda_stream());
+template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          CommunicationSpace CommSpace = DefaultCommunicationSpace>
+auto allgather(Handle<ExecSpace, CommSpace>& h, const SendView& sv, RecvView& rv) -> Req<CommSpace> {
+  return Impl::AllGather<SendView, RecvView, ExecSpace, CommSpace>(h, sv, rv);
 }
 
 }  // namespace Experimental
