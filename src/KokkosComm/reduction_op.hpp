@@ -16,22 +16,52 @@
 
 #pragma once
 
+#include <KokkosComm/concepts.hpp>
+
 namespace KokkosComm {
 
-namespace ReductionOp {
+struct ReduceMaximum {};
+template <>
+struct KokkosComm::Impl::is_reduction_operator<ReduceMaximum> : public std::true_type {};
 
-struct Maximum {};
-struct Minimum {};
-struct Sum {};
-struct Product {};
-struct Average {};
-struct LogicalAnd {};
-struct LogicalOr {};
-struct BinaryAnd {};
-struct BinaryOr {};
-struct MaximumLoc {};
-struct MinimumLoc {};
+struct ReduceMinimum {};
+template <>
+struct KokkosComm::Impl::is_reduction_operator<ReduceMinimum> : public std::true_type {};
 
-}  // namespace ReductionOp
+struct ReduceSum {};
+template <>
+struct KokkosComm::Impl::is_reduction_operator<ReduceSum> : public std::true_type {};
+
+struct ReduceProduct {};
+template <>
+struct KokkosComm::Impl::is_reduction_operator<ReduceProduct> : public std::true_type {};
+
+struct ReduceAverage {};
+template <>
+struct KokkosComm::Impl::is_reduction_operator<ReduceAverage> : public std::true_type {};
+
+struct ReduceLogicalAnd {};
+template <>
+struct KokkosComm::Impl::is_reduction_operator<ReduceLogicalAnd> : public std::true_type {};
+
+struct ReduceLogicalOr {};
+template <>
+struct KokkosComm::Impl::is_reduction_operator<ReduceLogicalOr> : public std::true_type {};
+
+struct ReduceBinaryAnd {};
+template <>
+struct KokkosComm::Impl::is_reduction_operator<ReduceBinaryAnd> : public std::true_type {};
+
+struct ReduceBinaryOr {};
+template <>
+struct KokkosComm::Impl::is_reduction_operator<ReduceBinaryOr> : public std::true_type {};
+
+struct ReduceMaximumLoc {};
+template <>
+struct KokkosComm::Impl::is_reduction_operator<ReduceMaximumLoc> : public std::true_type {};
+
+struct ReduceMinimumLoc {};
+template <>
+struct KokkosComm::Impl::is_reduction_operator<ReduceMinimumLoc> : public std::true_type {};
 
 }  // namespace KokkosComm

@@ -26,17 +26,17 @@
 
 namespace KokkosComm::Experimental::nccl::Impl {
 
-template <typename RedOp>
+template <ReductionOperator RedOp>
 constexpr auto reduction_op() -> ncclRedOp_t {
-  if constexpr (std::is_same_v<RedOp, ReductionOp::Maximum>) {
+  if constexpr (std::is_same_v<RedOp, ReduceMaximum>) {
     return ncclMax;
-  } else if constexpr (std::is_same_v<RedOp, ReductionOp::Minimum>) {
+  } else if constexpr (std::is_same_v<RedOp, ReduceMinimum>) {
     return ncclMin;
-  } else if constexpr (std::is_same_v<RedOp, ReductionOp::Sum>) {
+  } else if constexpr (std::is_same_v<RedOp, ReduceSum>) {
     return ncclSum;
-  } else if constexpr (std::is_same_v<RedOp, ReductionOp::Product>) {
+  } else if constexpr (std::is_same_v<RedOp, ReduceProduct>) {
     return ncclProd;
-  } else if constexpr (std::is_same_v<RedOp, ReductionOp::Average>) {
+  } else if constexpr (std::is_same_v<RedOp, ReduceAverage>) {
     return ncclAvg;
   } else {
     {
@@ -46,8 +46,8 @@ constexpr auto reduction_op() -> ncclRedOp_t {
   }
 }
 
-template <typename Scalar>
-inline constexpr ncclRedOp_t reduction_op_v = reduction_op<Scalar>();
+template <ReductionOperator RedOp>
+inline constexpr ncclRedOp_t reduction_op_v = reduction_op<RedOp>();
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
 void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, ncclRedOp_t op, int root, int rank,
