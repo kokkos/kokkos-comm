@@ -50,8 +50,7 @@ template <ReductionOperator RedOp>
 inline constexpr ncclRedOp_t reduction_op_v = reduction_op<RedOp>();
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, ncclRedOp_t op, int root, int rank,
-            ncclComm_t comm) {
+void reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t op, int root, int rank, ncclComm_t comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::Impl::reduce");
 
   using SendPacker = typename PackTraits<SendView>::packer_type;
@@ -77,16 +76,16 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, nccl
     if ((root == rank) && !KokkosComm::is_contiguous(rv)) {
       auto recv_args = RecvPacker::allocate_packed_for(space, "reduce recv", rv);
       space.fence();
-      ncclReduce(sv.data(), recv_args.view.data(), sv.span(),
-                 KokkosComm::Experimental::nccl::Impl::datatype_v<SendScalar>, op, root, comm, space.cuda_stream());
+      ncclReduce(sv.data(), recv_args.view.data(), sv.span(), datatype_v<SendScalar>, op, root, comm,
+                 space.cuda_stream());
       RecvPacker::unpack_into(space, rv, recv_args.view);
     } else {
       space.fence();  // is this fence necessary?
-      ncclReduce(sv.data(), rv.data(), sv.span(), KokkosComm::Experimental::nccl::Impl::datatype_v<SendScalar>, op,
-                 root, comm, space.cuda_stream());
+      ncclReduce(sv.data(), rv.data(), sv.span(), datatype_v<SendScalar>, op, root, comm, space.cuda_stream());
     }
   }
 
   Kokkos::Tools::popRegion();
 }
+
 }  // namespace KokkosComm::Experimental::nccl::Impl
