@@ -39,4 +39,3 @@ struct Recv {
 #endif
 
 }  // namespace KokkosComm::Impl
-

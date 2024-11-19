@@ -50,7 +50,8 @@ template <ReductionOperator RedOp>
 inline constexpr ncclRedOp_t reduction_op_v = reduction_op<RedOp>();
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-void reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t op, int root, int rank, ncclComm_t comm) {
+void reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t op, int root, int rank,
+            ncclComm_t comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::Impl::reduce");
 
   using SendPacker = typename PackTraits<SendView>::packer_type;
