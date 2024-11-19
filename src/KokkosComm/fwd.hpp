@@ -25,13 +25,11 @@ namespace KokkosComm {
 class Mpi;
 using DefaultCommunicationSpace  = Mpi;
 using FallbackCommunicationSpace = Mpi;
-
-// NOTE: for now MPI must be enabled as well for NCCL to be enabled too
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
+#elif defined(KOKKOSCOMM_ENABLE_NCCL)
+class Mpi;
 class Nccl;
 using DefaultCommunicationSpace  = Nccl;
 using FallbackCommunicationSpace = Mpi;
-#endif
 #else
 #error at least one transport must be defined
 #endif
