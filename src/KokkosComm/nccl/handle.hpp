@@ -50,7 +50,7 @@ class Handle<ExecSpace, Nccl> {
   // Commenting it out for now.
   // Handle() : Handle(Kokkos::DefaultExecutionSpace{}, ) {}
 
-  auto get_inner() -> ncclComm_t & { return comm_; }
+  auto comm() -> communicator_type & { return comm_; }
   auto space() const -> const execution_space & { return space_; }
 
   auto size() -> rank_type {
