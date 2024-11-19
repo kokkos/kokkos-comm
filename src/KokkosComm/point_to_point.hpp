@@ -16,11 +16,12 @@
 
 #pragma once
 
+#include <KokkosComm/fwd.hpp>
+
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
 #include <KokkosComm/nccl/nccl.hpp>
 #include <KokkosComm/nccl/send.hpp>
-
-#include <KokkosComm/fwd.hpp>
-#include <KokkosComm/concepts.hpp>
+#endif
 
 #include <Kokkos_Core_fwd.hpp>
 
@@ -49,21 +50,5 @@ template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultE
 Req<CommSpace> send(SendView &sv, int dest) {
   return send<SendView, ExecSpace, CommSpace>(Handle<ExecSpace, CommSpace>{}, sv, dest);
 }
-
-namespace Experimental {
-
-template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::Cuda, CommunicationSpace CommSpace = Nccl>
-auto send(const Handle<ExecSpace, CommSpace> &h, const SendView &sv, int dest) -> Req<Nccl> {
-  nccl::Impl::send(h.space(), sv, dest, h.get_inner());
-  return Req<Nccl>(h.space.cuda_stream());
-}
-
-template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::Cuda, CommunicationSpace CommSpace = Nccl>
-auto recv(const Handle<ExecSpace, CommSpace> &h, const RecvView &sv, int dest) -> Req<Nccl> {
-  nccl::Impl::recv(h.space(), sv, dest, h.get_inner());
-  return Req<Nccl>(h.space.cuda_stream());
-}
-
-}  // namespace Experimental
 
 }  // namespace KokkosComm
