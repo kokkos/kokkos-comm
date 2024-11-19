@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include
 #include <KokkosComm/fwd.hpp>
-#include <KokkosComm/nccl/nccl.hpp>
+
+#include <nccl.h>
 
 namespace KokkosComm::Experimental {
 
@@ -34,12 +34,15 @@ namespace KokkosComm::Experimental {
 template <KokkosExecutionSpace ExecSpace>
 class Handle<ExecSpace, Nccl> {
  public:
-  using execution_space = ExecSpace;
-  using transport_type  = Nccl;
-  using size_type       = int;
+  using execution_space     = ExecSpace;
+  using communication_space = Nccl;
+  using communicator_type   = ncclComm_t;
+  using datatype_type       = ncclDataType_t;
+  using reduction_op_type   = ncclRedOp_t;
+  using rank_type           = int;
 
-  explicit Handle(const execution_space &space, ncclComm_t comm) : space_(space), comm_(comm) {}
-  explicit Handle(ncclComm_t comm) : Handle(execution_space{}, comm) {}
+  explicit Handle(const execution_space &space, communicator_type comm) : space_(space), comm_(comm) {}
+  explicit Handle(communicator_type comm) : Handle(execution_space{}, comm) {}
 
   // NOTE: Do we want to allow users creating a NCCL Handle without providing the communicator?
   // This would require us initializing it manually, which is a lot more work than for initializing MPI.
@@ -50,21 +53,21 @@ class Handle<ExecSpace, Nccl> {
   auto get_inner() -> ncclComm_t & { return comm_; }
   auto space() const -> const execution_space & { return space_; }
 
-  auto size() -> size_type {
-    size_type ret;
+  auto size() -> rank_type {
+    rank_type ret;
     ncclCommCount(comm_, &ret);
     return ret;
   }
 
-  auto rank() -> size_type {
-    size_type ret;
+  auto rank() -> rank_type {
+    rank_type ret;
     ncclCommUserRank(comm_, &ret);
     return ret;
   }
 
  private:
   execution_space space_;
-  ncclComm_t comm_;
+  communicator_type comm_;
 };
 
 }  // namespace KokkosComm::Experimental

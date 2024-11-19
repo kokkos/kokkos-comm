@@ -19,18 +19,12 @@
 #include <KokkosComm/concepts.hpp>
 
 #include <Kokkos_Core_fwd.hpp>  // Kokkos::Cuda
-#include <nccl.h>
 
 #include <type_traits>
 
 namespace KokkosComm::Experimental {
 
-struct Nccl {
-  using communication_space = Nccl;
-  using execution_space     = Kokkos::Cuda;
-  using datatype_type       = ncclDataType_t;
-  using reduction_op_type   = ncclRedOp_t;
-};
+struct Nccl {};
 
 // Nccl is a KokkosComm::CommunicationSpace
 template <>
