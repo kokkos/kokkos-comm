@@ -36,13 +36,13 @@ template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp,
           KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 auto reduce(Handle<ExecSpace, CommSpace>& h, const SendView& sv, RecvView& rv, int root) -> Req<CommSpace> {
-  return Impl::Reduce<SendView, RecvView, RedOp, ExecSpace, CommSpace>(h, sv, rv, root);
+  return Impl::Reduce<SendView, RecvView, RedOp, ExecSpace, CommSpace>::execute(h, sv, rv, root);
 }
 
 template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
 auto allgather(Handle<ExecSpace, CommSpace>& h, const SendView& sv, RecvView& rv) -> Req<CommSpace> {
-  return Impl::AllGather<SendView, RecvView, ExecSpace, CommSpace>(h, sv, rv);
+  return Impl::AllGather<SendView, RecvView, ExecSpace, CommSpace>::execute(h, sv, rv);
 }
 
 }  // namespace Experimental
