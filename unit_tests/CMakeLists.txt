@@ -72,6 +72,19 @@ if(KOKKOSCOMM_ENABLE_MPI)
   )
 endif()
 
+if(KOKKOSCOMM_ENABLE_NCCL)
+  # Standalone NCCL smoke tests (do not use KokkosComm)
+  add_executable(test-nccl)
+  target_sources(test-nccl PRIVATE nccl/test_nccl.cpp)
+  # doesn't use KokkosComm, so explicitly link MPI
+  target_include_directories(test-nccl SYSTEM PRIVATE ${NCCL_INCLUDE_DIRS})
+  target_link_libraries(test-nccl PRIVATE ${NCCL_LIBRARIES})
+  add_test(
+    NAME test-nccl-1
+    COMMAND ./test-nccl
+  )
+endif()
+
 # Tests using the MPI communication space, but not linking with MPI itself
 add_executable(test-main)
 target_sources(
