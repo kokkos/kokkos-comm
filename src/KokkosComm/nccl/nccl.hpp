@@ -26,8 +26,8 @@ namespace KokkosComm::Experimental {
 
 struct Nccl {};
 
+}  // namespace KokkosComm::Experimental
+
 // Nccl is a KokkosComm::CommunicationSpace
 template <>
-struct KokkosComm::Impl::is_communication_space<Nccl> : public std::true_type {};
-
-}  // namespace KokkosComm::Experimental
+struct KokkosComm::Impl::is_communication_space<KokkosComm::Experimental::Nccl> : public std::true_type {};
