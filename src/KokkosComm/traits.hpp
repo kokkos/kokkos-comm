@@ -41,12 +41,12 @@ struct Traits<View> {
 };
 
 template <KokkosView View>
-auto data_handle(const View &v) {
+constexpr auto data_handle(const View &v) {
   return v.data();
 }
 
 template <KokkosView View>
-auto span(const View &v) {
+constexpr auto span(const View &v) {
   return v.span();
 }
 
@@ -62,11 +62,11 @@ constexpr size_t rank() {
 }
 
 template <KokkosView View>
-size_t extent(const View &v, const int i) {
+constexpr size_t extent(const View &v, const int i) {
   return v.extent(i);
 }
 template <KokkosView View>
-size_t stride(const View &v, const int i) {
+constexpr size_t stride(const View &v, const int i) {
   return v.stride(i);
 }
 

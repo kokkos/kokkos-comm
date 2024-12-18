@@ -14,8 +14,6 @@
 #
 #@HEADER
 
-set(TARGET_LIBRARY kokkoscomm)
-
 add_library(KokkosComm INTERFACE)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
 
@@ -26,7 +24,7 @@ target_sources(
     FILE_SET kokkoscomm_public_headers
     TYPE HEADERS
     BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-    FILES KokkosComm.hpp collective.hpp concepts.hpp fwd.hpp point_to_point.hpp traits.hpp
+    FILES KokkosComm.hpp collective.hpp concepts.hpp fwd.hpp point_to_point.hpp traits.hpp reduction_op.hpp
 )
 
 # Implementation detail headers
@@ -36,7 +34,7 @@ target_sources(
     FILE_SET kokkoscomm_impl_headers
     TYPE HEADERS
     BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-    FILES impl/KokkosComm_contiguous.hpp
+    FILES impl/KokkosComm_contiguous.hpp impl/send.hpp impl/recv.hpp impl/allgather.hpp impl/reduce.hpp
 )
 
 # Configuration header
@@ -83,6 +81,28 @@ if(KOKKOSCOMM_ENABLE_MPI)
   )
 endif()
 
+if(KOKKOSCOMM_ENABLE_NCCL)
+  # Public NCCL headers
+  target_sources(
+    KokkosComm
+    INTERFACE
+      FILE_SET kokkoscomm_nccl_headers
+      TYPE HEADERS
+      BASE_DIRS ${PROJECT_SOURCE_DIR}/src
+      FILES nccl/nccl.hpp nccl/handle.hpp nccl/req.hpp nccl/send.hpp nccl/recv.hpp nccl/allgather.hpp nccl/reduce.hpp
+  )
+
+  # Implementation detail NCCL headers
+  target_sources(
+    KokkosComm
+    INTERFACE
+      FILE_SET kokkoscomm_nccl_impl_headers
+      TYPE HEADERS
+      BASE_DIRS ${PROJECT_SOURCE_DIR}/src
+      FILES nccl/impl/pack_traits.hpp nccl/impl/packer.hpp nccl/impl/types.hpp
+  )
+endif()
+
 # --- COMPILE FLAGS --- #
 include(CheckCXXCompilerFlag)
 
@@ -90,7 +110,10 @@ macro(kokkoscomm_check_and_add_compile_options)
   set(target ${ARGV0})
   set(flag ${ARGV1})
 
-  check_cxx_compiler_flag(${flag} HAS_${flag})
+  check_cxx_compiler_flag(
+    ${flag}
+    HAS_${flag}
+  )
   if(HAS_${flag})
     target_compile_options(${target} INTERFACE ${flag})
   endif()
@@ -100,7 +123,12 @@ endmacro()
 add_library(KokkosCommFlags INTERFACE)
 add_library(KokkosComm::KokkosCommFlags ALIAS KokkosCommFlags)
 target_compile_features(KokkosCommFlags INTERFACE cxx_std_20)
-set_target_properties(KokkosCommFlags PROPERTIES CXX_EXTENSIONS OFF)
+set_target_properties(
+  KokkosCommFlags
+  PROPERTIES
+    CXX_EXTENSIONS
+      OFF
+)
 
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wall)
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wextra)
@@ -113,14 +141,30 @@ kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wmissing-include-dirs)
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wno-gnu-zero-variadic-macro-arguments)
 
 # Linking
-target_link_libraries(KokkosComm INTERFACE KokkosComm::KokkosCommFlags Kokkos::kokkos)
+target_link_libraries(
+  KokkosComm
+  INTERFACE
+    KokkosComm::KokkosCommFlags
+    Kokkos::kokkos
+)
 if(KOKKOSCOMM_ENABLE_MPI)
   target_link_libraries(KokkosComm INTERFACE MPI::MPI_CXX)
+endif()
+if(KOKKOSCOMM_ENABLE_NCCL)
+  # TODO: determine if this is the right way to link with NCCL
+  target_link_libraries(
+    KokkosComm
+    INTERFACE
+      ${NCCL_LIBRARIES}
+  )
+  target_include_directories(KokkosComm SYSTEM INTERFACE ${NCCL_INCLUDE_DIRS})
 endif()
 
 # Install library
 install(
-  TARGETS KokkosComm KokkosCommFlags
+  TARGETS
+    KokkosComm
+    KokkosCommFlags
   EXPORT KokkosCommTargets
   FILE_SET
   kokkoscomm_public_headers
@@ -130,6 +174,10 @@ install(
   kokkoscomm_mpi_headers
   FILE_SET
   kokkoscomm_mpi_impl_headers
+  FILE_SET
+  kokkoscomm_nccl_headers
+  FILE_SET
+  kokkoscomm_nccl_impl_headers
   FILE_SET
   kokkoscomm_config_headers
 )

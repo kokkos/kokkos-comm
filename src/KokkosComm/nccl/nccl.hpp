@@ -16,9 +16,18 @@
 
 #pragma once
 
-#define KOKKOSCOMM_VERSION_MAJOR @KOKKOSCOMM_VERSION_MAJOR@
-#define KOKKOSCOMM_VERSION_MINOR @KOKKOSCOMM_VERSION_MINOR@
-#define KOKKOSCOMM_VERSION_PATCH @KOKKOSCOMM_VERSION_PATCH@
+#include <KokkosComm/concepts.hpp>
 
-#cmakedefine KOKKOSCOMM_ENABLE_MPI
-#cmakedefine KOKKOSCOMM_ENABLE_NCCL
+#include <Kokkos_Core_fwd.hpp>  // Kokkos::Cuda
+
+#include <type_traits>
+
+namespace KokkosComm::Experimental {
+
+struct Nccl {};
+
+}  // namespace KokkosComm::Experimental
+
+// Nccl is a KokkosComm::CommunicationSpace
+template <>
+struct KokkosComm::Impl::is_communication_space<KokkosComm::Experimental::Nccl> : public std::true_type {};

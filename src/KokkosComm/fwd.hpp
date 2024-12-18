@@ -16,15 +16,20 @@
 
 #pragma once
 
-#include <vector>
-
-#include "concepts.hpp"
+#include <KokkosComm/concepts.hpp>
 #include <KokkosComm/config.hpp>
+#include <KokkosComm/reduction_op.hpp>
 
 namespace KokkosComm {
+
 #if defined(KOKKOSCOMM_ENABLE_MPI)
 class Mpi;
 using DefaultCommunicationSpace  = Mpi;
+using FallbackCommunicationSpace = Mpi;
+#elif defined(KOKKOSCOMM_ENABLE_NCCL)
+class Mpi;
+class Nccl;
+using DefaultCommunicationSpace  = Nccl;
 using FallbackCommunicationSpace = Mpi;
 #else
 #error at least one transport must be defined
@@ -42,13 +47,29 @@ namespace Impl {
 template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
 struct Recv;
+
 template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
 struct Send;
+
 template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 struct Barrier;
 
 }  // namespace Impl
+
+// Allgather and Reduce are currently experimental functions
+namespace Experimental::Impl {
+
+template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          CommunicationSpace CommSpace = DefaultCommunicationSpace>
+struct AllGather;
+
+template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp,
+          KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+          CommunicationSpace CommSpace   = DefaultCommunicationSpace>
+struct Reduce;
+
+}  // namespace Experimental::Impl
 
 }  // namespace KokkosComm
