@@ -70,6 +70,7 @@ if(KOKKOSCOMM_ENABLE_MPI)
     COMMAND
       ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-mpi
   )
+
 endif()
 
 # Tests using the MPI communication space, but not linking with MPI itself
@@ -78,8 +79,9 @@ target_sources(
   test-main
   PRIVATE
     test_main.cpp
-    mpi/test_gtest_mpi.cpp
-    mpi/test_sendrecv.cpp
+    mpi/test_gtest_mpi.cpp        # make sure gtest is working
+    mpi/test_mpi_view_access.cpp  # make sure MPI can access Kokkos::View data
+    mpi/test_sendrecv.cpp         # other tests...
     mpi/test_allgather.cpp
     mpi/test_alltoall.cpp
     mpi/test_isendrecv.cpp
