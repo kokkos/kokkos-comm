@@ -76,7 +76,7 @@ if(KOKKOSCOMM_ENABLE_MPI)
   target_sources(
     test-main-mpi
     PRIVATE
-      mpi/test_main.cpp
+      test_main.cpp
       mpi/test_gtest_mpi.cpp
       mpi/test_sendrecv.cpp
       mpi/test_allgather.cpp
@@ -98,27 +98,6 @@ if(KOKKOSCOMM_ENABLE_MPI)
       ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-main-mpi
   )
 
-  # General Kokkos Comm tests
-  add_executable(test-main)
-  target_sources(
-    test-main
-    PRIVATE
-      mpi/test_main.cpp
-      test_barrier.cpp
-      test_sendrecv.cpp
-  )
-  target_link_libraries(
-    test-main
-    PRIVATE
-      KokkosComm::KokkosComm
-      gtest
-  )
-  add_test(
-    NAME test-main
-    COMMAND
-      ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-main
-  )
-
 endif()
 
 if(KOKKOSCOMM_ENABLE_NCCL)
@@ -131,5 +110,30 @@ if(KOKKOSCOMM_ENABLE_NCCL)
   add_test(
     NAME test-nccl-1
     COMMAND ./test-nccl
+  )
+endif()
+
+# General Kokkos Comm tests
+add_executable(test-main)
+target_sources(
+  test-main
+  PRIVATE
+    test_main.cpp
+    test_barrier.cpp
+    test_sendrecv.cpp
+)
+
+target_link_libraries(
+  test-main
+  PRIVATE
+    KokkosComm::KokkosComm
+    gtest
+)
+
+if (KOKKOSCOMM_ENABLE_MPI)
+  add_test(
+    NAME test-main
+    COMMAND
+      ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-main
   )
 endif()

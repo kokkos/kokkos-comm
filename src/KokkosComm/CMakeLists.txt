@@ -155,9 +155,9 @@ if(KOKKOSCOMM_ENABLE_NCCL)
   target_link_libraries(
     KokkosComm
     INTERFACE
-      MPI::MPI_CXX
       ${NCCL_LIBRARIES}
   )
+  target_include_directories(KokkosComm SYSTEM INTERFACE ${NCCL_INCLUDE_DIRS})
 endif()
 
 # Install library
