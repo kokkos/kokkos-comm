@@ -31,7 +31,7 @@ struct NcclArgs {
   ncclDataType_t datatype_;
   int count_;
 
-  NcclArgs(const View &view, const ncclDatatype_t datatype, const int count)
+  NcclArgs(const View &view, const ncclDataType_t datatype, const int count)
       : view_(view), datatype_(datatype), count_(count) {}
 };
 
