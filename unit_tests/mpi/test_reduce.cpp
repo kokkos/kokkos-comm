@@ -29,6 +29,7 @@ class Reduce : public testing::Test {
 using ScalarTypes = ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>, Kokkos::complex<double>>;
 TYPED_TEST_SUITE(Reduce, ScalarTypes);
 
+namespace {
 /*!
 Each rank fills its sendbuf[i] with `rank + i`
 
@@ -68,6 +69,7 @@ void test_reduce_1d_contig() {
     ASSERT_EQ(errs, 0);
   }
 }
+}  // namespace
 
 TYPED_TEST(Reduce, 1D_contig) { test_reduce_1d_contig<typename TestFixture::Scalar>(); }
 
