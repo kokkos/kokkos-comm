@@ -18,6 +18,8 @@
 
 #include "KokkosComm/KokkosComm.hpp"
 
+#include "../view_builder.hpp"
+
 namespace {
 
 template <typename T>
@@ -35,17 +37,14 @@ Each rank fills its sendbuf[i] with `rank + i`
 
 operation is sum, so recvbuf[i] should be sum(0..size) + i * size
 */
-template <typename Scalar>
-void test_reduce_1d_contig() {
+template <typename Scalar, typename SendContig, typename RecvContig>
+void test_reduce_1d() {
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  Kokkos::View<Scalar *> sendv("sendv", 65536);
-  Kokkos::View<Scalar *> recvv;
-  if (0 == rank) {
-    Kokkos::resize(recvv, sendv.extent(0));
-  }
+  auto sendv = ViewBuilder<Scalar, 1>::view(SendContig{}, "sendv", 65536);
+  auto recvv = ViewBuilder<Scalar, 1>::view(RecvContig{}, "recvv", 65536);
 
   // fill send buffer
   Kokkos::parallel_for(
@@ -69,8 +68,12 @@ void test_reduce_1d_contig() {
     ASSERT_EQ(errs, 0);
   }
 }
+
 }  // namespace
 
-TYPED_TEST(Reduce, 1D_contig) { test_reduce_1d_contig<typename TestFixture::Scalar>(); }
+TYPED_TEST(Reduce, 1D_contig_contig) { test_reduce_1d<typename TestFixture::Scalar, contig, contig>(); }
+TYPED_TEST(Reduce, 1D_contig_noncontig) { test_reduce_1d<typename TestFixture::Scalar, contig, noncontig>(); }
+TYPED_TEST(Reduce, 1D_noncontig_contig) { test_reduce_1d<typename TestFixture::Scalar, noncontig, contig>(); }
+TYPED_TEST(Reduce, 1D_noncontig_noncontig) { test_reduce_1d<typename TestFixture::Scalar, noncontig, noncontig>(); }
 
 }  // namespace
