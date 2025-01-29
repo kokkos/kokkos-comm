@@ -40,7 +40,7 @@ void test_reduce_1d_contig() {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  Kokkos::View<Scalar *> sendv("sendv", 10);
+  Kokkos::View<Scalar *> sendv("sendv", 65536);
   Kokkos::View<Scalar *> recvv;
   if (0 == rank) {
     Kokkos::resize(recvv, sendv.extent(0));
@@ -50,12 +50,13 @@ void test_reduce_1d_contig() {
   Kokkos::parallel_for(
       sendv.extent(0), KOKKOS_LAMBDA(const int i) { sendv(i) = rank + i; });
 
-  KokkosComm::mpi::reduce(Kokkos::DefaultExecutionSpace(), sendv, recvv, MPI_SUM, 0, MPI_COMM_WORLD);
+  KokkosComm::mpi::reduce(Kokkos::DefaultExecutionSpace{}, sendv, recvv, MPI_SUM, 0, MPI_COMM_WORLD);
 
   if (0 == rank) {
+    Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> policy(0, recvv.extent(0));
     int errs;
     Kokkos::parallel_reduce(
-        recvv.extent(0),
+        policy,
         KOKKOS_LAMBDA(const int &i, int &lsum) {
           Scalar acc = 0;
           for (int r = 0; r < size; ++r) {
