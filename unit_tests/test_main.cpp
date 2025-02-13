@@ -55,7 +55,8 @@ class MpiListener : public testing::EmptyTestEventListener {
     const int rankFailed = result.failed();
     if (rankFailed) {
       std::stringstream ss;
-      ss << "(rank " << rank << " failed)";
+      ss << "(rank " << rank << " failed)\n";
+      ss << result.message();
       std::cout << ss.str() << std::endl;
     }
 
