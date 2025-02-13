@@ -53,14 +53,13 @@ void test_reduce_1d() {
   KokkosComm::mpi::reduce(Kokkos::DefaultExecutionSpace{}, sendv, recvv, MPI_SUM, 0, MPI_COMM_WORLD);
 
   if (0 == rank) {
-    Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> policy(0, recvv.extent(0));
     int errs;
     Kokkos::parallel_reduce(
-        policy,
+        recvv.extent(0),
         KOKKOS_LAMBDA(const int &i, int &lsum) {
           Scalar acc = 0;
           for (int r = 0; r < size; ++r) {
-            acc += r + i;
+            acc += r + i;  // every rank contributes rank + i
           }
           lsum += recvv(i) != acc;
         },
