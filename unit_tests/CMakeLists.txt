@@ -94,9 +94,6 @@ if(KOKKOSCOMM_ENABLE_MPI)
           ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-mpi-cuda-sendrecv
     )
   endif()
-
-
-
 endif()
 
 function(add_mpi_test test_name num_procs)
