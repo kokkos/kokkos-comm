@@ -132,7 +132,6 @@ endfunction()
 
 add_mpi_test(test-gtest-mpi       2 mpi/test_gtest_mpi.cpp) # make sure gtest is working
 add_mpi_test(test-mpi-view-access 2 mpi/test_mpi_view_access.cpp) # make sure MPI can access Kokkos::View data
-# add_mpi_test(test-mpi-sendrecv    2 mpi/test_mpi_sendrecv.cpp)
 add_mpi_test(test-sendrecv        2 mpi/test_sendrecv.cpp)
 add_mpi_test(test-isendrecv       2 mpi/test_isendrecv.cpp)
 add_mpi_test(test-reduce          2 mpi/test_reduce.cpp)
