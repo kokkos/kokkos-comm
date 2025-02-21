@@ -31,6 +31,7 @@
 #include "mpi/isend.hpp"
 #include "mpi/recv.hpp"
 #include "mpi/reduce.hpp"
+#include "mpi/impl/wait.hpp"
 #else
 #error at least one transport must be defined
 #endif
@@ -38,6 +39,7 @@
 #include "concepts.hpp"
 #include "point_to_point.hpp"
 #include "collective.hpp"
+#include "wait.hpp"
 
 #include <Kokkos_Core.hpp>
 
