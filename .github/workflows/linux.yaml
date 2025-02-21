@@ -21,7 +21,7 @@ jobs:
       COMM_SRC: ${{ github.workspace }}
       COMM_BUILD: ${{ github.workspace }}/build
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
