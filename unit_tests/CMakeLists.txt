@@ -98,29 +98,37 @@ if(KOKKOSCOMM_ENABLE_MPI)
 endif()
 
 # Tests using the MPI communication space, but not linking with MPI itself
-add_executable(test-main)
-target_sources(
-  test-main
-  PRIVATE
-    test_main.cpp
-    mpi/test_gtest_mpi.cpp        # make sure gtest is working
-    mpi/test_mpi_view_access.cpp  # make sure MPI can access Kokkos::View data
-    mpi/test_sendrecv.cpp         # other tests...
-    mpi/test_allgather.cpp
-    mpi/test_alltoall.cpp
-    mpi/test_isendrecv.cpp
-    mpi/test_alltoall.cpp
-    mpi/test_reduce.cpp
-    mpi/test_allgather.cpp
-)
-target_link_libraries(
-  test-main
-  PRIVATE
-    KokkosComm::KokkosComm
-    gtest
-)
-add_test(
-  NAME test-main
-  COMMAND
-    ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-main
-)
+function(add_mpi_test test_name num_procs)
+    # Extract source files from remaining arguments
+    set(sources ${ARGN})
+    
+    # Add test_main.cpp and the provided source files
+    add_executable(${test_name})
+    target_sources(
+        ${test_name}
+        PRIVATE
+            test_main.cpp
+            ${sources}
+    )
+    
+    target_link_libraries(
+        ${test_name}
+        PRIVATE
+            KokkosComm::KokkosComm
+            gtest
+    )
+    
+    add_test(
+        NAME ${test_name}
+        COMMAND
+            ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${num_procs} ./${test_name}
+    )
+endfunction()
+
+add_mpi_test(test-gtest-mpi       2 mpi/test_gtest_mpi.cpp) # make sure gtest is working
+add_mpi_test(test-mpi-view-access 2 mpi/test_mpi_view_access.cpp) # make sure MPI can access Kokkos::View data
+add_mpi_test(test-sendrecv        2 mpi/test_sendrecv.cpp)
+add_mpi_test(test-isendrecv       2 mpi/test_isendrecv.cpp)
+add_mpi_test(test-reduce          2 mpi/test_reduce.cpp)
+add_mpi_test(test-alltoall        2 mpi/test_alltoall.cpp)
+add_mpi_test(test-allgather       2 mpi/test_allgather.cpp)
