@@ -34,14 +34,16 @@
 
 #pragma once
 
-#include <KokkosComm/traits.hpp>
-#include <KokkosComm/mpi/impl/pack_traits.hpp>
-#include <KokkosComm/mpi/impl/include_mpi.hpp>
-#include <KokkosComm/mpi/impl/types.hpp>
-
+#include <mpi.h>
 #include <Kokkos_Core.hpp>
 
+#include <KokkosComm/concepts.hpp>
+#include <KokkosComm/traits.hpp>
+#include "impl/pack_traits.hpp"
+#include "impl/types.hpp"
+
 namespace KokkosComm::Impl {
+
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
 void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount, const RecvView &rv,
               const size_t recvCount, MPI_Comm comm) {

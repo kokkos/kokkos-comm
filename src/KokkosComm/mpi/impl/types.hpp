@@ -16,11 +16,11 @@
 
 #pragma once
 
-#include <KokkosComm/mpi/impl/include_mpi.hpp>
-
+#include <mpi.h>
 #include <Kokkos_Core.hpp>
 
 namespace KokkosComm::Impl {
+
 template <typename Scalar>
 MPI_Datatype mpi_type() {
   using T = std::decay_t<Scalar>;

@@ -16,10 +16,8 @@
 
 #pragma once
 
-#include <KokkosComm/concepts.hpp>
 #include <KokkosComm/config.hpp>
-
-#include <vector>
+#include "concepts.hpp"
 
 namespace KokkosComm {
 

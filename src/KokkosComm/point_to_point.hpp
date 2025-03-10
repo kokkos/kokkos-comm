@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include <KokkosComm/fwd.hpp>
-#include <KokkosComm/concepts.hpp>
-
 #include <Kokkos_Core.hpp>
+
+#include "fwd.hpp"
+#include "concepts.hpp"
 
 namespace KokkosComm {
 

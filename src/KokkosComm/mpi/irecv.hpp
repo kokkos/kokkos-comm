@@ -16,8 +16,11 @@
 
 #pragma once
 
-#include <KokkosComm/mpi/mpi.hpp>
-#include <KokkosComm/mpi/impl/tags.hpp>
+#include <KokkosComm/concepts.hpp>
+#include <KokkosComm/traits.hpp>
+#include "mpi.hpp"
+
+#include "impl/tags.hpp"
 
 namespace KokkosComm {
 
