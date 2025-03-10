@@ -16,9 +16,9 @@
 
 #include <iostream>
 
+#include <mpi.h>
 #include <gtest/gtest.h>
-
-#include "KokkosComm/KokkosComm.hpp"
+#include <KokkosComm/KokkosComm.hpp>
 
 #if defined(KOKKOSCOMM_IMPL_MPIEXT_H)
 #include <mpi-ext.h>

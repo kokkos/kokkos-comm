@@ -14,10 +14,10 @@
 //
 //@HEADER
 
-#include "view_builder.hpp"
+#include <gtest/gtest.h>
 #include <KokkosComm/KokkosComm.hpp>
 
-#include <gtest/gtest.h>
+#include "view_builder.hpp"
 
 namespace {
 

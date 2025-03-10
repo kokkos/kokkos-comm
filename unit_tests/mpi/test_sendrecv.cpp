@@ -14,11 +14,10 @@
 //
 //@HEADER
 
-#include <KokkosComm/KokkosComm.hpp>
+#include <type_traits>
 
 #include <gtest/gtest.h>
-
-#include <type_traits>
+#include <KokkosComm/KokkosComm.hpp>
 
 namespace {
 

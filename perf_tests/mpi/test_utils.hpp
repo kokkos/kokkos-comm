@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include <benchmark/benchmark.h>
-#include <mpi.h>
-
 #include <chrono>
+
+#include <mpi.h>
+#include <benchmark/benchmark.h>
 
 // F is a function that takes (state, MPI_Comm, args...)
 template <typename F, typename... Args>
