@@ -19,6 +19,7 @@
 // (NBCL), The Ohio State University.
 
 #include "test_utils.hpp"
+
 #include <KokkosComm/KokkosComm.hpp>
 
 template <typename Space, typename View>

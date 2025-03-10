@@ -29,7 +29,6 @@ namespace KokkosComm::mpi {
 template <KokkosView RecvView>
 void recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *status) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::recv");
-  using KCT = KokkosComm::Traits<RecvView>;
 
   if (KokkosComm::is_contiguous(rv)) {
     using ScalarType = typename RecvView::non_const_value_type;
@@ -38,6 +37,7 @@ void recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *statu
   } else {
     throw std::runtime_error("only contiguous views supported for low-level recv");
   }
+
   Kokkos::Tools::popRegion();
 }
 

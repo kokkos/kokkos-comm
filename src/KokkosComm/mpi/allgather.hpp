@@ -71,8 +71,6 @@ void allgather(const RecvView &rv, MPI_Comm comm) {
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
 void allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Mpi::allgather");
-  using SPT = KokkosComm::PackTraits<SendView>;
-  using RPT = KokkosComm::PackTraits<RecvView>;
 
   if (!KokkosComm::is_contiguous(sv) || !KokkosComm::is_contiguous(rv)) {
     throw std::runtime_error("allgather for non-contiguous views not implemented");

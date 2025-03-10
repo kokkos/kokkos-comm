@@ -23,9 +23,11 @@
 namespace KokkosComm {
 
 namespace Impl {
-// fallback - most types are not a KokkosComm transport
+
+// Fallback: types are not a KokkosComm communication space by default
 template <typename T>
 struct is_communication_space : public std::false_type {};
+
 }  // namespace Impl
 
 template <typename T>

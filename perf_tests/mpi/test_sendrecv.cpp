@@ -15,6 +15,7 @@
 //@HEADER
 
 #include "test_utils.hpp"
+
 #include <KokkosComm/KokkosComm.hpp>
 
 template <KokkosComm::mpi::CommunicationMode Mode, typename Space, typename View>
