@@ -16,29 +16,28 @@
 
 #pragma once
 
-#include <KokkosComm/fwd.hpp>
+// Should KokkosComm include Kokkos Core in its "main" header?
+#include <Kokkos_Core.hpp>
 
-// transport declarations
-// TODO: could probably be moved to a per-transport file to be included
+#include "fwd.hpp"
+#include "concepts.hpp"
+#include "point_to_point.hpp"
+#include "collective.hpp"
+
+// Communication spaces declarations
 #if defined(KOKKOSCOMM_ENABLE_MPI)
-#include <KokkosComm/mpi/mpi.hpp>
-#include <KokkosComm/mpi/send.hpp>
-#include <KokkosComm/mpi/allgather.hpp>
-#include <KokkosComm/mpi/alltoall.hpp>
-#include <KokkosComm/mpi/barrier.hpp>
-#include <KokkosComm/mpi/handle.hpp>
-#include <KokkosComm/mpi/irecv.hpp>
-#include <KokkosComm/mpi/isend.hpp>
-#include <KokkosComm/mpi/recv.hpp>
-#include <KokkosComm/mpi/reduce.hpp>
+#include "mpi/mpi.hpp"
+#include "mpi/handle.hpp"
+#include "mpi/send.hpp"
+#include "mpi/isend.hpp"
+#include "mpi/recv.hpp"
+#include "mpi/irecv.hpp"
+#include "mpi/barrier.hpp"
+#include "mpi/reduce.hpp"
+#include "mpi/allgather.hpp"
+#include "mpi/alltoall.hpp"
 #else
 #error at least one transport must be defined
 #endif
-
-#include <KokkosComm/concepts.hpp>
-#include <KokkosComm/point_to_point.hpp>
-#include <KokkosComm/collective.hpp>
-
-#include <Kokkos_Core.hpp>
 
 namespace KokkosComm {}  // namespace KokkosComm
