@@ -16,9 +16,6 @@
 
 #pragma once
 
-// Should KokkosComm include Kokkos Core in its "main" header?
-#include <Kokkos_Core.hpp>
-
 #include "fwd.hpp"
 #include "concepts.hpp"
 #include "point_to_point.hpp"
