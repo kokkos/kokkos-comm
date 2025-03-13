@@ -19,12 +19,16 @@
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include "mpi_space.hpp"
+#include "handle.hpp"
 
+#include "impl/pack_traits.hpp"
 #include "impl/tags.hpp"
+#include "impl/types.hpp"
 
 namespace KokkosComm {
 
 namespace Impl {
+// 
 // Recv implementation for Mpi
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 struct Recv<RecvView, ExecSpace, Mpi> {

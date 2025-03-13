@@ -22,9 +22,11 @@
 #include <KokkosComm/traits.hpp>
 #include "mpi_space.hpp"
 #include "comm_mode.hpp"
+#include "handle.hpp"
 
-#include "impl/types.hpp"
+#include "impl/pack_traits.hpp"
 #include "impl/tags.hpp"
+#include "impl/types.hpp"
 
 namespace KokkosComm {
 

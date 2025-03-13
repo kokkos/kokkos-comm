@@ -24,6 +24,7 @@
 #include "comm_mode.hpp"
 
 #include "impl/pack_traits.hpp"
+#include "impl/types.hpp"
 
 namespace KokkosComm::mpi {
 
