@@ -26,9 +26,8 @@
 #include "impl/types.hpp"
 
 namespace KokkosComm {
-
 namespace Impl {
-// 
+
 // Recv implementation for Mpi
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 struct Recv<RecvView, ExecSpace, Mpi> {
