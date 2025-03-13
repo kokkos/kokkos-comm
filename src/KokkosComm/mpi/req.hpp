@@ -22,7 +22,7 @@
 #include <mpi.h>
 
 #include <KokkosComm/fwd.hpp>
-#include "mpi.hpp"
+#include "mpi_space.hpp"
 
 namespace KokkosComm {
 

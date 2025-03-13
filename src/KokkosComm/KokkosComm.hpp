@@ -26,7 +26,7 @@
 
 // Communication spaces declarations
 #if defined(KOKKOSCOMM_ENABLE_MPI)
-#include "mpi/mpi.hpp"
+#include "mpi/mpi_space.hpp"
 #include "mpi/handle.hpp"
 #include "mpi/send.hpp"
 #include "mpi/isend.hpp"

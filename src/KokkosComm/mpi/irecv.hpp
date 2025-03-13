@@ -18,7 +18,7 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
-#include "mpi.hpp"
+#include "mpi_space.hpp"
 
 #include "impl/tags.hpp"
 

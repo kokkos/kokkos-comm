@@ -20,7 +20,7 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
-#include "mpi.hpp"
+#include "mpi_space.hpp"
 #include "comm_mode.hpp"
 
 #include "impl/types.hpp"
