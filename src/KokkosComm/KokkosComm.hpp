@@ -27,15 +27,20 @@
 // Communication spaces declarations
 #if defined(KOKKOSCOMM_ENABLE_MPI)
 #include "mpi/mpi_space.hpp"
+
 #include "mpi/handle.hpp"
-#include "mpi/send.hpp"
+#include "mpi/req.hpp"
+
+#include "mpi/irecv.hpp"
 #include "mpi/isend.hpp"
 #include "mpi/recv.hpp"
-#include "mpi/irecv.hpp"
-#include "mpi/barrier.hpp"
-#include "mpi/reduce.hpp"
+#include "mpi/send.hpp"
+
 #include "mpi/allgather.hpp"
 #include "mpi/alltoall.hpp"
+#include "mpi/reduce.hpp"
+
+#include "mpi/barrier.hpp"
 #else
 #error at least one transport must be defined
 #endif
