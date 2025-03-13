@@ -52,18 +52,18 @@ if(KOKKOSCOMM_ENABLE_MPI)
       TYPE HEADERS
       BASE_DIRS ${PROJECT_SOURCE_DIR}/src
       FILES
-        mpi/mpi.hpp
-        mpi/allgather.hpp
-        mpi/alltoall.hpp
-        mpi/barrier.hpp
+        mpi/mpi_space.hpp
         mpi/comm_mode.hpp
         mpi/handle.hpp
+        mpi/req.hpp
         mpi/irecv.hpp
         mpi/isend.hpp
         mpi/recv.hpp
-        mpi/reduce.hpp
-        mpi/req.hpp
         mpi/send.hpp
+        mpi/allgather.hpp
+        mpi/alltoall.hpp
+        mpi/reduce.hpp
+        mpi/barrier.hpp
   )
 
   # Implementation detail MPI headers
