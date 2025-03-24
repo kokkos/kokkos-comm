@@ -16,4 +16,4 @@ concurrency:
 
 jobs:
   h100:
-    uses: ./.github/workflows/snl-h100.yml
+    uses: ./.github/workflows/snl-h100.yaml
