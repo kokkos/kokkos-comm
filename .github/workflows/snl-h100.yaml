@@ -1,0 +1,64 @@
+name: H100
+
+permissions:
+  contents: none
+
+on:
+  workflow_call:
+
+jobs:
+  PR_CUDA1250_OPENMPI504:
+    name: PR_CUDA1250_OPENMPI504
+    runs-on: [cuda125-openmpi504-latest-latest]
+    
+    steps:
+      - name: Checkout Kokkos Comm
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: kokkos-comm
+
+      - name: Checkout Kokkos
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kokkos/kokkos
+          ref: 4.5.01
+          path: kokkos
+
+      - name: Configure Kokkos
+        run: |
+          nvidia-smi
+          cd kokkos/build
+          cmake -S kokkos -B kokkos/build \
+            -DCMAKE_CXX_COMPILER=kokkos/bin/nvcc_wrapper \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_INSTALL_PREFIX=kokkos/install \
+            -DKokkos_ENABLE_CUDA=ON \
+            -DKokkos_ARCH_HOPPER90=ON \
+            -DKokkos_ENABLE_TESTS=OFF \
+            -DKokkos_ENABLE_EXAMPLES=OFF \
+            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+            ..
+
+      - name: Build Kokkos
+        working-directory: kokkos/build
+        run: cmake --build kokkos/build --target install --parallel $(nproc)
+
+      - name: Configure Kokkos Comm
+        run: |
+          cmake -S kokkos-comm -B build \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_CXX_COMPILER=kokkos/bin/nvcc_wrapper \
+            -DCMAKE_CXX_FLAGS="-Werror" \
+            -DKokkosComm_ENABLE_TESTS=ON \
+            -DKokkosComm_ENABLE_PERFTESTS=ON
+
+      - name: Build Kokkos Comm
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Test Kokkos Comm
+        working-directory: build
+        run: ctest --output-on-failure -V --timeout 1200

@@ -1,0 +1,19 @@
+name: SNL-AT2
+
+on: 
+  pull_request:
+    paths-ignore:
+    - 'docs/**'
+    types: [ opened, reopened, synchronize ]
+
+permissions:
+  contents: none
+
+# Cancels any in progress 'workflow' associated with this PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  h100:
+    uses: ./.github/workflows/snl-h100.yml
