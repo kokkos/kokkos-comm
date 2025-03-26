@@ -77,10 +77,22 @@ inline void wait(Req<Mpi> req) {
   req.record_->postWaits_.clear();
 }
 
+inline void wait_all() {}
+
+inline void wait_all(Req<Mpi>& req) {
+  wait(req);
+}
+
 inline void wait_all(std::vector<Req<Mpi>> &reqs) {
   for (Req<Mpi> &req : reqs) {
     wait(req);
   }
+}
+
+template<typename... Args>
+inline void wait_all(Req<Mpi>& first, Args&... args) {
+  wait(first);
+  wait_all(args...);
 }
 
 inline int wait_any(std::vector<Req<Mpi>> &reqs) {
