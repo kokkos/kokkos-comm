@@ -31,7 +31,7 @@ jobs:
       - name: Configure Kokkos
         run: |
           cmake -S kokkos -B kokkos/build \
-            -DCMAKE_CXX_COMPILER=kokkos/bin/nvcc_wrapper \
+            -DCMAKE_CXX_COMPILER=$(realpath kokkos/bin/nvcc_wrapper) \
             -DCMAKE_CXX_STANDARD=20 \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_INSTALL_PREFIX=kokkos/install \
@@ -49,9 +49,9 @@ jobs:
       - name: Configure Kokkos Comm
         run: |
           cmake -S kokkos-comm -B build \
+            -DCMAKE_CXX_COMPILER=$(realpath kokkos/bin/nvcc_wrapper) \
             -DCMAKE_CXX_STANDARD=20 \
             -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DCMAKE_CXX_COMPILER=kokkos/bin/nvcc_wrapper \
             -DCMAKE_CXX_FLAGS="-Werror" \
             -DKokkosComm_ENABLE_TESTS=ON \
             -DKokkosComm_ENABLE_PERFTESTS=ON
