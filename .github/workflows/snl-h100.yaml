@@ -41,8 +41,7 @@ jobs:
             -DKokkos_ENABLE_EXAMPLES=OFF \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
-            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-            ..
+            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF
 
       - name: Build Kokkos
         run: cmake --build kokkos/build --target install --parallel $(nproc)
