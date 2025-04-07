@@ -1,5 +1,6 @@
 name: H100
 
+
 permissions:
   contents: none
 
@@ -24,10 +25,11 @@ jobs:
           ref: 4.5.01
           path: kokkos
 
+      - name: nvidia-smi
+        run: nvidia-smi
+
       - name: Configure Kokkos
         run: |
-          nvidia-smi
-          cd kokkos/build
           cmake -S kokkos -B kokkos/build \
             -DCMAKE_CXX_COMPILER=kokkos/bin/nvcc_wrapper \
             -DCMAKE_CXX_STANDARD=20 \
@@ -43,7 +45,6 @@ jobs:
             ..
 
       - name: Build Kokkos
-        working-directory: kokkos/build
         run: cmake --build kokkos/build --target install --parallel $(nproc)
 
       - name: Configure Kokkos Comm
