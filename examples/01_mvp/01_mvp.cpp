@@ -21,7 +21,7 @@
 // the other that needs our part of x.
 
 // Two helper objects are used to manage the distributed work:
-// - RankDims: contains the number of rows, the start and end row indices for each rank.
+// - RankDims: contains the number of rows, the start and end indices for each rank.
 // - RankCommInfo: contains the ranks to send data to and receive data from.
 
 // Other communication patterns can be used to exchange the vector x between ranks.
@@ -65,26 +65,35 @@ struct RankCommInfo {
 
 template <typename View>
 bool verify_result(View& y, int N) {
-  double N_d       = static_cast<double>(N);
+  const double N_d = static_cast<double>(N);
   const double sum = N_d * (N_d + 1) * (2 * N_d + 1) / 6;
   int errors       = 0;
-  Kokkos::parallel_reduce(
-      "Verify", y.extent(0), KOKKOS_LAMBDA(const int i, int& err) { err += (y(i) != sum); }, errors);
+
+  Kokkos::parallel_reduce("Verify", y.extent(0), KOKKOS_LAMBDA(const int i, int& err) {
+    err += (y(i) != sum);
+  }, errors);
 
   return (errors == 0);
 }
 
 int main(int argc, char* argv[]) {
   int N = 1 << 12;
+  int M = 1 << 12;
 
-  if (argc > 1) {
-    std::string_view arg(argv[1]);
+  for (int i = 1; i < argc; i++) {
+    std::string_view arg(argv[i]);
+
     if (arg == "-h") {
-      std::cout << "KokkosComm dense square matrix-vector product example \n"
-                << "  Usage: " << argv[0] << " [-N <size>] default size is 2^12" << std::endl;
+      std::cout << "KokkosComm dense matrix-vector product example \n"
+                << "Options: \n"
+                << " [-M <size>] Number of rows in matrix A (default: 2^12)\n"
+                << " [-N <size>] Number of columns in A (default: 2^12)\n"
+                << " [-h]        for help" << std::endl;
       return 0;
-    } else if (arg == "-N" && argc > 2) {
-      N = static_cast<int>(std::stoi(argv[2]));
+    } else if (arg == "-N" && argc > i + 1) {
+      N = std::stoi(argv[i+1]);
+    } else if (arg == "-M" && argc > i + 1) {
+      M = std::stoi(argv[i+1]);
     }
   }
 
@@ -97,9 +106,9 @@ int main(int argc, char* argv[]) {
   {
   using ExecSpace   = Kokkos::DefaultExecutionSpace;
   using CommSpace   = KokkosComm::Mpi;
-  using matrix_type = Kokkos::View<double**, ExecSpace>;
-  using vector_type = Kokkos::View<double*, ExecSpace>;
-  using kk_pair     = Kokkos::pair<int, int>;
+  using MatrixType  = Kokkos::View<double**, ExecSpace>;
+  using VectorType  = Kokkos::View<double*, ExecSpace>;
+  using KKPair      = Kokkos::pair<int, int>;
 
   int rank, size;
   KokkosComm::Handle<ExecSpace, CommSpace> handle;
@@ -108,38 +117,41 @@ int main(int argc, char* argv[]) {
 
   if (rank == 0) {
     std::cout << "Running with " << size << " ranks\n"
-              << "Matrix size " << N << " x " << N << std::endl;
+              << "Matrix size " << M << " x " << N << std::endl;
   }
 
   // Helper objects for distributed work
-  RankDims dim(N, rank, size);
+  RankDims dim_mtx(M, rank, size);
+  RankDims dim_vec(N, rank, size);
   RankCommInfo comm_info(rank, size);
 
-  matrix_type A("A", dim.nb_rows, N);
-  vector_type x("x", dim.nb_rows);
-  vector_type y("y", dim.nb_rows);
+  MatrixType A("A", dim_mtx.nb_rows, N);
+  VectorType x("x", dim_vec.nb_rows);
+  VectorType y("y", dim_mtx.nb_rows);
 
-  // Initialize A, x, y
-  Kokkos::parallel_for(
-      "Initialize", dim.nb_rows, KOKKOS_LAMBDA(const int i) {
-        for (int j = 0; j < N; j++) {
-          A(i, j) = j + 1.0;
-        }
-        x(i) = dim.row_start + i + 1.0;
-      });
+  // Initialize A and x
+  Kokkos::parallel_for("Initialize", dim_mtx.nb_rows, KOKKOS_LAMBDA(const int i) {
+    for (int j = 0; j < N; j++) {
+      A(i, j) = j + 1.0;
+    }
+  });
+
+  Kokkos::parallel_for("Initialize x", dim_vec.nb_rows, KOKKOS_LAMBDA(const int i) {
+    x(i) = dim_vec.row_start + i +  1.0;
+  });
 
   // Set communication vector for send/recv operations
-  vector_type comm_vector("comm_vector", dim.nb_rows + size);
-  vector_type compute_vector("computed_vector", dim.nb_rows + size);
+  VectorType comm_vector("comm_vector", dim_vec.nb_rows + size);
+  VectorType compute_vector("computed_vector", dim_vec.nb_rows + size);
 
   // Span for the computation on the current step
-  auto span_compute = Kokkos::subview(compute_vector, kk_pair(0, dim.nb_rows));
+  auto span_compute = Kokkos::subview(compute_vector, KKPair(0, dim_vec.nb_rows));
   // Span to store the received data for next step
-  auto span_comm = Kokkos::subview(comm_vector, kk_pair(0, dim.nb_rows + size));
+  auto span_comm = Kokkos::subview(comm_vector, KKPair(0, dim_vec.nb_rows + size));
 
   // Copy x to the computation vector for first step
   Kokkos::deep_copy(span_compute, x);
-  RankDims current_dim = dim;
+  RankDims current_dim = dim_vec;
 
   // Communication and computation steps
   for (int step = 1; step < size; step++) {
@@ -148,37 +160,35 @@ int main(int argc, char* argv[]) {
 
     // Prepare to receive data
     RankDims next_dim(N, recv_comm_rank, size);
-    span_comm = Kokkos::subview(comm_vector, kk_pair(0, next_dim.nb_rows));
+    span_comm = Kokkos::subview(comm_vector, KKPair(0, next_dim.nb_rows));
 
     // Start MPI communication (non-blocking)
     auto req_send = KokkosComm::send(handle, x, send_comm_rank);
     auto req_recv = KokkosComm::recv(handle, span_comm, recv_comm_rank);
 
     // Compute with current data while communication may happen in the background
-    Kokkos::parallel_for(
-        "MatrixVectorProduct", dim.nb_rows, KOKKOS_LAMBDA(const int i) {
-          for (int j = 0; j < current_dim.nb_rows; j++) {
-            y(i) += A(i, j + current_dim.row_start) * span_compute(j);
-          }
-        });
+    Kokkos::parallel_for("MatrixVectorProduct", dim_mtx.nb_rows, KOKKOS_LAMBDA(const int i) {
+      for (int j = 0; j < current_dim.nb_rows; j++) {
+        y(i) += A(i, j + current_dim.row_start) * span_compute(j);
+      }
+    });
 
     // Wait for the communication to finish
     KokkosComm::wait(req_send);
     KokkosComm::wait(req_recv);
 
     // Copy the received data to span_compute for the next step
-    span_compute = Kokkos::subview(compute_vector, kk_pair(0, next_dim.nb_rows));
+    span_compute = Kokkos::subview(compute_vector, KKPair(0, next_dim.nb_rows));
     Kokkos::deep_copy(span_compute, span_comm);
     current_dim = next_dim;
   }
 
   // Last step
-  Kokkos::parallel_for(
-      "MatrixVectorProduct tail", dim.nb_rows, KOKKOS_LAMBDA(const int i) {
-        for (int j = 0; j < current_dim.nb_rows; j++) {
-          y(i) += A(i, j + current_dim.row_start) * span_compute(j);
-        }
-      });
+  Kokkos::parallel_for("MatrixVectorProduct tail", dim_mtx.nb_rows, KOKKOS_LAMBDA(const int i) {
+    for (int j = 0; j < current_dim.nb_rows; j++) {
+      y(i) += A(i, j + current_dim.row_start) * span_compute(j);
+    }
+  });
 
   // Wait for all nodes
   KokkosComm::mpi::barrier(handle.mpi_comm());
