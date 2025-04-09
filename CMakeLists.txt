@@ -34,11 +34,13 @@ include(cmake/mpi-vendor.cmake)
 option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" OFF)
 option(KokkosComm_ENABLE_TESTS "Build KokkosComm tests" OFF)
 option(KokkosComm_ENABLE_MPI "Build KokkosComm with MPI transport" ON)
+option(KokkosComm_ENABLE_EXAMPLES "Build KokkosComm examples" OFF)
 
 # Resolve options
 set(KOKKOSCOMM_ENABLE_PERFTESTS ${KokkosComm_ENABLE_PERFTESTS} CACHE BOOL "" FORCE)
 set(KOKKOSCOMM_ENABLE_TESTS ${KokkosComm_ENABLE_TESTS} CACHE BOOL "" FORCE)
 set(KOKKOSCOMM_ENABLE_MPI ${KokkosComm_ENABLE_MPI} CACHE BOOL "" FORCE)
+set(KOKKOSCOMM_ENABLE_EXAMPLES ${KokkosComm_ENABLE_EXAMPLES} CACHE BOOL "" FORCE)
 
 find_package(Kokkos REQUIRED)
 if(KOKKOSCOMM_ENABLE_MPI)
@@ -54,6 +56,9 @@ endif()
 if(KOKKOSCOMM_ENABLE_PERFTESTS)
   enable_testing() # so we can run ctest at the top-level build dir
   add_subdirectory(perf_tests)
+endif()
+if(KOKKOSCOMM_ENABLE_EXAMPLES)
+  add_subdirectory(examples)
 endif()
 
 # -- PACKAGING -- #
