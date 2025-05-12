@@ -9,9 +9,7 @@ project(
 )
 
 find_package(Kokkos REQUIRED)
-if(KOKKOSCOMM_ENABLE_MPI)
-  find_package(MPI REQUIRED)
-endif()
+find_package(MPI REQUIRED)
 
 # Treat the unit tests as a separate project
 # If not included in the Kokkos Comm build, find Kokkos Comm to do a standalone build

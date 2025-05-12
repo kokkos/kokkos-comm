@@ -37,8 +37,8 @@ struct RankDimsMtx {
   RankDimsMtx(int M, int N, int rank, int size) {
     const int grid_size = static_cast<int>(std::sqrt(size));
 
-    const int block_row = rank / grid_size;
-    const int block_col = rank % grid_size;
+    const int block_col = rank / grid_size;
+    const int block_row = rank % grid_size;
 
     this->row_offset = block_row * (M / grid_size);
     this->col_offset = block_col * (N / grid_size);
@@ -64,19 +64,19 @@ struct RankDimsVec {
 
   RankDimsVec(int N, int rank, int size) {
     const int grid_size = static_cast<int>(std::sqrt(size));
-    const int block_col = rank % grid_size;
-    const int block_row = rank / grid_size;
+    const int block_col = rank / grid_size;
+    const int block_row = rank % grid_size;
 
-    int block_row_offset = block_row * (N / grid_size);
-    int block_row_end    = (block_row + 1) * (N / grid_size);
-    if (block_row == grid_size - 1) {
+    int block_row_offset = block_col * (N / grid_size);
+    int block_row_end    = (block_col + 1) * (N / grid_size);
+    if (block_col == grid_size - 1) {
       block_row_end = N;
     }
     const int block_size = block_row_end - block_row_offset;
 
-    this->row_offset = block_row_offset + block_col * (block_size / grid_size);
-    int row_end      = block_row_offset + (block_col + 1) * (block_size / grid_size);
-    if (block_col == grid_size - 1) {
+    this->row_offset = block_row_offset + block_row * (block_size / grid_size);
+    int row_end      = block_row_offset + (block_row + 1) * (block_size / grid_size);
+    if (block_row == grid_size - 1) {
       row_end = block_row_end;
     }
     this->segment_size = row_end - this->row_offset;
@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
   using CommHandle = KokkosComm::Handle<ExecSpace, CommSpace>;
 
   CommHandle globalHandle;
-  const int worldRank  = globalHandle.rank();
+  const int worldRank = globalHandle.rank();
   const int worldSize = globalHandle.size();
 
   const int gridSize = static_cast<int>(std::sqrt(worldSize));
@@ -167,12 +167,12 @@ int main(int argc, char* argv[]) {
 
   // Create column communicator
   MPI_Comm colComm;
-  int col = worldRank % gridSize;
+  int col = worldRank / gridSize;
   MPI_Comm_split(MPI_COMM_WORLD, col, worldRank, &colComm);
 
   // Create row communicator
   MPI_Comm rowComm;
-  int row = worldRank / gridSize;
+  int row = worldRank % gridSize;
   MPI_Comm_split(MPI_COMM_WORLD, row, worldRank, &rowComm);
 
   // Create KokkosComm handles for each communicator
@@ -180,8 +180,7 @@ int main(int argc, char* argv[]) {
   CommHandle rowHandle(rowComm);
 
   // Transpose the rank mapping
-  const int transposedRank = (worldRank % gridSize) * gridSize + worldRank / gridSize;
-  RankDimsVec vectorDist(N, transposedRank, worldSize);
+  RankDimsVec vectorDist(N, worldRank, worldSize);
   RankDimsMtx matrixDist(M, N, worldRank, worldSize);
 
   MatrixType A("A", matrixDist.num_rows, matrixDist.num_cols);
@@ -215,10 +214,9 @@ int main(int argc, char* argv[]) {
     const int sendRank = commPattern.send_ranks(step);
     const int recvRank = commPattern.recv_ranks(step);
 
-    // Transpose the rank to get the distribution for the next step
-    const int recvGlobalRank    = (recvRank * gridSize) + worldRank % gridSize;
-    const int recvRankTranspose = (recvGlobalRank % gridSize) * gridSize + recvGlobalRank / gridSize;
-    RankDimsVec nextDist(N, recvRankTranspose, worldSize);
+    // Get the global rank for the dimension
+    const int recvGlobalRank = (worldRank / gridSize) * gridSize + recvRank;
+    RankDimsVec nextDist(N, recvGlobalRank, worldSize);
 
     auto recvSpan = Kokkos::subview(recvBuffer, IndexRange(0, nextDist.segment_size));
     auto reqSend = KokkosComm::send(colHandle, x, sendRank);
@@ -279,12 +277,10 @@ int main(int argc, char* argv[]) {
     Kokkos::deep_copy(workBuffer, recvBuffer);
   }
 
+  // Last step
   Kokkos::parallel_for("Sum", matrixDist.num_rows, KOKKOS_LAMBDA(const int i) {
     y(i) += workBuffer(i);
   });
-
-  // Wait for all nodes
-  KokkosComm::mpi::barrier(globalHandle.mpi_comm());
 
   // Check the result
   bool success = verifyResults(y, N);
