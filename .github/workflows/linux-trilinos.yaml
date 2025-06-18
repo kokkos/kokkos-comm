@@ -13,14 +13,14 @@ on:
     types: [ opened, reopened, synchronize ]
 
 jobs:
-   Trilinos-develop-OpenMPI:
+  Develop-OpenMPI:
     continue-on-error: true # failure won't fail the workflow
     env:
       TRILINOS_BUILD: ${{ github.workspace }}/trilinos-build
       TRILINOS_INSTALL: ${{ github.workspace }}/trilinos-install
       COMM_SRC: ${{ github.workspace }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 40 # Trilinos build takes ~20 minutes
     steps:
       - name: Install MPI
         run: |
