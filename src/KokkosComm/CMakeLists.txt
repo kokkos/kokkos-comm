@@ -17,20 +17,22 @@
 add_library(KokkosComm INTERFACE)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
 
+
+
 # Public headers
 target_sources(
   KokkosComm
   INTERFACE
     FILE_SET kokkoscomm_public_headers
     TYPE HEADERS
-    BASE_DIRS ${PROJECT_SOURCE_DIR}/src
+    BASE_DIRS ${KokkosComm_SOURCE_DIR}/src
     FILES KokkosComm.hpp collective.hpp concepts.hpp fwd.hpp point_to_point.hpp traits.hpp
 )
 
 # Implementation detail headers
 target_sources(
   KokkosComm
-  INTERFACE FILE_SET kokkoscomm_impl_headers TYPE HEADERS BASE_DIRS ${PROJECT_SOURCE_DIR}/src FILES impl/contiguous.hpp
+  INTERFACE FILE_SET kokkoscomm_impl_headers TYPE HEADERS BASE_DIRS ${KokkosComm_SOURCE_DIR}/src FILES impl/contiguous.hpp
 )
 
 # Configuration header
@@ -39,8 +41,8 @@ target_sources(
   INTERFACE
     FILE_SET kokkoscomm_config_headers
     TYPE HEADERS
-    BASE_DIRS ${CMAKE_BINARY_DIR}/src
-    FILES ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp
+    BASE_DIRS ${KokkosComm_BINARY_DIR}/src
+    FILES ${KokkosComm_BINARY_DIR}/src/KokkosComm/config.hpp
 )
 
 if(KOKKOSCOMM_ENABLE_MPI)
@@ -50,7 +52,7 @@ if(KOKKOSCOMM_ENABLE_MPI)
     INTERFACE
       FILE_SET kokkoscomm_mpi_headers
       TYPE HEADERS
-      BASE_DIRS ${PROJECT_SOURCE_DIR}/src
+      BASE_DIRS ${KokkosComm_SOURCE_DIR}/src
       FILES
         mpi/mpi_space.hpp
         mpi/comm_mode.hpp
@@ -74,7 +76,7 @@ if(KOKKOSCOMM_ENABLE_MPI)
     INTERFACE
       FILE_SET kokkoscomm_mpi_impl_headers
       TYPE HEADERS
-      BASE_DIRS ${PROJECT_SOURCE_DIR}/src
+      BASE_DIRS ${KokkosComm_SOURCE_DIR}/src
       FILES mpi/impl/pack_traits.hpp mpi/impl/packer.hpp mpi/impl/tags.hpp mpi/impl/types.hpp
   )
 endif()
@@ -119,6 +121,24 @@ endif()
 target_link_libraries(KokkosComm INTERFACE KokkosComm::KokkosCommFlags Kokkos::kokkos)
 
 # Install library
+
+install(
+  TARGETS KokkosComm KokkosCommFlags
+  EXPORT KokkosComm
+  FILE_SET
+  kokkoscomm_public_headers
+  FILE_SET
+  kokkoscomm_impl_headers
+  FILE_SET
+  kokkoscomm_mpi_headers
+  FILE_SET
+  kokkoscomm_mpi_impl_headers
+  FILE_SET
+  kokkoscomm_config_headers
+  COMPONENT
+  KokkosComm
+)
+
 install(
   TARGETS KokkosComm KokkosCommFlags
   EXPORT KokkosCommTargets
@@ -128,3 +148,26 @@ install(
   FILE_SET kokkoscomm_mpi_impl_headers
   FILE_SET kokkoscomm_config_headers
 )
+
+if (KOKKOSCOMM_HAS_TRILINOS)
+  add_library(KokkosComm_all_libs INTERFACE)
+
+  set_target_properties(KokkosComm_all_libs PROPERTIES EXPORT_NAME all_libs)
+  target_link_libraries(KokkosComm_all_libs INTERFACE KokkosComm)
+
+  install(
+    TARGETS KokkosComm_all_libs
+    EXPORT KokkosComm
+    COMPONENT KokkosComm
+  )
+
+  # install(
+  #   TARGETS KokkosComm_all_libs
+  #   EXPORT KokkosCommTargets
+  #   COMPONENT KokkosComm
+  # )
+
+  add_library(KokkosComm::all_libs ALIAS KokkosComm_all_libs)
+else()
+
+endif()
