@@ -17,8 +17,6 @@
 add_library(KokkosComm INTERFACE)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
 
-
-
 # Public headers
 target_sources(
   KokkosComm
@@ -115,8 +113,10 @@ kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wno-gnu-zero-variadic-
 # linked before CUDA and friends, so link MPI before Kokkos.
 # TODO_CMAKE: in CMake 3.31, we can use LINK_LIBRARIES_STRATEGY to explicitly ask CMake not to
 # reorder how libraries are linked. In the mean time, we have to just hope (?).
-if(KOKKOSCOMM_ENABLE_MPI)
-  target_link_libraries(KokkosComm INTERFACE MPI::MPI_CXX)
+if(NOT KOKKOSCOMM_HAS_TRILINOS)
+  if(KOKKOSCOMM_ENABLE_MPI)
+    target_link_libraries(KokkosComm INTERFACE MPI::MPI_CXX)
+  endif()
 endif()
 target_link_libraries(KokkosComm INTERFACE KokkosComm::KokkosCommFlags Kokkos::kokkos)
 
