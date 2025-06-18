@@ -1,0 +1,59 @@
+name: Linux-Trilinos-Integration
+
+# only run most recent workflow in branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    paths-ignore:
+    - README.md
+    - 'docs/**'
+    types: [ opened, reopened, synchronize ]
+
+jobs:
+   Trilinos-develop-OpenMPI:
+    continue-on-error: true # failure won't fail the workflow
+    env:
+      TRILINOS_BUILD: ${{ github.workspace }}/trilinos-build
+      TRILINOS_INSTALL: ${{ github.workspace }}/trilinos-install
+      COMM_SRC: ${{ github.workspace }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Install MPI
+        run: |
+          sudo apt-get update && sudo apt-get install -y libopenmpi-dev openmpi-bin cmake
+          which mpirun
+          mpirun --version
+          which mpicxx
+          mpicxx --version
+      - name: Install openblas
+        run: sudo apt-get install libopenblas-dev
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Check out Trilinos
+        uses: actions/checkout@v4
+        with:
+          repository: trilinos/Trilinos
+          fetch-depth: 1
+          ref: develop # FIXME: master, once master has support
+          path: trilinos
+      - name: symlink kokkos-comm
+        run: |
+          ln -s "${{ github.workspace }}" trilinos/packages/kokkos-comm
+      - name: Configure Trilinos
+        run: >
+          cmake -S trilinos -B "$TRILINOS_BUILD" \
+            -DCMAKE_INSTALL_PREFIX="$TRILINOS_INSTALL" \
+            -DTPL_ENABLE_MPI=ON \
+            -DTrilinos_ENABLE_KokkosComm=ON \
+            -DTrilinos_ENABLE_Tpetra=ON \
+              -DTpetra_ENABLE_TESTS=ON
+      - name: Build Trilinos
+        run: cmake --build "$TRILINOS_BUILD" --parallel $(nproc)
+      - name: Test Exists
+        run: "[ -f \"$TRILINOS_BUILD/packages/tpetra/core/test/KokkosComm/TpetraCore_KokkosComm_include.exe\" ] || exit 1"
+      - name: Install Trilinos
+        run: cmake --build "$TRILINOS_BUILD" --target install
