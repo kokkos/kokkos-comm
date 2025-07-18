@@ -63,8 +63,10 @@ if(KOKKOSCOMM_ENABLE_MPI)
   # Standalone MPI smoke tests (do not use KokkosComm)
   add_executable(test-mpi)
   target_sources(test-mpi PRIVATE mpi/test_mpi.cpp)
-  # doesn't use KokkosComm, so explicitly link MPI
-  target_link_libraries(test-mpi MPI::MPI_CXX)
+  if (NOT KOKKOSCOMM_HAS_TRILINOS)
+    # doesn't use KokkosComm, so explicitly link MPI
+    target_link_libraries(test-mpi MPI::MPI_CXX)
+  endif()
   add_test(
     NAME test-mpi-1
     COMMAND

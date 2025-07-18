@@ -48,6 +48,7 @@ Documentation Content
    dev/testing
    dev/mpi
    dev/docs
+   dev/trilinos
 
 
 Indices and tables
