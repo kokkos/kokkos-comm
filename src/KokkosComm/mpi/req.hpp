@@ -70,15 +70,17 @@ inline void wait_all(std::vector<Req<Mpi>> &reqs) {
   }
 }
 
-inline int wait_any(std::vector<Req<Mpi>> &reqs) {
-  for (size_t i = 0; i < reqs.size(); ++i) {
-    int completed;
-    MPI_Test(&(reqs[i].mpi_request()), &completed, MPI_STATUS_IGNORE);
-    if (completed) {
-      return true;
+inline void wait_any(std::span<Req<Mpi>> reqs) {
+  while (true) {
+    for (Req<Mpi> &req : reqs) {
+      int flag;
+      MPI_Test(&(req.mpi_request()), &flag, MPI_STATUS_IGNORE);
+      if (flag) {
+        wait(req);
+        return;
+      }
     }
   }
-  return false;
 }
 
 }  // namespace KokkosComm
