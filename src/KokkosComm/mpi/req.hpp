@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <vector>
 #include <functional>
+#include <span>
+#include <vector>
 
 #include <mpi.h>
 
@@ -51,12 +52,12 @@ class Req<Mpi> {
  private:
   std::shared_ptr<Record> record_;
 
-  friend void wait(Req<Mpi> req);
-  friend void wait_all(std::vector<Req<Mpi>> &reqs);
-  friend int wait_any(std::vector<Req<Mpi>> &reqs);
+  friend void wait(Req<Mpi> &req);
+  friend void wait_all(std::span<Req<Mpi>> reqs);
+  friend void wait_any(std::span<Req<Mpi>> reqs);
 };
 
-inline void wait(Req<Mpi> req) {
+inline void wait(Req<Mpi> &req) {
   MPI_Wait(&req.mpi_request(), MPI_STATUS_IGNORE);
   for (auto &f : req.record_->postWaits_) {
     f();
@@ -64,7 +65,7 @@ inline void wait(Req<Mpi> req) {
   req.record_->postWaits_.clear();
 }
 
-inline void wait_all(std::vector<Req<Mpi>> &reqs) {
+inline void wait_all(std::span<Req<Mpi>> reqs) {
   for (Req<Mpi> &req : reqs) {
     wait(req);
   }
