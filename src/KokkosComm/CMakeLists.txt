@@ -1,19 +1,3 @@
-#@HEADER
-# ************************************************************************
-#
-#                        Kokkos v. 4.0
-#       Copyright (2022) National Technology & Engineering
-#               Solutions of Sandia, LLC (NTESS).
-#
-# Under the terms of Contract DE-NA0003525 with NTESS,
-# the U.S. Government retains certain rights in this software.
-#
-# Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-# See https://kokkos.org/LICENSE for license information.
-# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#
-#@HEADER
-
 add_library(KokkosComm INTERFACE)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
 
@@ -30,7 +14,11 @@ target_sources(
 # Implementation detail headers
 target_sources(
   KokkosComm
-  INTERFACE FILE_SET kokkoscomm_impl_headers TYPE HEADERS BASE_DIRS ${PROJECT_SOURCE_DIR}/src FILES impl/contiguous.hpp
+  INTERFACE
+    FILE_SET kokkoscomm_impl_headers
+    TYPE HEADERS
+    BASE_DIRS ${PROJECT_SOURCE_DIR}/src
+    FILES impl/contiguous.hpp
 )
 
 # Configuration header
@@ -97,7 +85,10 @@ macro(kokkoscomm_check_and_add_compile_options)
   set(target ${ARGV0})
   set(flag ${ARGV1})
 
-  check_cxx_compiler_flag(${flag} HAS_${flag})
+  check_cxx_compiler_flag(
+    ${flag}
+    HAS_${flag}
+  )
   if(HAS_${flag})
     target_compile_options(${target} INTERFACE ${flag})
   endif()
@@ -107,7 +98,12 @@ endmacro()
 add_library(KokkosCommFlags INTERFACE)
 add_library(KokkosComm::KokkosCommFlags ALIAS KokkosCommFlags)
 target_compile_features(KokkosCommFlags INTERFACE cxx_std_20)
-set_target_properties(KokkosCommFlags PROPERTIES CXX_EXTENSIONS OFF)
+set_target_properties(
+  KokkosCommFlags
+  PROPERTIES
+    CXX_EXTENSIONS
+      OFF
+)
 
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wall)
 kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wextra)
@@ -127,15 +123,27 @@ kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wno-gnu-zero-variadic-
 if(KOKKOSCOMM_ENABLE_MPI)
   target_link_libraries(KokkosComm INTERFACE MPI::MPI_CXX)
 endif()
-target_link_libraries(KokkosComm INTERFACE KokkosComm::KokkosCommFlags Kokkos::kokkos)
+target_link_libraries(
+  KokkosComm
+  INTERFACE
+    KokkosComm::KokkosCommFlags
+    Kokkos::kokkos
+)
 
 # Install library
 install(
-  TARGETS KokkosComm KokkosCommFlags
+  TARGETS
+    KokkosComm
+    KokkosCommFlags
   EXPORT KokkosCommTargets
-  FILE_SET kokkoscomm_public_headers
-  FILE_SET kokkoscomm_impl_headers
-  FILE_SET kokkoscomm_mpi_headers
-  FILE_SET kokkoscomm_mpi_impl_headers
-  FILE_SET kokkoscomm_config_headers
+  FILE_SET
+  kokkoscomm_public_headers
+  FILE_SET
+  kokkoscomm_impl_headers
+  FILE_SET
+  kokkoscomm_mpi_headers
+  FILE_SET
+  kokkoscomm_mpi_impl_headers
+  FILE_SET
+  kokkoscomm_config_headers
 )

@@ -1,20 +1,8 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#pragma once
+#ifndef KOKKOSCOMM_MPI_REDUCE_HPP
+#define KOKKOSCOMM_MPI_REDUCE_HPP
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
@@ -87,3 +75,5 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_
 }
 
 }  // namespace KokkosComm::mpi
+
+#endif  // KOKKOSCOMM_MPI_REDUCE_HPP

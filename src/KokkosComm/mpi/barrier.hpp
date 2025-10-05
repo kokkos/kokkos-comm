@@ -1,26 +1,14 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#pragma once
+#ifndef KOKKOSCOMM_MPI_BARRIER_HPP
+#define KOKKOSCOMM_MPI_BARRIER_HPP
 
 #include <KokkosComm/concepts.hpp>
 
 namespace KokkosComm {
-
 namespace Impl {
+
 template <KokkosExecutionSpace ExecSpace, CommunicationSpace CommSpace>
 struct Barrier {
   Barrier(Handle<ExecSpace, Mpi> &&h) {
@@ -28,8 +16,8 @@ struct Barrier {
     MPI_Barrier(h.mpi_comm());
   }
 };
-}  // namespace Impl
 
+}  // namespace Impl
 namespace mpi {
 
 inline void barrier(MPI_Comm comm) {
@@ -39,5 +27,6 @@ inline void barrier(MPI_Comm comm) {
 }
 
 }  // namespace mpi
-
 }  // namespace KokkosComm
+
+#endif  // KOKKOSCOMM_MPI_BARRIER_HPP

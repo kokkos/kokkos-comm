@@ -1,20 +1,8 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#pragma once
+#ifndef KOKKOSCOMM_PERF_TESTS_MPI_UTILS_HPP
+#define KOKKOSCOMM_PERF_TESTS_MPI_UTILS_HPP
 
 #include <chrono>
 
@@ -36,3 +24,5 @@ void do_iteration(benchmark::State &state, MPI_Comm comm, F &&func, Args... args
   MPI_Allreduce(&elapsed_seconds, &max_elapsed_second, 1, MPI_DOUBLE, MPI_MAX, comm);
   state.SetIterationTime(max_elapsed_second);
 }
+
+#endif  // KOKKOSCOMM_PERF_TESTS_MPI_UTILS_HPP

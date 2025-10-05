@@ -1,19 +1,3 @@
-#@HEADER
-# ************************************************************************
-#
-#                        Kokkos v. 4.0
-#       Copyright (2022) National Technology & Engineering
-#               Solutions of Sandia, LLC (NTESS).
-#
-# Under the terms of Contract DE-NA0003525 with NTESS,
-# the U.S. Government retains certain rights in this software.
-#
-# Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-# See https://kokkos.org/LICENSE for license information.
-# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#
-#@HEADER
-
 cmake_minimum_required(VERSION 3.23) # same as KokkosComm
 
 project(
@@ -77,66 +61,81 @@ if(KOKKOSCOMM_ENABLE_MPI)
   )
 
   # KOKKOS_ENABLE_CUDA is not set?
-  if (Kokkos_ENABLE_CUDA)
+  if(Kokkos_ENABLE_CUDA)
     add_executable(test-mpi-cuda-sendrecv)
     target_sources(test-mpi-cuda-sendrecv PRIVATE mpi/test_mpi_cuda_sendrecv.cpp)
     target_link_libraries(test-mpi-cuda-sendrecv MPI::MPI_CXX)
 
     # MPICH needs dynamic cudart (we think, pmodels/mpich#7304)
-    if (KOKKOSCOMM_IMPL_MPI_IS_MPICH)
+    if(KOKKOSCOMM_IMPL_MPI_IS_MPICH)
       # Setting the CUDA_RUNTIME_LIBRARY property on this target to "Shared" doesn't work for
       # reasons I don't understand.
-      target_compile_options(test-mpi-cuda-sendrecv PUBLIC --cudart shared)
-      target_link_options(test-mpi-cuda-sendrecv PUBLIC --cudart shared)
+      target_compile_options(
+        test-mpi-cuda-sendrecv
+        PUBLIC
+          --cudart
+          shared
+      )
+      target_link_options(
+        test-mpi-cuda-sendrecv
+        PUBLIC
+          --cudart
+          shared
+      )
     endif()
     add_test(
       NAME test-mpi-cuda-sendrecv
       COMMAND
-          ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-mpi-cuda-sendrecv
+        ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-mpi-cuda-sendrecv
     )
   endif()
 
-  if (Kokkos_ENABLE_HIP)
+  if(Kokkos_ENABLE_HIP)
     add_executable(test-mpi-hip-sendrecv)
     target_sources(test-mpi-hip-sendrecv PRIVATE mpi/test_mpi_hip_sendrecv.cpp)
     target_link_libraries(test-mpi-hip-sendrecv MPI::MPI_CXX)
     find_package(hip REQUIRED)
     target_link_libraries(test-mpi-hip-sendrecv hip::host)
-    target_compile_options(test-mpi-hip-sendrecv PUBLIC -x hip)
+    target_compile_options(
+      test-mpi-hip-sendrecv
+      PUBLIC
+        -x
+        hip
+    )
     add_test(
       NAME test-mpi-hip-sendrecv
       COMMAND
-          ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-mpi-hip-sendrecv
+        ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ./test-mpi-hip-sendrecv
     )
   endif()
 endif()
 
 # Tests using the MPI communication space, but not linking with MPI itself
 function(add_mpi_test test_name num_procs)
-    # Extract source files from remaining arguments
-    set(sources ${ARGN})
+  # Extract source files from remaining arguments
+  set(sources ${ARGN})
 
-    # Add test_main.cpp and the provided source files
-    add_executable(${test_name})
-    target_sources(
-        ${test_name}
-        PRIVATE
-            test_main.cpp
-            ${sources}
-    )
+  # Add test_main.cpp and the provided source files
+  add_executable(${test_name})
+  target_sources(
+    ${test_name}
+    PRIVATE
+      test_main.cpp
+      ${sources}
+  )
 
-    target_link_libraries(
-        ${test_name}
-        PRIVATE
-            KokkosComm::KokkosComm
-            gtest
-    )
+  target_link_libraries(
+    ${test_name}
+    PRIVATE
+      KokkosComm::KokkosComm
+      gtest
+  )
 
-    add_test(
-        NAME ${test_name}
-        COMMAND
-            ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${num_procs} ./${test_name}
-    )
+  add_test(
+    NAME ${test_name}
+    COMMAND
+      ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${num_procs} ./${test_name}
+  )
 endfunction()
 
 add_mpi_test(test-gtest-mpi       2 mpi/test_gtest_mpi.cpp) # make sure gtest is working

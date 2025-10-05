@@ -1,20 +1,8 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#pragma once
+#ifndef KOKKOSCOMM_MPI_ISEND_HPP
+#define KOKKOSCOMM_MPI_ISEND_HPP
 
 #include <mpi.h>
 
@@ -30,7 +18,6 @@
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm {
-
 namespace Impl {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, mpi::CommunicationMode SendMode>
@@ -76,7 +63,6 @@ struct Send<SendView, ExecSpace, Mpi> {
 };
 
 }  // namespace Impl
-
 namespace mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode SendMode>
@@ -102,5 +88,6 @@ void isend(const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Request &re
 }
 
 }  // namespace mpi
-
 }  // namespace KokkosComm
+
+#endif  // KOKKOSCOMM_MPI_ISEND_HPP

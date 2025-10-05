@@ -1,20 +1,8 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#pragma once
+#ifndef KOKKOSCOMM_MPI_IRECV_HPP
+#define KOKKOSCOMM_MPI_IRECV_HPP
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
@@ -57,7 +45,6 @@ struct Recv<RecvView, ExecSpace, Mpi> {
 };
 
 }  // namespace Impl
-
 namespace mpi {
 
 template <KokkosView RecvView>
@@ -73,5 +60,6 @@ void irecv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Request &req
 }
 
 }  // namespace mpi
-
 }  // namespace KokkosComm
+
+#endif  // KOKKOSCOMM_MPI_IRECV_HPP
