@@ -51,6 +51,7 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
   send(space, sv, dest, tag, comm, DefaultCommMode{});
 }
 
+/// NOTE: This overload has the side effect of fencing on the default execution space.
 template <KokkosView SendView>
 void send(const SendView &sv, int dest, int tag, MPI_Comm comm) {
   send(Kokkos::DefaultExecutionSpace(), sv, dest, tag, comm, DefaultCommMode{});
