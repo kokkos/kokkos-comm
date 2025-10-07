@@ -75,6 +75,7 @@ inline void wait_all(std::span<Req<Mpi>> reqs) {
 }
 
 inline void wait_any(std::span<Req<Mpi>> reqs) {
+  // FIXME: Active wait-loop
   while (true) {
     for (Req<Mpi> &req : reqs) {
       int flag;
