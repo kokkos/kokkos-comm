@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_POINT_TO_POINT_HPP
-#define KOKKOSCOMM_POINT_TO_POINT_HPP
+#pragma once
 
 #include <Kokkos_Core.hpp>
 
@@ -36,5 +35,3 @@ Req<CommSpace> send(SendView &sv, int dest) {
 }
 
 }  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_POINT_TO_POINT_HPP

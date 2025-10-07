@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_REDUCE_HPP
-#define KOKKOSCOMM_MPI_REDUCE_HPP
+#pragma once
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
@@ -75,5 +74,3 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_
 }
 
 }  // namespace KokkosComm::mpi
-
-#endif  // KOKKOSCOMM_MPI_REDUCE_HPP

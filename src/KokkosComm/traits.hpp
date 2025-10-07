@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_TRAITS_HPP
-#define KOKKOSCOMM_TRAITS_HPP
+#pragma once
 
 #include <type_traits>
 
@@ -61,5 +60,3 @@ constexpr bool is_reference_counted() {
 }
 
 }  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_TRAITS_HPP

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_IMPL_PACKER_HPP
-#define KOKKOSCOMM_MPI_IMPL_PACKER_HPP
+#pragma once
 
 #include <mpi.h>
 
@@ -99,5 +98,3 @@ struct MpiDatatype {
 
 }  // namespace Packer
 }  // namespace KokkosComm::Impl
-
-#endif  // KOKKOSCOMM_MPI_IMPL_PACKER_HPP

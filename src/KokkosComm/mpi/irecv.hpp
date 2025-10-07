@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_IRECV_HPP
-#define KOKKOSCOMM_MPI_IRECV_HPP
+#pragma once
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
@@ -61,5 +60,3 @@ void irecv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Request &req
 
 }  // namespace mpi
 }  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_MPI_IRECV_HPP

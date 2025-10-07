@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_COMM_MODE_HPP
-#define KOKKOSCOMM_MPI_COMM_MODE_HPP
+#pragma once
 
 #include <type_traits>
 
@@ -54,5 +53,3 @@ template <typename T>
 concept CommunicationMode = is_communication_mode_v<T>;
 
 }  // namespace KokkosComm::mpi
-
-#endif  // KOKKOSCOMM_MPI_COMM_MODE_HPP

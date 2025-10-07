@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_IMPL_ERROR_HANDLING_HPP
-#define KOKKOSCOMM_MPI_IMPL_ERROR_HANDLING_HPP
+#pragma once
 
 #include <iostream>
 #include <mpi.h>
@@ -21,5 +20,3 @@ inline void fail_if(bool condition, const char* error_msg) {
 }
 
 }  // namespace KokkosComm::mpi
-
-#endif  // KOKKOSCOMM_MPI_IMPL_ERROR_HANDLING_HPP

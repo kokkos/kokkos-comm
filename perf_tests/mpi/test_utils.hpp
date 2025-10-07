@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_PERF_TESTS_MPI_UTILS_HPP
-#define KOKKOSCOMM_PERF_TESTS_MPI_UTILS_HPP
+#pragma once
 
 #include <chrono>
 
@@ -24,5 +23,3 @@ void do_iteration(benchmark::State &state, MPI_Comm comm, F &&func, Args... args
   MPI_Allreduce(&elapsed_seconds, &max_elapsed_second, 1, MPI_DOUBLE, MPI_MAX, comm);
   state.SetIterationTime(max_elapsed_second);
 }
-
-#endif  // KOKKOSCOMM_PERF_TESTS_MPI_UTILS_HPP

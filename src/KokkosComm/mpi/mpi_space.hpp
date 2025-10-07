@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_MPI_SPACE_HPP
-#define KOKKOSCOMM_MPI_MPI_SPACE_HPP
+#pragma once
 
 #include <type_traits>
 
@@ -35,5 +34,3 @@ template <>
 struct Impl::is_communication_space<KokkosComm::Mpi> : public std::true_type {};
 
 }  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_MPI_MPI_SPACE_HPP

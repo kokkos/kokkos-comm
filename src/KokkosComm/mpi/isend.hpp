@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_ISEND_HPP
-#define KOKKOSCOMM_MPI_ISEND_HPP
+#pragma once
 
 #include <mpi.h>
 
@@ -89,5 +88,3 @@ void isend(const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Request &re
 
 }  // namespace mpi
 }  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_MPI_ISEND_HPP

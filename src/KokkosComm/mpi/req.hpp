@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_REQ_HPP
-#define KOKKOSCOMM_MPI_REQ_HPP
+#pragma once
 
 #include <vector>
 #include <functional>
@@ -83,5 +82,3 @@ inline int wait_any(std::vector<Req<Mpi>> &reqs) {
 }
 
 }  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_MPI_REQ_HPP

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_ALL_GATHER_HPP
-#define KOKKOSCOMM_MPI_ALL_GATHER_HPP
+#pragma once
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
@@ -67,5 +66,3 @@ void allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, M
 }
 
 }  // namespace KokkosComm::mpi
-
-#endif  // KOKKOSCOMM_MPI_ALL_GATHER_HPP

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_CONFIG_HPP
-#define KOKKOSCOMM_CONFIG_HPP
+#pragma once
 
 #define KOKKOSCOMM_VERSION_MAJOR @KOKKOSCOMM_VERSION_MAJOR@
 #define KOKKOSCOMM_VERSION_MINOR @KOKKOSCOMM_VERSION_MINOR@
@@ -15,5 +14,3 @@
 #if defined(KOKKOSCOMM_ENABLE_MPI) && __has_include(<mpi-ext.h>)
 #define KOKKOSCOMM_IMPL_MPIEXT_H
 #endif
-
-#endif  // KOKKOSCOMM_CONFIG_HPP

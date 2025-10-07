@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_IMPL_PACK_TRAITS_HPP
-#define KOKKOSCOMM_MPI_IMPL_PACK_TRAITS_HPP
+#pragma once
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
@@ -22,5 +21,3 @@ struct PackTraits<View> {
 };
 
 }  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_MPI_IMPL_PACK_TRAITS_HPP

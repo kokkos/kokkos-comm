@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_CHANNEL_HPP
-#define KOKKOSCOMM_MPI_CHANNEL_HPP
+#pragma once
 
 #include <Kokkos_Core.hpp>
 
@@ -76,5 +75,3 @@ class Channel {
 };
 
 }  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_MPI_CHANNEL_HPP

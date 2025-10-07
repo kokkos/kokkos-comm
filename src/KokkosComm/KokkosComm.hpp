@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_KOKKOSCOMM_HPP
-#define KOKKOSCOMM_KOKKOSCOMM_HPP
+#pragma once
 
 #include "fwd.hpp"
 #include "concepts.hpp"
@@ -36,5 +35,3 @@
 #endif
 
 namespace KokkosComm {}  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_KOKKOSCOMM_HPP

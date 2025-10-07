@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_SCAN_HPP
-#define KOKKOSCOMM_MPI_SCAN_HPP
+#pragma once
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
@@ -95,6 +94,5 @@ void exclusive_scan(ExecSpace const &space, SendView const &sv, RecvView const &
 
   Kokkos::Tools::popRegion();
 }
-}  // namespace KokkosComm::mpi
 
-#endif  // KOKKOSCOMM_MPI_SCAN_HPP
+}  // namespace KokkosComm::mpi

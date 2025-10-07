@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_IMPL_TYPES_HPP
-#define KOKKOSCOMM_MPI_IMPL_TYPES_HPP
+#pragma once
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
@@ -135,5 +134,3 @@ MPI_Datatype view_mpi_type(const View &view) {
 }
 
 };  // namespace KokkosComm::Impl
-
-#endif  // KOKKOSCOMM_MPI_IMPL_TYPES_HPP

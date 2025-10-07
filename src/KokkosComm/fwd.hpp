@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_FWD_HPP
-#define KOKKOSCOMM_FWD_HPP
+#pragma once
 
 #include <KokkosComm/config.hpp>
 #include "concepts.hpp"
@@ -37,7 +36,4 @@ template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
 struct Barrier;
 
 }  // namespace Impl
-
 }  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_FWD_HPP

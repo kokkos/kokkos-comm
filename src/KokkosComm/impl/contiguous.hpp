@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_IMPL_CONTIGUOUS_HPP
-#define KOKKOSCOMM_IMPL_CONTIGUOUS_HPP
+#pragma once
 
 #include <string>
 
@@ -49,5 +48,3 @@ auto resize_contiguous_for(const Space &space, DstView &out, const SrcView &in) 
 }
 
 }  // namespace KokkosComm::Impl
-
-#endif  // KOKKOSCOMM_IMPL_CONTIGUOUS_HPP

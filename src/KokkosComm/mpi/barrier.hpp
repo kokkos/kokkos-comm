@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_BARRIER_HPP
-#define KOKKOSCOMM_MPI_BARRIER_HPP
+#pragma once
 
 #include <KokkosComm/concepts.hpp>
 
@@ -28,5 +27,3 @@ inline void barrier(MPI_Comm comm) {
 
 }  // namespace mpi
 }  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_MPI_BARRIER_HPP

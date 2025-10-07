@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_ALL_TO_ALL_HPP
-#define KOKKOSCOMM_MPI_ALL_TO_ALL_HPP
+#pragma once
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
@@ -86,5 +85,3 @@ void alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount
 }
 
 }  // namespace KokkosComm::Impl
-
-#endif  // KOKKOSCOMM_MPI_ALL_TO_ALL_HPP

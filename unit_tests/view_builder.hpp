@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_UNIT_TESTS_VIEW_BUILDER_HPP
-#define KOKKOSCOMM_UNIT_TESTS_VIEW_BUILDER_HPP
+#pragma once
 
 #include <Kokkos_Core.hpp>
 
@@ -32,5 +31,3 @@ struct ViewBuilder<T, 2> {
 
   static auto view(contig, const std::string &name, int e0, int e1) { return Kokkos::View<T **>(name, e0, e1); }
 };
-
-#endif  // KOKKOSCOMM_UNIT_TESTS_VIEW_BUILDER_HPP

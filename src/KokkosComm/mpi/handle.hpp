@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_MPI_HANDLE_HPP
-#define KOKKOSCOMM_MPI_HANDLE_HPP
+#pragma once
 
 #include <KokkosComm/fwd.hpp>
 #include <KokkosComm/concepts.hpp>
@@ -52,5 +51,3 @@ class Handle<ExecSpace, Mpi> {
 };
 
 }  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_MPI_HANDLE_HPP

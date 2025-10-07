@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOSCOMM_CONCEPTS_HPP
-#define KOKKOSCOMM_CONCEPTS_HPP
+#pragma once
 
 #include <type_traits>
 
@@ -28,5 +27,3 @@ template <typename T>
 concept CommunicationSpace = KokkosComm::Impl::is_communication_space<T>::value;
 
 }  // namespace KokkosComm
-
-#endif  // KOKKOSCOMM_CONCEPTS_HPP
