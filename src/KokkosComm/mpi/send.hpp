@@ -35,6 +35,7 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
   };
 
   if (is_contiguous(sv)) {
+    space.fence("fence before send");
     mpi_send_fn(data_handle(sv), span(sv), Impl::mpi_type_v<T>);
   } else {
     auto args = Packer::pack(space, sv);
