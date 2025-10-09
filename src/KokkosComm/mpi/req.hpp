@@ -74,6 +74,8 @@ inline void wait_all(std::span<Req<Mpi>> reqs) {
   }
 }
 
+/// FIXME: This function will loop indefinitely if all requests in the list are equivalent to `MPI_REQUEST_NULL`.
+/// FIXME: This function should return the index of the completed request, if any.
 inline void wait_any(std::span<Req<Mpi>> reqs) {
   // FIXME: Active wait-loop
   while (true) {
