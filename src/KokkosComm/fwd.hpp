@@ -28,12 +28,10 @@ namespace Impl {
 template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
 struct Recv;
+
 template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
 struct Send;
-template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
-          CommunicationSpace CommSpace   = DefaultCommunicationSpace>
-struct Barrier;
 
 }  // namespace Impl
 }  // namespace KokkosComm

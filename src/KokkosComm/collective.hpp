@@ -10,12 +10,4 @@
 #include "fwd.hpp"
 #include "concepts.hpp"
 
-namespace KokkosComm {
-
-template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
-          CommunicationSpace CommSpace   = DefaultCommunicationSpace>
-void barrier(Handle<ExecSpace, CommSpace> &&h) {
-  Impl::Barrier<ExecSpace, CommSpace>{std::forward<Handle<ExecSpace, CommSpace>>(h)};
-}
-
-}  // namespace KokkosComm
+namespace KokkosComm {}  // namespace KokkosComm
