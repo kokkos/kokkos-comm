@@ -7,6 +7,9 @@
 
 namespace {
 
-TEST(Barrier, 0) { KokkosComm::barrier(KokkosComm::Handle<>{}); }
+TEST(Barrier, 0) {
+  auto h = KokkosComm::Handle<KokkosComm::Mpi>{};
+  KokkosComm::mpi::barrier(h.mpi_comm());
+}
 
 }  // namespace
