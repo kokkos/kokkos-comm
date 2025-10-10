@@ -142,6 +142,7 @@ add_mpi_test(test-gtest-mpi       2 mpi/test_gtest_mpi.cpp) # make sure gtest is
 add_mpi_test(test-mpi-view-access 2 mpi/test_mpi_view_access.cpp) # make sure MPI can access Kokkos::View data
 add_mpi_test(test-sendrecv        2 mpi/test_sendrecv.cpp)
 add_mpi_test(test-isendrecv       2 mpi/test_isendrecv.cpp)
+add_mpi_test(test-barrier         2 mpi/test_barrier.cpp)
 add_mpi_test(test-broadcast       2 mpi/test_broadcast.cpp)
 add_mpi_test(test-reduce          2 mpi/test_reduce.cpp)
 add_mpi_test(test-allreduce       2 mpi/test_allreduce.cpp)

@@ -8,7 +8,7 @@
 namespace {
 
 TEST(Barrier, 0) {
-  auto h = KokkosComm::Handle<KokkosComm::Mpi>{};
+  KokkosComm::Handle h;
   KokkosComm::mpi::barrier(h.mpi_comm());
 }
 
