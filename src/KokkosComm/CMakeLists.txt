@@ -110,24 +110,3 @@ endif()
 if(KokkosComm_ENABLE_NCCL)
   target_link_libraries(KokkosComm INTERFACE NCCL::NCCL)
 endif()
-# Install library
-install(
-  TARGETS
-    KokkosComm
-    KokkosCommFlags
-  EXPORT KokkosCommTargets
-  FILE_SET
-  kokkoscomm_public_headers
-  FILE_SET
-  kokkoscomm_impl_headers
-  FILE_SET
-  kokkoscomm_mpi_headers
-  FILE_SET
-  kokkoscomm_mpi_impl_headers
-  FILE_SET
-  kokkoscomm_nccl_headers
-  FILE_SET
-  kokkoscomm_nccl_impl_headers
-  FILE_SET
-  kokkoscomm_config_headers
-)

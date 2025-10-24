@@ -42,9 +42,9 @@ add_library(KokkosComm INTERFACE)
 add_subdirectory(src/KokkosComm)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
 
-# -- PACKAGING -- #
-include(CMakePackageConfigHelpers)
-include(GNUInstallDirs)
+# --- PACKAGING --- #
+# Install library
+install(TARGETS KokkosComm EXPORT KokkosCommTargets FILE_SET HEADERS)
 
 # Generate version config header
 set(KOKKOSCOMM_VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR} CACHE STRING "" FORCE)
@@ -55,6 +55,9 @@ configure_file(
   ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp
   @ONLY
 )
+if(KokkosComm_INSTALL_CMAKE_PACKAGE)
+  include(GNUInstallDirs)
+  include(CMakePackageConfigHelpers)
 
 # Generate package config file
 configure_package_config_file(
@@ -85,6 +88,7 @@ install(
   NAMESPACE KokkosComm::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
 )
+endif()
 
 # --- TESTING / BENCHMARKING --- #
 if(KokkosComm_BUILD_UNITTESTS)
