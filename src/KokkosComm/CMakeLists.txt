@@ -1,23 +1,20 @@
-# Public headers
 target_sources(
   KokkosComm
   INTERFACE
-    FILE_SET kokkoscomm_public_headers
-    TYPE HEADERS
+    FILE_SET HEADERS
     BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-    FILES KokkosComm.hpp collective.hpp concepts.hpp fwd.hpp point_to_point.hpp traits.hpp reduction_op.hpp
+    FILES
+      # Public headers
+      KokkosComm.hpp
+      fwd.hpp
+      concepts.hpp
+      traits.hpp
+      collective.hpp
+      point_to_point.hpp
+      reduction_op.hpp
+      # Implementation detail headers
+      impl/contiguous.hpp
 )
-
-# Implementation detail headers
-target_sources(
-  KokkosComm
-  INTERFACE
-    FILE_SET kokkoscomm_impl_headers
-    TYPE HEADERS
-    BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-    FILES impl/contiguous.hpp
-)
-
 # Configuration header
 target_sources(
   KokkosComm
@@ -28,23 +25,20 @@ target_sources(
     FILES ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp
 )
 
-if(KOKKOSCOMM_ENABLE_MPI)
-  # Public MPI headers
+if(KokkosComm_ENABLE_MPI)
   target_sources(
     KokkosComm
     INTERFACE
-      FILE_SET kokkoscomm_mpi_headers
-      TYPE HEADERS
+      FILE_SET HEADERS
       BASE_DIRS ${PROJECT_SOURCE_DIR}/src
       FILES
-        # Structures
+        # Objects
         mpi/mpi_space.hpp
-        mpi/comm_mode.hpp
         mpi/handle.hpp
         mpi/req.hpp
         mpi/comm_mode.hpp
         mpi/channel.hpp
-        # P2P
+        # Point-to-point
         mpi/irecv.hpp
         mpi/isend.hpp
         mpi/recv.hpp
@@ -58,16 +52,7 @@ if(KOKKOSCOMM_ENABLE_MPI)
         mpi/scan.hpp
         # Other/utilities
         mpi/barrier.hpp
-  )
-
-  # Implementation detail MPI headers
-  target_sources(
-    KokkosComm
-    INTERFACE
-      FILE_SET kokkoscomm_mpi_impl_headers
-      TYPE HEADERS
-      BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-      FILES
+        # Implementation detail headers
         mpi/impl/pack_traits.hpp
         mpi/impl/packer.hpp
         mpi/impl/tags.hpp
@@ -75,21 +60,19 @@ if(KOKKOSCOMM_ENABLE_MPI)
         mpi/impl/error_handling.hpp
   )
 endif()
-
-if(KOKKOSCOMM_ENABLE_NCCL)
-  # Public NCCL headers
+# Should this be an `elseif()`?
+if(KokkosComm_ENABLE_NCCL)
   target_sources(
     KokkosComm
     INTERFACE
-      FILE_SET kokkoscomm_nccl_headers
-      TYPE HEADERS
+      FILE_SET HEADERS
       BASE_DIRS ${PROJECT_SOURCE_DIR}/src
       FILES
-        # Structures
+        # Objects
         nccl/nccl_space.hpp
         nccl/handle.hpp
         nccl/req.hpp
-        # P2P
+        # Point-to-point
         nccl/send.hpp
         nccl/recv.hpp
         # Collectives
@@ -98,16 +81,10 @@ if(KOKKOSCOMM_ENABLE_NCCL)
         nccl/allgather.hpp
         nccl/allreduce.hpp
         nccl/reduce.hpp
-  )
-
-  # Implementation detail NCCL headers
-  target_sources(
-    KokkosComm
-    INTERFACE
-      FILE_SET kokkoscomm_nccl_impl_headers
-      TYPE HEADERS
-      BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-      FILES nccl/impl/pack_traits.hpp nccl/impl/packer.hpp nccl/impl/types.hpp
+        # Implementation detail headers
+        nccl/impl/pack_traits.hpp
+        nccl/impl/packer.hpp
+        nccl/impl/types.hpp
   )
 endif()
 
