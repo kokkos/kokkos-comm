@@ -92,62 +92,24 @@ if(KokkosComm_ABORT_ON_ERROR)
   target_compile_definitions(KokkosComm INTERFACE KOKKOSCOMM_ABORT_ON_ERROR)
 endif()
 
-# --- COMPILE FLAGS --- #
-include(CheckCXXCompilerFlag)
-
-macro(kokkoscomm_check_and_add_compile_options)
-  set(target ${ARGV0})
-  set(flag ${ARGV1})
-  check_cxx_compiler_flag(
-    ${flag}
-    HAS_${flag}
-  )
-  if(HAS_${flag})
-    target_compile_options(${target} INTERFACE ${flag})
-  endif()
-endmacro()
-
 # KokkosComm is a C++20 project
-add_library(KokkosCommFlags INTERFACE)
-add_library(KokkosComm::KokkosCommFlags ALIAS KokkosCommFlags)
-target_compile_features(KokkosCommFlags INTERFACE cxx_std_20)
+target_compile_features(KokkosComm INTERFACE cxx_std_20)
 set_target_properties(
-  KokkosCommFlags
+  KokkosComm
   PROPERTIES
     CXX_EXTENSIONS
       OFF
 )
 
-kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wall)
-kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wextra)
-kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wshadow)
-kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wpedantic)
-kokkoscomm_check_and_add_compile_options(KokkosCommFlags -pedantic)
-kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wcast-align)
-kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wformat=2)
-kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wmissing-include-dirs)
-kokkoscomm_check_and_add_compile_options(KokkosCommFlags -Wno-gnu-zero-variadic-macro-arguments)
 
 # Linking
-target_link_libraries(
-  KokkosComm
-  INTERFACE
-    KokkosComm::KokkosCommFlags
-    Kokkos::kokkos
-)
-if(KOKKOSCOMM_ENABLE_MPI)
+target_link_libraries(KokkosComm INTERFACE Kokkos::kokkos)
+if(KokkosComm_ENABLE_MPI)
   target_link_libraries(KokkosComm INTERFACE MPI::MPI_CXX)
 endif()
-if(KOKKOSCOMM_ENABLE_NCCL)
+if(KokkosComm_ENABLE_NCCL)
   target_link_libraries(KokkosComm INTERFACE NCCL::NCCL)
 endif()
-target_link_libraries(
-  KokkosComm
-  INTERFACE
-    KokkosComm::KokkosCommFlags
-    Kokkos::kokkos
-)
-
 # Install library
 install(
   TARGETS
