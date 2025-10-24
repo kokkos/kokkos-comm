@@ -15,16 +15,6 @@ target_sources(
       # Implementation detail headers
       impl/contiguous.hpp
 )
-# Configuration header
-target_sources(
-  KokkosComm
-  INTERFACE
-    FILE_SET kokkoscomm_config_headers
-    TYPE HEADERS
-    BASE_DIRS ${CMAKE_BINARY_DIR}/src
-    FILES ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp
-)
-
 if(KokkosComm_ENABLE_MPI)
   target_sources(
     KokkosComm
@@ -88,10 +78,6 @@ if(KokkosComm_ENABLE_NCCL)
   )
 endif()
 
-if(KokkosComm_ABORT_ON_ERROR)
-  target_compile_definitions(KokkosComm INTERFACE KOKKOSCOMM_ABORT_ON_ERROR)
-endif()
-
 # KokkosComm is a C++20 project
 target_compile_features(KokkosComm INTERFACE cxx_std_20)
 set_target_properties(
@@ -101,6 +87,24 @@ set_target_properties(
       OFF
 )
 
+# Definitions
+if(KokkosComm_ENABLE_MPI)
+  target_compile_definitions(KokkosComm INTERFACE KOKKOSCOMM_ENABLE_MPI)
+  if(KokkosComm_IMPL_MPI_IS_MPICH)
+    target_compile_definitions(KokkosComm INTERFACE KOKKOSCOMM_IMPL_MPI_IS_MPICH)
+  elseif(KokkosComm_IMPL_MPI_IS_OPENMPI)
+    target_compile_definitions(KokkosComm INTERFACE KOKKOSCOMM_IMPL_MPI_IS_OPENMPI)
+  endif()
+  if(KokkosComm_IMPL_MPI_HAS_MPI_EXT_H)
+    target_compile_definitions(KokkosComm INTERFACE KOKKOSCOMM_IMPL_MPIEXT_H)
+  endif()
+endif()
+if(KokkosComm_ENABLE_NCCL)
+  target_compile_definitions(KokkosComm INTERFACE KOKKOSCOMM_ENABLE_NCCL)
+endif()
+if(KokkosComm_ENABLE_ABORT_ON_ERROR)
+  target_compile_definitions(KokkosComm INTERFACE KOKKOSCOMM_ABORT_ON_ERROR)
+endif()
 
 # Linking
 target_link_libraries(KokkosComm INTERFACE Kokkos::kokkos)

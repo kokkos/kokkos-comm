@@ -7,7 +7,6 @@
 
 #include <gtest/gtest.h>
 
-#include <KokkosComm/config.hpp>
 #include <Kokkos_Core.hpp>
 
 #include <mpi.h>
@@ -74,8 +73,7 @@ int main(int argc, char *argv[]) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   if (0 == rank) {
-    std::cerr << argv[0] << " (KokkosComm " << KOKKOSCOMM_VERSION_MAJOR << "." << KOKKOSCOMM_VERSION_MINOR << "."
-              << KOKKOSCOMM_VERSION_PATCH << ")\n";
+    std::cerr << argv[0] << "\n";
   }
 
   Kokkos::initialize();

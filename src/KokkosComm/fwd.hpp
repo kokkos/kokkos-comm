@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <KokkosComm/config.hpp>
 #include "concepts.hpp"
 #include "reduction_op.hpp"
 
