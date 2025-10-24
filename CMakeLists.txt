@@ -28,12 +28,12 @@ option(
   OFF
 )
 
+# --- DEPENDENCIES --- #
 find_package(Kokkos REQUIRED)
-if(KOKKOSCOMM_ENABLE_MPI)
-  find_package(MPI REQUIRED)
-endif()
+find_package(MPI REQUIRED)
 kokkoscomm_set_mpi_vendor_variables()
-if(KOKKOSCOMM_ENABLE_NCCL)
+
+if(KokkosComm_ENABLE_NCCL)
   find_package(NCCL REQUIRED)
 endif()
 
