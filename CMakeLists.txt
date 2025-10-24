@@ -12,17 +12,21 @@ project(
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(mpi-vendor)
 
-option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" OFF)
-option(KokkosComm_ENABLE_TESTS "Build KokkosComm tests" OFF)
-option(KokkosComm_ENABLE_MPI "Build KokkosComm with MPI transport" ON)
-option(KokkosComm_ENABLE_NCCL "Build KokkosComm with NCCL transport" OFF)
-option(KokkosComm_ABORT_ON_ERROR "Runtime error checks trigger a global abort" OFF)
-
-# Resolve options
-set(KOKKOSCOMM_ENABLE_PERFTESTS ${KokkosComm_ENABLE_PERFTESTS} CACHE BOOL "" FORCE)
-set(KOKKOSCOMM_ENABLE_TESTS ${KokkosComm_ENABLE_TESTS} CACHE BOOL "" FORCE)
-set(KOKKOSCOMM_ENABLE_MPI ${KokkosComm_ENABLE_MPI} CACHE BOOL "" FORCE)
-set(KOKKOSCOMM_ENABLE_NCCL ${KokkosComm_ENABLE_NCCL} CACHE BOOL "" FORCE)
+# --- OPTIONS --- #
+option(KokkosComm_BUILD_UNITTESTS "Build unit tests. Default: OFF. Values: { ON, OFF }." OFF)
+option(KokkosComm_BUILD_PERFTESTS "Build perf tests. Default: OFF. Values: { ON, OFF }." OFF)
+option(
+  KokkosComm_INSTALL_CMAKE_PACKAGE
+  "Install a CMake config-file package. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
+  ${PROJECT_IS_TOP_LEVEL}
+)
+option(KokkosComm_ENABLE_MPI "Enable MPI communication space backend. Default: ON. Values: { ON, OFF }." ON)
+option(KokkosComm_ENABLE_NCCL "Enable NCCL communication space backend. Default: OFF. Values: { ON, OFF }." OFF)
+option(
+  KokkosComm_ENABLE_ABORT_ON_ERROR
+  "Enable global abort on runtime error checks. Default: OFF. Values: { ON, OFF }."
+  OFF
+)
 
 find_package(Kokkos REQUIRED)
 if(KOKKOSCOMM_ENABLE_MPI)
