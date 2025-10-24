@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.25...4.2)
 
 project(
   KokkosComm
+  DESCRIPTION "Experimental communication interfaces for the Kokkos C++ Performance Portability Programming ecosystem"
   LANGUAGES
     CXX
   VERSION 0.2.0
-  DESCRIPTION "Experimental MPI interfaces (and more!) for the Kokkos C++ Performance Portability Programming ecosystem"
   HOMEPAGE_URL "https://kokkos.org/kokkos-comm/"
 )
 
