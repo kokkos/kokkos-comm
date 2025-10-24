@@ -37,7 +37,10 @@ if(KOKKOSCOMM_ENABLE_NCCL)
   find_package(NCCL REQUIRED)
 endif()
 
+# --- LIBRARY --- #
+add_library(KokkosComm INTERFACE)
 add_subdirectory(src/KokkosComm)
+add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
 
 # -- PACKAGING -- #
 include(CMakePackageConfigHelpers)

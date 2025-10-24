@@ -1,6 +1,3 @@
-add_library(KokkosComm INTERFACE)
-add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
-
 # Public headers
 target_sources(
   KokkosComm
