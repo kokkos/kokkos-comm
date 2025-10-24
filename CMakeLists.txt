@@ -38,14 +38,6 @@ if(KOKKOSCOMM_ENABLE_NCCL)
 endif()
 
 add_subdirectory(src/KokkosComm)
-if(KOKKOSCOMM_ENABLE_TESTS)
-  enable_testing() # so we can run ctest at the top-level build dir
-  add_subdirectory(unit_tests)
-endif()
-if(KOKKOSCOMM_ENABLE_PERFTESTS)
-  enable_testing() # so we can run ctest at the top-level build dir
-  add_subdirectory(perf_tests)
-endif()
 
 # -- PACKAGING -- #
 include(CMakePackageConfigHelpers)
@@ -90,3 +82,14 @@ install(
   NAMESPACE KokkosComm::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
 )
+
+# --- TESTING / BENCHMARKING --- #
+if(KokkosComm_BUILD_UNITTESTS)
+  enable_testing()
+  add_subdirectory(unit_tests)
+endif()
+if(KokkosComm_BUILD_PERFTESTS)
+  # Allow registering benchmarks as tests so we can run them using `ctest`
+  enable_testing()
+  add_subdirectory(perf_tests)
+endif()
