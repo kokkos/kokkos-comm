@@ -5,7 +5,7 @@ project(
   DESCRIPTION "Experimental communication interfaces for the Kokkos C++ Performance Portability Programming ecosystem"
   LANGUAGES
     CXX
-  VERSION 0.2.0
+  VERSION 0.3.0
   HOMEPAGE_URL "https://kokkos.org/kokkos-comm/"
 )
 
