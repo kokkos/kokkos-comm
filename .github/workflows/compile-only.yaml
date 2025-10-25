@@ -38,8 +38,8 @@ jobs:
         run: apt-get update && apt-get install -y wget git
       - name: Install CMake
         run: |
-          wget https://github.com/Kitware/CMake/releases/download/v3.23.5/cmake-3.23.5-linux-x86_64.tar.gz
-          tar -C /usr/local --strip-components=1 -xf cmake-3.23.5-linux-x86_64.tar.gz
+          wget https://github.com/Kitware/CMake/releases/download/v3.25.3/cmake-3.25.3-linux-x86_64.tar.gz
+          tar -C /usr/local --strip-components=1 -xf cmake-3.25.3-linux-x86_64.tar.gz
 
       - name: Open MPI - Fetch
         run: |
