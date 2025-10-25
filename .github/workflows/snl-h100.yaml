@@ -29,33 +29,37 @@ jobs:
         run: nvidia-smi
 
       - name: Configure Kokkos
-        run: |
-          cmake -S kokkos -B kokkos/build \
-            -DCMAKE_CXX_COMPILER=$(realpath kokkos/bin/nvcc_wrapper) \
-            -DCMAKE_CXX_STANDARD=20 \
-            -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DCMAKE_INSTALL_PREFIX=kokkos/install \
-            -DKokkos_ENABLE_CUDA=ON \
-            -DKokkos_ARCH_HOPPER90=ON \
-            -DKokkos_ENABLE_TESTS=OFF \
-            -DKokkos_ENABLE_EXAMPLES=OFF \
-            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
-            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF
+        run: >
+          cmake
+          -S kokkos
+          -B kokkos/build
+          -DCMAKE_CXX_COMPILER=$(realpath kokkos/bin/nvcc_wrapper)
+          -DCMAKE_CXX_STANDARD=20
+          -DCMAKE_CXX_EXTENSIONS=OFF
+          -DCMAKE_INSTALL_PREFIX=kokkos/install
+          -DKokkos_ENABLE_CUDA=ON
+          -DKokkos_ARCH_HOPPER90=ON
+          -DKokkos_ENABLE_TESTS=OFF
+          -DKokkos_ENABLE_EXAMPLES=OFF
+          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF
+          -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF
+          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF
 
       - name: Build Kokkos
         run: cmake --build kokkos/build --target install --parallel $(nproc)
 
       - name: Configure Kokkos Comm
-        run: |
-          cmake -S kokkos-comm -B build \
-            -DCMAKE_CXX_COMPILER=$(realpath kokkos/bin/nvcc_wrapper) \
-            -DCMAKE_CXX_STANDARD=20 \
-            -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DCMAKE_CXX_FLAGS="-Werror" \
-            -DKokkos_ROOT=kokkos/install \
-            -DKokkosComm_ENABLE_TESTS=ON \
-            -DKokkosComm_ENABLE_PERFTESTS=ON
+        run: >
+          cmake
+          -S kokkos-comm
+          -B build
+          -DCMAKE_CXX_COMPILER=$(realpath kokkos/bin/nvcc_wrapper)
+          -DCMAKE_CXX_STANDARD=20
+          -DCMAKE_CXX_EXTENSIONS=OFF
+          -DCMAKE_CXX_FLAGS="-Werror"
+          -DKokkos_ROOT=kokkos/install
+          -DKokkosComm_BUILD_UNITTESTS=ON
+          -DKokkosComm_BUILD_PERFTESTS=ON
 
       - name: Build Kokkos Comm
         run: cmake --build build --parallel $(nproc)

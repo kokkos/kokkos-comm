@@ -26,46 +26,58 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Install MPI
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Install MPI & dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y libopenmpi-dev openmpi-bin cmake
           which mpirun
           mpirun --version
           which mpicxx
           mpicxx --version
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: List files in the repository
-        run: ls ${{ github.workspace }}
+
       - name: Build Kokkos
         run: |
           git clone https://github.com/kokkos/kokkos.git --branch master --depth 1 "$KOKKOS_SRC"
-          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_OPENMP=ON
-          cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
-      - name: Configure KokkosComm
+          cmake\
+           -S "$KOKKOS_SRC"\
+           -B "$KOKKOS_BUILD"\
+           -DCMAKE_BUILD_TYPE=RelWithDebInfo\
+           -DKokkos_ENABLE_SERIAL=ON\
+           -DKokkos_ENABLE_OPENMP=ON
+          cmake --build "$KOKKOS_BUILD" --parallel $(nproc)
+          cmake --install "$KOKKOS_BUILD" --prefix "$KOKKOS_INSTALL"
+
+      - name: Build KokkosComm
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="$COMM_INSTALL"
-      - name: Build and Install KokkosComm
-        run: |
-          VERBOSE=1 cmake --build "$COMM_BUILD" --target install
-      - name: Remove remnants of KokkosComm build
-        run: |
+          cmake\
+           -S "$COMM_SRC"\
+           -B "$COMM_BUILD"\
+           -DCMAKE_BUILD_TYPE=RelWithDebInfo\
+           -DKokkos_ROOT="$KOKKOS_INSTALL"
+          VERBOSE=1 cmake --build "$COMM_BUILD"
+          cmake --install "$COMM_BUILD" --prefix "$COMM_INSTALL"
           rm -rf $"COMM_BUILD"
-      - name: Configure KokkosComm Unit Tests against Installed
+
+      - name: Run KokkosComm Unit Tests against install
         run: |
-          cmake -S "$COMM_SRC"/unit_tests -B "$COMM_UNIT_TESTS_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DKokkosComm_ROOT="$COMM_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo
-      - name: Build KokkosComm Unit Tests
-        run: |
+          cmake\
+           -S "$COMM_SRC"/unit_tests\
+           -B "$COMM_UNIT_TESTS_BUILD"\
+           -DCMAKE_BUILD_TYPE=RelWithDebInfo\
+           -DKokkos_ROOT="$KOKKOS_INSTALL"\
+           -DKokkosComm_ROOT="$COMM_INSTALL"
           VERBOSE=1 cmake --build "$COMM_UNIT_TESTS_BUILD"
-      - name: Run KokkosComm Unit Tests against Install
-        run: |
           ctest -V --test-dir "$COMM_UNIT_TESTS_BUILD"
-      - name: Configure KokkosComm Perf Tests against Installed
+
+      - name: Run KokkosComm Perf Tests against install
         run: |
-          cmake -S "$COMM_SRC"/perf_tests -B "$COMM_PERF_TESTS_BUILD" -DKokkos_ROOT="$KOKKOS_INSTALL" -DKokkosComm_ROOT="$COMM_INSTALL" -DCMAKE_BUILD_TYPE=RelWithDebInfo
-      - name: Build KokkosComm Perf Tests
-        run: |
+          cmake\
+           -S "$COMM_SRC"/perf_tests\
+           -B "$COMM_PERF_TESTS_BUILD"\
+           -DCMAKE_BUILD_TYPE=RelWithDebInfo\
+           -DKokkos_ROOT="$KOKKOS_INSTALL"\
+           -DKokkosComm_ROOT="$COMM_INSTALL"
           VERBOSE=1 cmake --build "$COMM_PERF_TESTS_BUILD"
-      - name: Run KokkosComm Perf Tests against Install
-        run: |
           ctest -V --test-dir "$COMM_PERF_TESTS_BUILD"

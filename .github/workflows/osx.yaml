@@ -23,6 +23,9 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 10
     steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
       - name: Install MPI
         run: |
           brew install open-mpi
@@ -32,23 +35,33 @@ jobs:
           mpicxx --version
       - name: CMake Version
         run: cmake --version
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
+
       - name: Build Kokkos
         run: |
           git clone https://github.com/kokkos/kokkos.git --branch master --depth 1 "$KOKKOS_SRC"
-          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Debug -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_THREADS=ON -DKokkos_ARCH_NATIVE=ON
-          cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
+          cmake\
+           -S "$KOKKOS_SRC"\
+           -B "$KOKKOS_BUILD"\
+           -DCMAKE_BUILD_TYPE=Debug\
+           -DKokkos_ENABLE_SERIAL=ON\
+           -DKokkos_ENABLE_THREADS=ON\
+           -DKokkos_ARCH_NATIVE=ON
+          cmake --build "$KOKKOS_BUILD" --parallel $(nproc)
+          cmake --install "$KOKKOS_BUILD" --prefix "$KOKKOS_INSTALL"
       - name: Build KokkosComm
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DCMAKE_CXX_FLAGS="-Werror" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Debug -DKokkosComm_ENABLE_TESTS=ON -DKokkosComm_ENABLE_PERFTESTS=ON
+          cmake\
+           -S "$COMM_SRC"\
+           -B "$COMM_BUILD"\
+           -DCMAKE_BUILD_TYPE=Debug\
+           -DCMAKE_CXX_FLAGS="-Werror"\
+           -DKokkos_ROOT="$KOKKOS_INSTALL"\
+           -DKokkosComm_BUILD_UNITTESTS=ON\
+           -DKokkosComm_BUILD_PERFTESTS=ON
           VERBOSE=1 cmake --build "$COMM_BUILD"
       - name: Test KokkosComm
-        run: |
-          ctest -V --test-dir "$COMM_BUILD"
+        run: ctest -V --test-dir "$COMM_BUILD"
+
    Kokkos-master-MPICH-Threads-Release:
     env:
       KOKKOS_SRC: ${{ github.workspace }}/_deps/kokkos
@@ -73,12 +86,25 @@ jobs:
       - name: Build Kokkos
         run: |
           git clone https://github.com/kokkos/kokkos.git --branch master --depth 1 "$KOKKOS_SRC"
-          cmake -S "$KOKKOS_SRC" -B "$KOKKOS_BUILD" -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_THREADS=ON -DKokkos_ARCH_NATIVE=ON
-          cmake --build "$KOKKOS_BUILD" --parallel $(nproc) -t install
+          cmake\
+           -S "$KOKKOS_SRC"\
+           -B "$KOKKOS_BUILD"\
+           -DCMAKE_BUILD_TYPE=Debug\
+           -DKokkos_ENABLE_SERIAL=ON\
+           -DKokkos_ENABLE_THREADS=ON\
+           -DKokkos_ARCH_NATIVE=ON
+          cmake --build "$KOKKOS_BUILD" --parallel $(nproc)
+          cmake --install "$KOKKOS_BUILD" --prefix "$KOKKOS_INSTALL"
       - name: Build KokkosComm
         run: |
-          cmake -S "$COMM_SRC" -B "$COMM_BUILD" -DCMAKE_CXX_FLAGS="-Werror" -DKokkos_ROOT="$KOKKOS_INSTALL" -DCMAKE_BUILD_TYPE=Release -DKokkosComm_ENABLE_TESTS=ON -DKokkosComm_ENABLE_PERFTESTS=ON
+          cmake\
+           -S "$COMM_SRC"\
+           -B "$COMM_BUILD"\
+           -DCMAKE_CXX_FLAGS="-Werror"\
+           -DKokkos_ROOT="$KOKKOS_INSTALL"\
+           -DCMAKE_BUILD_TYPE=Release\
+           -DKokkosComm_BUILD_UNITTESTS=ON\
+           -DKokkosComm_BUILD_PERFTESTS=ON
           VERBOSE=1 cmake --build "$COMM_BUILD"
       - name: Test KokkosComm
-        run: |
-          ctest -V --test-dir "$COMM_BUILD"
+        run: ctest -V --test-dir "$COMM_BUILD"

@@ -88,8 +88,8 @@ jobs:
           -DCMAKE_CXX_COMPILER="$KOKKOS_SRC/bin/nvcc_wrapper"
           -DKokkos_ROOT="$KOKKOS_INSTALL"
           -DKokkosComm_ENABLE_MPI=ON
-          -DKokkosComm_ENABLE_TESTS=ON
-          -DKokkosComm_ENABLE_PERFTESTS=ON
+          -DKokkosComm_BUILD_UNITTESTS=ON
+          -DKokkosComm_BUILD_PERFTESTS=ON
       - name: KokkosComm - Build MPI backend
         run: cmake --build "$KOKKOSCOMM_BUILD_MPI" --parallel $(nproc) --verbose
 
@@ -103,6 +103,6 @@ jobs:
           -DKokkos_ROOT="$KOKKOS_INSTALL"
           -DKokkosComm_ENABLE_NCCL=ON
           -DKokkosComm_ENABLE_MPI=OFF
-          -DKokkosComm_ENABLE_TESTS=ON
+          -DKokkosComm_BUILD_UNITTESTS=ON
       - name: KokkosComm - Build NCCL backend
         run: cmake --build "$KOKKOSCOMM_BUILD_NCCL" --parallel $(nproc) --verbose
