@@ -16,7 +16,7 @@ System requirements
       - Requirement
 
     * - CMake
-      - 3.23+
+      - 3.25+
 
     * - C++ compiler
       - Conforming to ISO C++20 standard
@@ -69,9 +69,9 @@ Test
 
     $ cmake -B <BUILD_DIR> \
             -DKokkos_ROOT=<KOKKOS_INSTALL_DIR> \
-            -DKokkosComm_ENABLE_TESTS=ON
+            -DKokkosComm_BUILD_UNITTESTS=ON
     $ cmake --build <BUILD_DIR>
-    $ ctest --test-dir <BUILD_DIR>/unit_tests
+    $ ctest --test-dir <BUILD_DIR>
 
 For a detailed guide on testing KokkosComm, please refer to the `Testing section <../dev/testing.html>`_.
 
@@ -94,7 +94,7 @@ Once installed, you can declare KokkosComm as a dependency of your project by ad
 
     find_package(KokkosComm REQUIRED)
 
-Then, for every executable or library in your project that depends on KokkosComm:
+Then, for targets in your project that depend on KokkosComm:
 
 .. code-block:: cmake
 
@@ -144,13 +144,21 @@ General options
       - Default
       - Description
 
-    * * ``KokkosComm_ENABLE_TESTS``
+    * * ``KokkosComm_BUILD_UNITTESTS``
       * ``OFF``
       * Build unit tests
 
-    * * ``KokkosComm_ENABLE_PERFTESTS``
+    * * ``KokkosComm_BUILD_PERFTESTS``
       * ``OFF``
       * Build performance tests
+
+    * * ``KokkosComm_INSTALL_CMAKE_PACKAGE``
+      * ``${PROJECT_IS_TOP_LEVEL}`` (i.e.``OFF`` when consuming KokkosComm)
+      * Install a CMake config-file package
+
+    * * ``KokkosComm_ENABLE_ABORT_ON_ERROR``
+      * ``OFF``
+      * Runtime error checks trigger a global abort
 
 
 Known quirks

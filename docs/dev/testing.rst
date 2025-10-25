@@ -56,17 +56,14 @@ Complete workflow
 
     $ # Clone Kokkos
     $ git clone https://github.com/kokkos/kokkos.git --branch master --depth 1 "$KOKKOS_SRC_DIR"
-
     $ # Configure Kokkos
     $ cmake -S "$KOKKOS_SRC_DIR" \
             -B "$KOKKOS_BUILD_DIR" \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ENABLE_OPENMP=ON
-
     $ # Build Kokkos
     $ cmake --build "$KOKKOS_BUILD_DIR" --parallel $(nproc)
-
     $ # Install Kokkos
     $ cmake --install "$KOKKOS_BUILD_DIR" --prefix "$KOKKOS_INSTALL_DIR"
 
@@ -75,13 +72,9 @@ Complete workflow
     $ cmake -S "$KOKKOSCOMM_SRC_DIR" \
             -B "$KOKKOSCOMM_BUILD_DIR" \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DKokkos_ROOT="$KOKKOS_INSTALL_DIR" \
-            -DKokkosComm_ENABLE_TESTS=OFF \
-            -DKokkosComm_ENABLE_PERFTESTS=OFF
-
+            -DKokkos_ROOT="$KOKKOS_INSTALL_DIR"
     $ # Build KokkosComm
     $ cmake --build "$KOKKOSCOMM_BUILD_DIR" --parallel $(nproc) --verbose
-
     $ # Install KokkosComm
     $ [ -d "$KOKKOSCOMM_INSTALL_DIR" ] && rm --recursive --force "$KOKKOSCOMM_INSTALL_DIR"
     $ cmake --install "$KOKKOSCOMM_BUILD_DIR" --prefix "$KOKKOSCOMM_INSTALL_DIR"
@@ -96,10 +89,8 @@ Complete workflow
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DKokkos_ROOT="$KOKKOS_INSTALL_DIR" \
             -DKokkosComm_ROOT="$KOKKOSCOMM_INSTALL_DIR"
-
     $ # Build KokkosComm unit tests
     $ cmake --build "$KOKKOSCOMM_UNIT_TESTS_BUILD_DIR" --parallel $(nproc) --verbose
-
     $ # Run KokkosComm unit tests
     $ ctest -V --test-dir "$KOKKOSCOMM_UNIT_TESTS_BUILD_DIR"
 
@@ -111,9 +102,7 @@ Complete workflow
             -DKokkos_ROOT="$KOKKOS_INSTALL_DIR" \
             -DKokkosComm_ROOT="$KOKKOSCOMM_INSTALL_DIR" \
             -DKOKKOSCOMM_ENABLE_MPI=ON # not defined if not built alongside KokkosComm
-
     $ # Build KokkosComm performance tests
     $ cmake --build "$KOKKOSCOMM_PERF_TESTS_BUILD_DIR" --parallel $(nproc) --verbose
-
     $ # Run KokkosComm performance tests
     $ ctest -V --test-dir "$KOKKOSCOMM_PERF_TESTS_BUILD_DIR"

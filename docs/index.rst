@@ -2,9 +2,9 @@
 KokkosComm: Communication layer for distributed Kokkos applications
 *******************************************************************
 
-KokkosComm provides experimental MPI interfaces (and more!) for the Kokkos C++ Performance Portability Programming ecosystem.
+KokkosComm provides experimental communication interfaces for the Kokkos C++ Performance Portability Programming ecosystem.
 
-.. warning:: This is a work in progress and is not yet ready for general use.
+.. warning:: This is a work in progress and is not yet production-ready.
 
 
 Questions?
