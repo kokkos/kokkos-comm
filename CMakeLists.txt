@@ -13,20 +13,12 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(mpi-vendor)
 
 # --- OPTIONS --- #
-option(KokkosComm_BUILD_UNITTESTS "Build unit tests. Default: OFF. Values: { ON, OFF }." OFF)
-option(KokkosComm_BUILD_PERFTESTS "Build perf tests. Default: OFF. Values: { ON, OFF }." OFF)
-option(
-  KokkosComm_INSTALL_CMAKE_PACKAGE
-  "Install a CMake config-file package. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
-  ${PROJECT_IS_TOP_LEVEL}
-)
-option(KokkosComm_ENABLE_MPI "Enable MPI communication space backend. Default: ON. Values: { ON, OFF }." ON)
-option(KokkosComm_ENABLE_NCCL "Enable NCCL communication space backend. Default: OFF. Values: { ON, OFF }." OFF)
-option(
-  KokkosComm_ENABLE_ABORT_ON_ERROR
-  "Enable global abort on runtime error checks. Default: OFF. Values: { ON, OFF }."
-  OFF
-)
+option(KokkosComm_BUILD_UNITTESTS "Build unit tests." OFF)
+option(KokkosComm_BUILD_PERFTESTS "Build perf tests." OFF)
+option(KokkosComm_INSTALL_CMAKE_PACKAGE "Install a CMake config-file package." ${PROJECT_IS_TOP_LEVEL})
+option(KokkosComm_ENABLE_MPI "Enable MPI communication space backend." ON)
+option(KokkosComm_ENABLE_NCCL "Enable NCCL communication space backend." OFF)
+option(KokkosComm_ENABLE_ABORT_ON_ERROR "Enable global abort on runtime error checks." OFF)
 
 # --- DEPENDENCIES --- #
 find_package(Kokkos REQUIRED)
