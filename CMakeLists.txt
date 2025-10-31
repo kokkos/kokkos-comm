@@ -22,8 +22,11 @@ option(KokkosComm_ENABLE_ABORT_ON_ERROR "Enable global abort on runtime error ch
 
 # --- DEPENDENCIES --- #
 find_package(Kokkos REQUIRED)
-find_package(MPI REQUIRED)
-kokkoscomm_set_mpi_vendor_variables()
+
+if(KokkosComm_ENABLE_MPI)
+  find_package(MPI REQUIRED)
+  kokkoscomm_set_mpi_vendor_variables()
+endif()
 
 if(KokkosComm_ENABLE_NCCL)
   find_package(NCCL REQUIRED)
