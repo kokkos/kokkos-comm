@@ -70,7 +70,7 @@ jobs:
       KOKKOS_INSTALL: ${{ github.workspace }}/_deps/kokkos-install
       COMM_SRC: ${{ github.workspace }}
       COMM_BUILD: ${{ github.workspace }}/build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
     steps:
       - name: Check out repository code
