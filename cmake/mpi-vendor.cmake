@@ -1,3 +1,7 @@
+# FIXME:
+# On the long run we do not wish to keep this distinction between MPI libraries.
+# This should be re-worked and/or upstreamed into MPI libraries so that we don't need to perform such checks.
+
 function(kokkoscomm_set_mpi_vendor_variables)
   # Initialize the variables to false
   set(KokkosComm_IMPL_MPI_IS_MPICH FALSE CACHE BOOL "MPI is MPICH")
