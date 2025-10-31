@@ -1,11 +1,10 @@
-cmake_minimum_required(VERSION 3.23) # same as KokkosComm
+cmake_minimum_required(VERSION 3.25...4.2) # same as KokkosComm
 
 project(
   KokkosCommUnitTests
-  VERSION 0.2.0
-  LANGUAGES
-    CXX
   DESCRIPTION "Unit tests for the KokkosComm experimental communication interfaces"
+  VERSION 0.3.0
+  LANGUAGES CXX
 )
 
 enable_testing()
@@ -14,6 +13,7 @@ enable_testing()
 # If not included in the KokkosComm build, find KokkosComm to do a standalone build
 if(NOT TARGET KokkosComm::KokkosComm)
   find_package(KokkosComm REQUIRED)
+  message(STATUS "Found KokkosComm ${KokkosComm_VERSION}")
 endif()
 # MPI is used in standalone when setting up the GTest environment.
 find_package(MPI REQUIRED)

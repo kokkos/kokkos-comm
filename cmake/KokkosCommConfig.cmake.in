@@ -1,14 +1,14 @@
 @PACKAGE_INIT@
 
-set(KOKKOSCOMM_ENABLE_MPI "@KOKKOSCOMM_ENABLE_MPI@")
-set(KOKKOSCOMM_IMPL_MPI_IS_MPICH "@KOKKOSCOMM_IMPL_MPI_IS_MPICH@")
-set(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI "@KOKKOSCOMM_IMPL_MPI_IS_OPENMPI@")
-
-GET_FILENAME_COMPONENT(KokkosComm_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-
+# Find dependencies
 include(CMakeFindDependencyMacro)
-find_dependency(MPI)
-find_dependency(Kokkos)
 
-INCLUDE("${KokkosComm_CMAKE_DIR}/KokkosCommTargets.cmake")
-UNSET(KokkosComm_CMAKE_DIR)
+find_dependency(Kokkos REQUIRED)
+if(KokkosComm_ENABLE_MPI AND NOT TARGET MPI::MPI_CXX)
+  find_dependency(MPI REQUIRED)
+endif()
+if(KokkosComm_ENABLE_NCCL AND NOT TARGET NCCL::NCCL)
+  find_dependency(NCCL REQUIRED)
+endif()
+
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/KokkosCommTargets.cmake")

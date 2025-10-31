@@ -57,6 +57,7 @@ if(KokkosComm_INSTALL_CMAKE_PACKAGE)
   # Generate package version-file
   write_basic_package_version_file(
     ${PROJECT_BINARY_DIR}/KokkosCommVersion.cmake
+    VERSION ${PROJECT_VERSION}
     COMPATIBILITY ExactVersion
     ARCH_INDEPENDENT # KokkosComm is a header-only library
   )

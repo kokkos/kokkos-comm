@@ -2,10 +2,9 @@ cmake_minimum_required(VERSION 3.23) # same as KokkosComm
 
 project(
   KokkosCommPerfTests
-  VERSION 0.2.0
-  LANGUAGES
-    CXX
   DESCRIPTION "Performance tests for the KokkosComm experimental communication interfaces"
+  VERSION 0.3.0
+  LANGUAGES CXX
 )
 
 enable_testing()
@@ -14,6 +13,7 @@ enable_testing()
 # If not included in the Kokkos Comm build, find Kokkos Comm to do a standalone build
 if(NOT TARGET KokkosComm::KokkosComm)
   find_package(KokkosComm REQUIRED)
+  message(STATUS "Found KokkosComm ${KokkosComm_VERSION}")
 endif()
 
 include(FetchContent)
