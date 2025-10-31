@@ -8,12 +8,12 @@ concurrency:
 on:
   pull_request:
     paths-ignore:
-    - README.md
-    - 'docs/**'
-    types: [ opened, reopened, synchronize ]
+      - README.md
+      - "docs/**"
+    types: [opened, reopened, synchronize]
 
 jobs:
-   Kokkos-master-OpenMPI-OpenMP-Release:
+  Kokkos-master-OpenMPI-OpenMP-Release:
     env:
       KOKKOS_SRC: ${{ github.workspace }}/_deps/kokkos
       KOKKOS_BUILD: ${{ github.workspace }}/_deps/kokkos-build
@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Install MPI & dependencies
         run: |
@@ -63,18 +63,18 @@ jobs:
       - name: Test KokkosComm
         run: ctest -V --test-dir "$COMM_BUILD"
 
-   Kokkos-master-MPICH-OpenMP-Debug:
+  Kokkos-master-MPICH-OpenMP-Debug:
     env:
       KOKKOS_SRC: ${{ github.workspace }}/_deps/kokkos
       KOKKOS_BUILD: ${{ github.workspace }}/_deps/kokkos-build
       KOKKOS_INSTALL: ${{ github.workspace }}/_deps/kokkos-install
       COMM_SRC: ${{ github.workspace }}
       COMM_BUILD: ${{ github.workspace }}/build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Install MPI & dependencies
         run: |

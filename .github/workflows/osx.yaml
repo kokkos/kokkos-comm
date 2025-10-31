@@ -8,12 +8,12 @@ concurrency:
 on:
   pull_request:
     paths-ignore:
-    - README.md
-    - 'docs/**'
-    types: [ opened, reopened, synchronize ]
+      - README.md
+      - "docs/**"
+    types: [opened, reopened, synchronize]
 
 jobs:
-   Kokkos-master-OpenMPI-Threads-Debug:
+  Kokkos-master-OpenMPI-Threads-Debug:
     env:
       KOKKOS_SRC: ${{ github.workspace }}/_deps/kokkos
       KOKKOS_BUILD: ${{ github.workspace }}/_deps/kokkos-build
@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Install MPI
         run: |
@@ -62,7 +62,7 @@ jobs:
       - name: Test KokkosComm
         run: ctest -V --test-dir "$COMM_BUILD"
 
-   Kokkos-master-MPICH-Threads-Release:
+  Kokkos-master-MPICH-Threads-Release:
     env:
       KOKKOS_SRC: ${{ github.workspace }}/_deps/kokkos
       KOKKOS_BUILD: ${{ github.workspace }}/_deps/kokkos-build
@@ -72,6 +72,9 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 10
     steps:
+      - name: Check out repository code
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
       - name: Install MPI
         run: |
           brew install mpich
@@ -81,8 +84,7 @@ jobs:
           mpicxx --version
       - name: CMake Version
         run: cmake --version
-      - name: Check out repository code
-        uses: actions/checkout@v4
+
       - name: Build Kokkos
         run: |
           git clone https://github.com/kokkos/kokkos.git --branch master --depth 1 "$KOKKOS_SRC"
