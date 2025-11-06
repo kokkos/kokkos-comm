@@ -22,20 +22,11 @@
 
 namespace KokkosComm::Experimental {
 
-/// Copy the `sv` view on the `root` rank to all ranks' `rv` view.
-///
-/// The `sv` view is only used on the `root` rank and ignored for all other ranks.
-template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
-          CommunicationSpace CommSpace = DefaultCommunicationSpace>
-auto broadcast(Handle<ExecSpace, CommSpace>& h, const SendView sv, RecvView rv, int root) -> Req<CommSpace> {
-  return Impl::Broadcast<SendView, RecvView, ExecSpace, CommSpace>::execute(h, sv, rv, root);
-}
-
-/// In-place variant of `broadcast`. Copy the `v` view from the `root` rank to all ranks' `v` view.
+/// Copy the `v` view from the `root` rank to all ranks' `v` view.
 template <KokkosView View, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
 auto broadcast(Handle<ExecSpace, CommSpace>& h, View v, int root) -> Req<CommSpace> {
-  return Impl::Broadcast<View, View, ExecSpace, CommSpace>::execute(h, v, v, root);
+  return Impl::Broadcast<View, ExecSpace, CommSpace>::execute(h, v, root);
 }
 
 /// Copy the `sv` view from each rank to the `rv` view, receiving data from rank `i` at offset

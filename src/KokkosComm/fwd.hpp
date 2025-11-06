@@ -47,7 +47,7 @@ struct Send;
 // Collectives are currently experimental functions
 namespace Experimental::Impl {
 
-template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
+template <KokkosView View, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
 struct Broadcast;
 
