@@ -22,9 +22,6 @@ void allreduce(SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm comm)
   static_assert(std::is_same_v<std::remove_cv_t<SendScalar>, std::remove_cv_t<RecvScalar> >,
                 "Send and receive views have different value types");
 
-  static_assert(KokkosComm::rank<SendView>() <= 1, "allreduce for SendView::rank > 1 not supported");
-  static_assert(KokkosComm::rank<RecvView>() <= 1, "allreduce for RecvView::rank > 1 not supported");
-
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(sv), "low-level allreduce requires contiguous send view");
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "low-level allreduce requires contiguous recv view");
   KokkosComm::mpi::fail_if(sv.size() != rv.size(), "allreduce requires send and receive views to have the same size");
