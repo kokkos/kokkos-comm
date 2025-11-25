@@ -39,8 +39,6 @@ void allreduce(View const &v, MPI_Op op, MPI_Comm comm) {
 
   using Scalar = typename View::value_type;
 
-  static_assert(KokkosComm::rank<View>() <= 1, "allreduce for View::rank > 1 not supported");
-
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(v), "low-level allgather requires contiguous recv view");
 
   int const count = v.size();

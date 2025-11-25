@@ -21,9 +21,6 @@ void allgather(const SendView &sv, const RecvView &rv, MPI_Comm comm) {
   using SendScalar = typename SendView::value_type;
   using RecvScalar = typename RecvView::value_type;
 
-  static_assert(KokkosComm::rank<SendView>() <= 1, "allgather for SendView::rank > 1 not supported");
-  static_assert(KokkosComm::rank<RecvView>() <= 1, "allgather for RecvView::rank > 1 not supported");
-
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(sv), "low-level allgather requires contiguous send view");
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "low-level allgather requires contiguous recv view");
 
@@ -40,8 +37,6 @@ void allgather(const ExecSpace &space, const RecvView &rv, const size_t recvCoun
   Kokkos::Tools::pushRegion("KokkosComm::Mpi::allgather");
 
   using RecvScalar = typename RecvView::value_type;
-
-  static_assert(KokkosComm::rank<RecvView>() <= 1, "allgather for RecvView::rank > 1 not supported");
 
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "low-level allgather requires contiguous recv view");
 
