@@ -19,7 +19,7 @@
 namespace KokkosComm {
 
 template <>
-class Req<Experimental::Nccl> {
+class Req<Experimental::NcclSpace> {
   // A type-erased view. Request uses these to keep temporary views alive for the lifetime of NCCL operations
   struct ViewHolderBase {
     virtual ~ViewHolderBase() {}
@@ -57,13 +57,13 @@ class Req<Experimental::Nccl> {
  private:
   std::shared_ptr<Record> record_;
 
-  friend void wait(Req<Experimental::Nccl> &req);
-  friend void wait(Req<Experimental::Nccl> &&req);
-  friend void wait_all(std::span<Req<Experimental::Nccl>> reqs);
-  friend int wait_any(std::span<Req<Experimental::Nccl>> reqs);
+  friend void wait(Req<Experimental::NcclSpace> &req);
+  friend void wait(Req<Experimental::NcclSpace> &&req);
+  friend void wait_all(std::span<Req<Experimental::NcclSpace>> reqs);
+  friend int wait_any(std::span<Req<Experimental::NcclSpace>> reqs);
 };
 
-inline auto wait(Req<Experimental::Nccl> &req) -> void {
+inline auto wait(Req<Experimental::NcclSpace> &req) -> void {
   KC_CUDA_CHECK(cudaStreamSynchronize(req.get_inner()));
   for (auto &f : req.record_->postWaits_) {
     f();
@@ -71,15 +71,15 @@ inline auto wait(Req<Experimental::Nccl> &req) -> void {
   req.record_->postWaits_.clear();
 }
 
-inline auto wait(Req<Experimental::Nccl> &&req) -> void { wait(req); }
+inline auto wait(Req<Experimental::NcclSpace> &&req) -> void { wait(req); }
 
-inline auto wait_all(std::span<Req<Experimental::Nccl>> reqs) -> void {
-  for (Req<Experimental::Nccl> &req : reqs) {
+inline auto wait_all(std::span<Req<Experimental::NcclSpace>> reqs) -> void {
+  for (Req<Experimental::NcclSpace> &req : reqs) {
     wait(req);
   }
 }
 
-inline auto wait_any(std::span<Req<Experimental::Nccl>> reqs) -> int {
+inline auto wait_any(std::span<Req<Experimental::NcclSpace>> reqs) -> int {
   // Loop while we don't have at least one completed request.
   while (true) {
     for (size_t r = 0; r < reqs.size(); ++r) {

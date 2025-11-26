@@ -9,18 +9,17 @@
 
 namespace KokkosComm {
 
-// NCCL backend also implicitly declares MPI
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-namespace Experimental {
-class Nccl;
-}  // namespace Experimental
-class Mpi;
-using DefaultCommunicationSpace  = Experimental::Nccl;
-using FallbackCommunicationSpace = Mpi;
+namespace Experimental { struct NcclSpace; }
+// NCCL backend also declares the MPI space as fallback
+struct MpiSpace;
+
+using DefaultCommunicationSpace  = Experimental::NcclSpace;
+using FallbackCommunicationSpace = MpiSpace;
 #elif defined(KOKKOSCOMM_ENABLE_MPI)
-class Mpi;
-using DefaultCommunicationSpace  = Mpi;
-using FallbackCommunicationSpace = Mpi;
+struct MpiSpace;
+using DefaultCommunicationSpace  = MpiSpace;
+using FallbackCommunicationSpace = MpiSpace;
 #else
 #error at least one communication space must be enabled
 #endif

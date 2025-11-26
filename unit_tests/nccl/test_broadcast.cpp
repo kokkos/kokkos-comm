@@ -10,7 +10,7 @@
 namespace {
 
 using ExecSpace = Kokkos::Cuda;
-using CommSpace = KokkosComm::Experimental::Nccl;
+using CommSpace = KokkosComm::Experimental::NcclSpace;
 
 template <typename T>
 class Broadcast : public testing::Test {

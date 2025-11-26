@@ -18,7 +18,7 @@ namespace nccl {
 namespace KC = KokkosComm;
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-auto allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, ncclComm_t comm) -> Req<Nccl> {
+auto allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, ncclComm_t comm) -> Req<NcclSpace> {
   using ST = typename SendView::non_const_value_type;
   using RT = typename RecvView::non_const_value_type;
   static_assert(std::is_same_v<ST, RT>,
@@ -27,7 +27,7 @@ auto allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, n
                 "KokkosComm::nccl::allgather: Views with rank higher than 1 are not supported");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::allgather");
 
-  Req<Nccl> req{space.cuda_stream()};
+  Req<NcclSpace> req{space.cuda_stream()};
   if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
     ncclAllGather(KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), Impl::datatype_v<ST>, comm,
                   space.cuda_stream());
@@ -45,8 +45,8 @@ auto allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, n
 namespace Impl {
 
 template <KokkosView SendView, KokkosView RecvView>
-struct AllGather<SendView, RecvView, Kokkos::Cuda, Nccl> {
-  static auto execute(Handle<Kokkos::Cuda, Nccl> &h, const SendView sv, RecvView rv) -> Req<Nccl> {
+struct AllGather<SendView, RecvView, Kokkos::Cuda, NcclSpace> {
+  static auto execute(Handle<Kokkos::Cuda, NcclSpace> &h, const SendView sv, RecvView rv) -> Req<NcclSpace> {
     return nccl::allgather(h.space(), sv, rv, h.comm());
   }
 };
