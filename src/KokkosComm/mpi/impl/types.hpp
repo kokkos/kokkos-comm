@@ -3,10 +3,17 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
+
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
 
-namespace KokkosComm::Impl {
+#include <KokkosComm/concepts.hpp>
+#include <KokkosComm/traits.hpp>
+
+namespace KokkosComm::mpi::Impl {
 
 template <typename Scalar>
 MPI_Datatype mpi_type() {
@@ -140,4 +147,4 @@ MPI_Datatype view_mpi_type(const View &view) {
   return type;
 }
 
-};  // namespace KokkosComm::Impl
+};  // namespace KokkosComm::mpi::Impl

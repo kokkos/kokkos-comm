@@ -37,8 +37,8 @@ Req<Mpi> isend_impl(Handle<ExecSpace, Mpi> &h, const SendView &sv, int dest, int
   Req<Mpi> req;
   if (KokkosComm::is_contiguous(sv)) {
     h.space().fence("fence before isend");
-    mpi_isend_fn(KokkosComm::data_handle(sv), KokkosComm::span(sv), mpi_type_v<typename SendView::value_type>, dest,
-                 tag, h.mpi_comm(), &req.mpi_request());
+    mpi_isend_fn(KokkosComm::data_handle(sv), KokkosComm::span(sv),
+                 mpi::Impl::mpi_type_v<typename SendView::value_type>, dest, tag, h.mpi_comm(), &req.mpi_request());
     req.extend_view_lifetime(sv);
   } else {
     using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;

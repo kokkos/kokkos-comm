@@ -21,7 +21,7 @@ void broadcast(View const& v, int root, MPI_Comm comm) {
 
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(v), "low-level broadcast requires contiguous view");
 
-  MPI_Bcast(KokkosComm::data_handle(v), KokkosComm::span(v), KokkosComm::Impl::mpi_type_v<Scalar>, root, comm);
+  MPI_Bcast(KokkosComm::data_handle(v), KokkosComm::span(v), Impl::mpi_type_v<Scalar>, root, comm);
 
   Kokkos::Tools::popRegion();
 }

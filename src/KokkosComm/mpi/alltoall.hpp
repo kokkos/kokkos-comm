@@ -48,8 +48,8 @@ void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount
     KokkosComm::mpi::fail_if(true, ss.str().data());
   }
 
-  MPI_Alltoall(KokkosComm::data_handle(sv), sendCount, mpi_type_v<SendScalar>, KokkosComm::data_handle(rv), recvCount,
-               mpi_type_v<RecvScalar>, comm);
+  MPI_Alltoall(data_handle(sv), sendCount, mpi::Impl::mpi_type_v<SendScalar>, data_handle(rv), recvCount,
+               mpi::Impl::mpi_type_v<RecvScalar>, comm);
 
   Kokkos::Tools::popRegion();
 }
@@ -78,8 +78,8 @@ void alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount
     KokkosComm::mpi::fail_if(true, ss.str().data());
   }
 
-  MPI_Alltoall(MPI_IN_PLACE, 0 /*ignored*/, MPI_BYTE /*ignored*/, KokkosComm::data_handle(rv), recvCount,
-               mpi_type_v<RecvScalar>, comm);
+  MPI_Alltoall(MPI_IN_PLACE, 0 /*ignored*/, MPI_BYTE /*ignored*/, data_handle(rv), recvCount,
+               mpi::Impl::mpi_type_v<RecvScalar>, comm);
 
   Kokkos::Tools::popRegion();
 }

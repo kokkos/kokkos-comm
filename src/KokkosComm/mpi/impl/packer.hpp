@@ -36,11 +36,11 @@ struct DeepCopy {
   static args_type allocate_packed_for(const ExecSpace &space, const std::string &label, const View &src) {
     if constexpr (KokkosComm::rank<View>() == 1) {
       non_const_packed_view_type packed(Kokkos::view_alloc(space, Kokkos::WithoutInitializing, label), src.extent(0));
-      return args_type(packed, mpi_type_v<packed_value_type>, KokkosComm::span(packed));
+      return args_type(packed, mpi::Impl::mpi_type_v<packed_value_type>, KokkosComm::span(packed));
     } else if constexpr (KokkosComm::rank<View>() == 2) {
       non_const_packed_view_type packed(Kokkos::view_alloc(space, Kokkos::WithoutInitializing, label), src.extent(0),
                                         src.extent(1));
-      return args_type(packed, mpi_type_v<packed_value_type>, KokkosComm::span(packed));
+      return args_type(packed, mpi::Impl::mpi_type_v<packed_value_type>, KokkosComm::span(packed));
     } else {
       static_assert(std::is_void_v<View>, "allocate_packed_for for rank >= 2 views unimplemented");
     }
@@ -71,7 +71,7 @@ struct MpiDatatype {
     using ValueType = typename View::value_type;
     using KCT       = KokkosComm::Traits<View>;
 
-    MPI_Datatype type = mpi_type<ValueType>();
+    MPI_Datatype type = mpi::Impl::mpi_type_v<ValueType>;
     for (size_t d = 0; d < KokkosComm::Traits<View>::rank(); ++d) {
       MPI_Datatype newtype;
       MPI_Type_create_hvector(KCT::extent(src, d) /*count*/, 1 /*block length*/,
