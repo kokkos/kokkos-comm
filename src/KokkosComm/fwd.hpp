@@ -5,6 +5,7 @@
 
 #include <KokkosComm/config.hpp>
 #include "concepts.hpp"
+#include "datatype.hpp"
 #include "reduction_op.hpp"
 
 namespace KokkosComm {

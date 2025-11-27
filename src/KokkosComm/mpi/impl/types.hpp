@@ -3,104 +3,20 @@
 
 #pragma once
 
+#if defined(USE_CACHE)
+#include <array>
+#include <map>
+#endif
+
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
 
+#include <KokkosComm/concepts.hpp>
+#include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatypes.hpp>
+#include <KokkosComm/mpi/mpi_space.hpp>
+
 namespace KokkosComm::Impl {
-
-template <typename Scalar>
-MPI_Datatype mpi_type() {
-  using T = std::decay_t<Scalar>;
-
-  if constexpr (std::is_same_v<T, std::byte>)
-    return MPI_BYTE;
-
-  else if constexpr (std::is_same_v<T, char>)
-    return MPI_CHAR;
-  else if constexpr (std::is_same_v<T, unsigned char>)
-    return MPI_UNSIGNED_CHAR;
-
-  else if constexpr (std::is_same_v<T, short>)
-    return MPI_SHORT;
-  else if constexpr (std::is_same_v<T, unsigned short>)
-    return MPI_UNSIGNED_SHORT;
-
-  else if constexpr (std::is_same_v<T, int>)
-    return MPI_INT;
-  else if constexpr (std::is_same_v<T, unsigned>)
-    return MPI_UNSIGNED;
-
-  else if constexpr (std::is_same_v<T, long>)
-    return MPI_LONG;
-  else if constexpr (std::is_same_v<T, unsigned long>)
-    return MPI_UNSIGNED_LONG;
-
-  else if constexpr (std::is_same_v<T, long long>)
-    return MPI_LONG_LONG;
-  else if constexpr (std::is_same_v<T, unsigned long long>)
-    return MPI_UNSIGNED_LONG_LONG;
-
-  else if constexpr (std::is_same_v<T, std::int8_t>)
-    return MPI_INT8_T;
-  else if constexpr (std::is_same_v<T, std::uint8_t>)
-    return MPI_UINT8_T;
-
-  else if constexpr (std::is_same_v<T, std::int16_t>)
-    return MPI_INT16_T;
-  else if constexpr (std::is_same_v<T, std::uint16_t>)
-    return MPI_UINT16_T;
-
-  else if constexpr (std::is_same_v<T, std::int32_t>)
-    return MPI_INT32_T;
-  else if constexpr (std::is_same_v<T, std::uint32_t>)
-    return MPI_UINT32_T;
-
-  else if constexpr (std::is_same_v<T, std::int64_t>)
-    return MPI_INT64_T;
-  else if constexpr (std::is_same_v<T, std::uint64_t>)
-    return MPI_UINT64_T;
-
-  else if constexpr (std::is_same_v<T, std::size_t>) {
-    if constexpr (sizeof(std::size_t) == 1) return MPI_UINT8_T;
-    if constexpr (sizeof(std::size_t) == 2) return MPI_UINT16_T;
-    if constexpr (sizeof(std::size_t) == 4) return MPI_UINT32_T;
-    if constexpr (sizeof(std::size_t) == 8) return MPI_UINT64_T;
-  }
-
-  else if constexpr (std::is_same_v<T, std::ptrdiff_t>) {
-    if constexpr (sizeof(std::ptrdiff_t) == 1) return MPI_INT8_T;
-    if constexpr (sizeof(std::ptrdiff_t) == 2) return MPI_INT16_T;
-    if constexpr (sizeof(std::ptrdiff_t) == 4) return MPI_INT32_T;
-    if constexpr (sizeof(std::ptrdiff_t) == 8) return MPI_INT64_T;
-  }
-
-  else if constexpr (std::is_same_v<T, float>)
-    return MPI_FLOAT;
-  else if constexpr (std::is_same_v<T, double>)
-    return MPI_DOUBLE;
-  else if constexpr (std::is_same_v<T, long double>)
-    return MPI_LONG_DOUBLE;
-
-  else if constexpr (std::is_same_v<T, Kokkos::complex<float>>)
-#if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI)
-    return MPI_CXX_COMPLEX;
-#else
-    return MPI_COMPLEX;
-#endif
-  else if constexpr (std::is_same_v<T, Kokkos::complex<double>>)
-#if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI)
-    return MPI_CXX_DOUBLE_COMPLEX;
-#else
-    return MPI_DOUBLE_COMPLEX;
-#endif
-  else {
-    static_assert(std::is_void_v<T>, "mpi_type not implemented");
-    return MPI_CHAR;  // unreachable
-  }
-}
-
-template <typename Scalar>
-inline MPI_Datatype mpi_type_v = mpi_type<Scalar>();
 
 template <KokkosView View>
 MPI_Datatype view_mpi_type(const View &view) {
@@ -121,7 +37,7 @@ MPI_Datatype view_mpi_type(const View &view) {
 #endif
 
   using value_type  = typename View::non_const_value_type;
-  MPI_Datatype type = mpi_type_v<value_type>;
+  MPI_Datatype type = datatype<MpiSpace, value_type>();
 
   // This doesn't work for 1D contiguous views into reduce because it
   // represents the whole 1D view as 1 Hvector, rather than N elements.
