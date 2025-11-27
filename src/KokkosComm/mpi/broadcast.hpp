@@ -8,10 +8,10 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatype.hpp>
 #include "mpi_space.hpp"
 #include "req.hpp"
 
-#include "impl/types.hpp"
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm::mpi {
@@ -26,7 +26,7 @@ auto ibroadcast(const ExecSpace& space, View& v, int root, MPI_Comm comm) -> Req
   space.fence("fence before non-blocking broadcast");
 
   Req<MpiSpace> req;
-  MPI_Ibcast(data_handle(v), span(v), Impl::mpi_type_v<T>, root, comm, &req.mpi_request());
+  MPI_Ibcast(data_handle(v), span(v), datatype<MpiSpace, T>, root, comm, &req.mpi_request());
   req.extend_view_lifetime(v);
 
   Kokkos::Tools::popRegion();
@@ -41,7 +41,7 @@ void broadcast(View const& v, int root, MPI_Comm comm) {
 
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(v), "low-level broadcast requires contiguous view");
 
-  MPI_Bcast(KokkosComm::data_handle(v), KokkosComm::span(v), KokkosComm::Impl::mpi_type_v<Scalar>, root, comm);
+  MPI_Bcast(KokkosComm::data_handle(v), KokkosComm::span(v), datatype<MpiSpace, Scalar>(), root, comm);
 
   Kokkos::Tools::popRegion();
 }

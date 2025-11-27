@@ -8,10 +8,10 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatype.hpp>
 #include "mpi_space.hpp"
 #include "req.hpp"
 
-#include "impl/types.hpp"
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm::mpi {
@@ -31,7 +31,7 @@ auto iallgather(const ExecSpace &space, const SView sv, RView rv, MPI_Comm comm)
 
   Req<MpiSpace> req;
   // All ranks send/recv same count
-  MPI_Iallgather(data_handle(sv), span(sv), Impl::mpi_type_v<ST>, data_handle(rv), span(sv), Impl::mpi_type_v<RT>, comm,
+  MPI_Iallgather(data_handle(sv), span(sv), datatype<MpiSpace, ST>, data_handle(rv), span(sv), datatype<MpiSpace, RT>, comm,
                  &req.mpi_request());
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
@@ -54,8 +54,8 @@ void allgather(const SendView &sv, const RecvView &rv, MPI_Comm comm) {
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "low-level allgather requires contiguous recv view");
 
   const int count = KokkosComm::span(sv);  // all ranks send/recv same count
-  MPI_Allgather(KokkosComm::data_handle(sv), count, KokkosComm::Impl::mpi_type_v<SendScalar>,
-                KokkosComm::data_handle(rv), count, KokkosComm::Impl::mpi_type_v<RecvScalar>, comm);
+  MPI_Allgather(KokkosComm::data_handle(sv), count, datatype<MpiSpace, SendScalar>(), KokkosComm::data_handle(rv),
+                count, datatype<MpiSpace, RecvScalar>(), comm);
 
   Kokkos::Tools::popRegion();
 }
@@ -73,7 +73,7 @@ void allgather(const ExecSpace &space, const RecvView &rv, const size_t recvCoun
 
   space.fence("fence before allgather");  // work in space may have been used to produce send view data
   MPI_Allgather(MPI_IN_PLACE, 0 /*ignored*/, MPI_DATATYPE_NULL /*ignored*/, KokkosComm::data_handle(rv), recvCount,
-                KokkosComm::Impl::mpi_type_v<RecvScalar>, comm);
+                datatype<MpiSpace, RecvScalar>(), comm);
 
   Kokkos::Tools::popRegion();
 }

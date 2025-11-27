@@ -7,13 +7,13 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatype.hpp>
 #include "mpi_space.hpp"
 #include "comm_mode.hpp"
 #include "handle.hpp"
 
 #include "impl/pack_traits.hpp"
 #include "impl/tags.hpp"
-#include "impl/types.hpp"
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm {
@@ -37,8 +37,8 @@ Req<MpiSpace> isend_impl(Handle<ExecSpace, MpiSpace> &h, const SendView &sv, int
   Req<MpiSpace> req;
   if (KokkosComm::is_contiguous(sv)) {
     h.space().fence("fence before isend");
-    mpi_isend_fn(KokkosComm::data_handle(sv), KokkosComm::span(sv), mpi_type_v<typename SendView::value_type>, dest,
-                 tag, h.mpi_comm(), &req.mpi_request());
+    mpi_isend_fn(KokkosComm::data_handle(sv), KokkosComm::span(sv), datatype<MpiSpace, typename SendView::value_type>(),
+                 dest, tag, h.mpi_comm(), &req.mpi_request());
     req.extend_view_lifetime(sv);
   } else {
     using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
@@ -81,7 +81,7 @@ void isend(const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Request &re
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(sv), "only contiguous views supported for low-level isend");
 
   using SendScalar = typename SendView::non_const_value_type;
-  MPI_Isend(KokkosComm::data_handle(sv), KokkosComm::span(sv), Impl::mpi_type_v<SendScalar>, dest, tag, comm, &req);
+  MPI_Isend(KokkosComm::data_handle(sv), KokkosComm::span(sv), datatype<MpiSpace, SendScalar>(), dest, tag, comm, &req);
 
   Kokkos::Tools::popRegion();
 }

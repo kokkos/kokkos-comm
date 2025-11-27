@@ -8,8 +8,7 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
-
-#include "impl/types.hpp"
+#include <KokkosComm/datatype.hpp>
 
 namespace KokkosComm::mpi {
 
@@ -35,8 +34,7 @@ void inclusive_scan(SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm 
     throw std::runtime_error{"inclusive_scan requires send and receive views to have the same size"};
   }
   int const count = sv.size();
-  MPI_Scan(KokkosComm::data_handle(sv), KokkosComm::data_handle(rv), count, KokkosComm::Impl::mpi_type_v<SendScalar>,
-           op, comm);
+  MPI_Scan(KokkosComm::data_handle(sv), KokkosComm::data_handle(rv), count, datatype<MpiSpace, SendScalar>(), op, comm);
 
   Kokkos::Tools::popRegion();
 }
@@ -63,8 +61,8 @@ void exclusive_scan(SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm 
     throw std::runtime_error{"exclusive_scan requires send and receive views to have the same size"};
   }
   int const count = sv.size();
-  MPI_Exscan(KokkosComm::data_handle(sv), KokkosComm::data_handle(rv), count, KokkosComm::Impl::mpi_type_v<SendScalar>,
-             op, comm);
+  MPI_Exscan(KokkosComm::data_handle(sv), KokkosComm::data_handle(rv), count, datatype<MpiSpace, SendScalar>(), op,
+             comm);
 
   Kokkos::Tools::popRegion();
 }

@@ -8,10 +8,10 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatype.hpp>
 #include "comm_mode.hpp"
 
 #include "impl/pack_traits.hpp"
-#include "impl/types.hpp"
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm::mpi {
@@ -36,7 +36,7 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
 
   if (is_contiguous(sv)) {
     space.fence("fence before send");
-    mpi_send_fn(data_handle(sv), span(sv), Impl::mpi_type_v<T>);
+    mpi_send_fn(data_handle(sv), span(sv), datatype<MpiSpace, T>());
   } else {
     auto args = Packer::pack(space, sv);
     space.fence("fence before send");

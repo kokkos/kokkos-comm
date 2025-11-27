@@ -8,11 +8,11 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatype.hpp>
 #include "mpi_space.hpp"
 #include "req.hpp"
 
 #include "impl/pack_traits.hpp"
-#include "impl/types.hpp"
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm::mpi {
@@ -32,7 +32,7 @@ auto ialltoall(const ExecSpace &space, const SView sv, RView rv, int count, MPI_
 
   Req<MpiSpace> req;
   // All ranks send/recv same count
-  MPI_Ialltoall(data_handle(sv), count, Impl::mpi_type_v<ST>, data_handle(rv), count, Impl::mpi_type_v<RT>, comm,
+  MPI_Ialltoall(data_handle(sv), count, datatype<MpiSpace, ST>, data_handle(rv), count, datatype<MpiSpace, RT>, comm,
                 &req.mpi_request());
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
@@ -74,8 +74,8 @@ void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount
     KokkosComm::mpi::fail_if(true, ss.str().data());
   }
 
-  MPI_Alltoall(KokkosComm::data_handle(sv), sendCount, Impl::mpi_type_v<SendScalar>, KokkosComm::data_handle(rv),
-               recvCount, Impl::mpi_type_v<RecvScalar>, comm);
+  MPI_Alltoall(KokkosComm::data_handle(sv), sendCount, datatype<MpiSpace, SendScalar>(), KokkosComm::data_handle(rv),
+               recvCount, datatype<MpiSpace, RecvScalar>(), comm);
 
   Kokkos::Tools::popRegion();
 }
@@ -105,7 +105,7 @@ void alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount
   }
 
   MPI_Alltoall(MPI_IN_PLACE, 0 /*ignored*/, MPI_BYTE /*ignored*/, KokkosComm::data_handle(rv), recvCount,
-               Impl::mpi_type_v<RecvScalar>, comm);
+               datatype<MpiSpace, RecvScalar>(), comm);
 
   Kokkos::Tools::popRegion();
 }

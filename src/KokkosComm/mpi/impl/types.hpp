@@ -13,7 +13,7 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
-#include <KokkosComm/datatypes.hpp>
+#include <KokkosComm/datatype.hpp>
 #include <KokkosComm/mpi/mpi_space.hpp>
 
 namespace KokkosComm::Impl {

@@ -5,12 +5,12 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatype.hpp>
 #include "mpi_space.hpp"
 #include "handle.hpp"
 
 #include "impl/pack_traits.hpp"
 #include "impl/tags.hpp"
-#include "impl/types.hpp"
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm {
@@ -29,8 +29,8 @@ struct Recv<RecvView, ExecSpace, MpiSpace> {
     Req<MpiSpace> req;
     if (KokkosComm::is_contiguous(rv)) {
       space.fence("fence before irecv");
-      MPI_Irecv(KokkosComm::data_handle(rv), KokkosComm::span(rv), mpi_type_v<typename RecvView::value_type>, src,
-                POINTTOPOINT_TAG, h.mpi_comm(), &req.mpi_request());
+      MPI_Irecv(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, typename RecvView::value_type>(),
+                src, POINTTOPOINT_TAG, h.mpi_comm(), &req.mpi_request());
       req.extend_view_lifetime(rv);
     } else {
       Args args = Packer::allocate_packed_for(space, "TODO", rv);
@@ -53,7 +53,7 @@ void irecv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Request &req
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "Only contiguous irecv viewsupported");
 
   using RecvScalar = typename RecvView::non_const_value_type;
-  MPI_Irecv(KokkosComm::data_handle(rv), KokkosComm::span(rv), Impl::mpi_type_v<RecvScalar>, src, tag, comm, &req);
+  MPI_Irecv(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, RecvScalar>(), src, tag, comm, &req);
 
   Kokkos::Tools::popRegion();
 }

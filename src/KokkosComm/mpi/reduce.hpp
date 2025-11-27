@@ -8,9 +8,9 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatype.hpp>
 
 #include "impl/pack_traits.hpp"
-#include "impl/types.hpp"
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm::mpi {
@@ -24,7 +24,7 @@ void reduce(const SendView &sv, const RecvView &rv, MPI_Op op, int root, MPI_Com
 
   using SendScalar = typename SendView::non_const_value_type;
   MPI_Reduce(KokkosComm::data_handle(sv), KokkosComm::data_handle(rv), KokkosComm::span(sv),
-             KokkosComm::Impl::mpi_type_v<SendScalar>, op, root, comm);
+             datatype<MpiSpace, SendScalar>(), op, root, comm);
 
   Kokkos::Tools::popRegion();
 }
@@ -61,12 +61,12 @@ void reduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_
       auto recvArgs = RecvPacker::allocate_packed_for(space, "reduce recv", rv);
       space.fence("fence allocation before MPI call");
       MPI_Reduce(KokkosComm::data_handle(sv), KokkosComm::data_handle(recvArgs.view), KokkosComm::span(sv),
-                 KokkosComm::Impl::mpi_type_v<SendScalar>, op, root, comm);
+                 datatype<MpiSpace, SendScalar>(), op, root, comm);
       RecvPacker::unpack_into(space, rv, recvArgs.view);
     } else {
       space.fence("fence space before MPI call");
       MPI_Reduce(KokkosComm::data_handle(sv), KokkosComm::data_handle(rv), KokkosComm::span(sv),
-                 KokkosComm::Impl::mpi_type_v<SendScalar>, op, root, comm);
+                 datatype<MpiSpace, SendScalar>(), op, root, comm);
     }
   }
 

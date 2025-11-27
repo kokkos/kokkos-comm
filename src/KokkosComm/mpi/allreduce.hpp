@@ -8,8 +8,7 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
-
-#include "impl/types.hpp"
+#include <KokkosComm/datatype.hpp>
 
 namespace KokkosComm::mpi {
 
@@ -30,8 +29,8 @@ void allreduce(SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm comm)
   KokkosComm::mpi::fail_if(sv.size() != rv.size(), "allreduce requires send and receive views to have the same size");
 
   int const count = sv.size();
-  MPI_Allreduce(KokkosComm::data_handle(sv), KokkosComm::data_handle(rv), count,
-                KokkosComm::Impl::mpi_type_v<SendScalar>, op, comm);
+  MPI_Allreduce(KokkosComm::data_handle(sv), KokkosComm::data_handle(rv), count, datatype<MpiSpace, SendScalar>(), op,
+                comm);
 
   Kokkos::Tools::popRegion();
 }
@@ -47,7 +46,7 @@ void allreduce(View const &v, MPI_Op op, MPI_Comm comm) {
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(v), "low-level allgather requires contiguous recv view");
 
   int const count = v.size();
-  MPI_Allreduce(MPI_IN_PLACE, KokkosComm::data_handle(v), count, KokkosComm::Impl::mpi_type_v<Scalar>, op, comm);
+  MPI_Allreduce(MPI_IN_PLACE, KokkosComm::data_handle(v), count, datatype<MpiSpace, Scalar>(), op, comm);
 
   Kokkos::Tools::popRegion();
 }
