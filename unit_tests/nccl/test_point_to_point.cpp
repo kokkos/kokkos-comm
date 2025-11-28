@@ -14,7 +14,7 @@
 namespace {
 
 using ExecSpace = Kokkos::Cuda;
-using CommSpace = KokkosComm::Experimental::NcclSpaceSpace;
+using CommSpace = KokkosComm::Experimental::NcclSpace;
 
 template <typename T>
 class PointToPoint : public testing::Test {

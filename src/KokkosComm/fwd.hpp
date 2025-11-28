@@ -10,7 +10,9 @@
 namespace KokkosComm {
 
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-namespace Experimental { struct NcclSpace; }
+namespace Experimental {
+struct NcclSpace;
+}
 // NCCL backend also declares the MPI space as fallback
 struct MpiSpace;
 

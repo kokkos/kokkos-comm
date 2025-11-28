@@ -68,10 +68,10 @@ class Channel {
  private:
   std::vector<Req<MpiSpace>> send_reqs_;  // Queue for send requests
   std::vector<Req<MpiSpace>> recv_reqs_;  // Queue for receive requests
-  int dest_rank_;                    // Destination rank for send
-  int src_rank_;                     // Source rank for receive
-  int tag_;                          // MPI tag
-  MPI_Comm comm_;                    // MPI communicator
+  int dest_rank_;                         // Destination rank for send
+  int src_rank_;                          // Source rank for receive
+  int tag_;                               // MPI tag
+  MPI_Comm comm_;                         // MPI communicator
 };
 
 }  // namespace KokkosComm
