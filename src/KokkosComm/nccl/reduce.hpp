@@ -9,6 +9,7 @@
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include <KokkosComm/reduction_op.hpp>
 #include "nccl_space.hpp"
 
 #include <KokkosComm/impl/contiguous.hpp>
@@ -70,7 +71,7 @@ namespace Impl {
 template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp>
 struct Reduce<SendView, RecvView, RedOp, Kokkos::Cuda, NcclSpace> {
   static auto execute(Handle<Kokkos::Cuda, NcclSpace> &h, const SendView sv, RecvView rv, int root) -> Req<NcclSpace> {
-    return nccl::reduce(h.space(), sv, rv, nccl::Impl::reduction_op_v<RedOp>, root, h.rank(), h.comm());
+    return nccl::reduce(h.space(), sv, rv, reduction_op<NcclSpace, RedOp>(), root, h.rank(), h.comm());
   }
 };
 

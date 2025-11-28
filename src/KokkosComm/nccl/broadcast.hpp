@@ -19,8 +19,7 @@ namespace nccl {
 namespace KC = KokkosComm;
 
 template <KokkosView View>
-auto broadcast(const Kokkos::Cuda& space, View& v, int root, ncclComm_t comm)
-    -> Req<NcclSpace> {
+auto broadcast(const Kokkos::Cuda& space, View& v, int root, ncclComm_t comm) -> Req<NcclSpace> {
   using T = typename View::non_const_value_type;
   static_assert(KC::rank<View>() <= 1,
                 "KokkosComm::Experimental::nccl::broadcast: Views with rank higher than 1 are not supported");

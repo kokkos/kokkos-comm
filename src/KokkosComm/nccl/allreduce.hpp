@@ -9,6 +9,7 @@
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include <KokkosComm/reduction_op.hpp>
 #include "nccl_space.hpp"
 
 #include "impl/pack_traits.hpp"
@@ -49,7 +50,7 @@ namespace Impl {
 template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp>
 struct AllReduce<SendView, RecvView, RedOp, Kokkos::Cuda, NcclSpace> {
   static auto execute(Handle<Kokkos::Cuda, NcclSpace> &h, const SendView sv, RecvView rv) -> Req<NcclSpace> {
-    return nccl::allreduce(h.space(), sv, rv, nccl::Impl::reduction_op_v<RedOp>, h.comm());
+    return nccl::allreduce(h.space(), sv, rv, reduction_op<NcclSpace, RedOp>(), h.comm());
   }
 };
 
