@@ -8,9 +8,10 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatype.hpp>
+#include "nccl_space.hpp"
 
 #include "impl/pack_traits.hpp"
-#include "impl/types.hpp"
 
 namespace KokkosComm::Experimental {
 namespace nccl {
@@ -29,7 +30,7 @@ auto allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, n
 
   Req<NcclSpace> req{space.cuda_stream()};
   if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
-    ncclAllGather(KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), Impl::datatype_v<ST>, comm,
+    ncclAllGather(KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), comm,
                   space.cuda_stream());
   } else {
     Kokkos::abort("KokkosComm::Experimental::nccl::allgather: unimplemented for non-contiguous views");

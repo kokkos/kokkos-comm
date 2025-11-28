@@ -31,8 +31,8 @@ auto iallgather(const ExecSpace &space, const SView sv, RView rv, MPI_Comm comm)
 
   Req<MpiSpace> req;
   // All ranks send/recv same count
-  MPI_Iallgather(data_handle(sv), span(sv), datatype<MpiSpace, ST>, data_handle(rv), span(sv), datatype<MpiSpace, RT>, comm,
-                 &req.mpi_request());
+  MPI_Iallgather(data_handle(sv), span(sv), datatype<MpiSpace, ST>, data_handle(rv), span(sv), datatype<MpiSpace, RT>,
+                 comm, &req.mpi_request());
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 

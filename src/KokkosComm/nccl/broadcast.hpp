@@ -8,9 +8,10 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatype.hpp>
+#include "nccl_space.hpp"
 
 #include "impl/pack_traits.hpp"
-#include "impl/types.hpp"
 
 namespace KokkosComm::Experimental {
 namespace nccl {
@@ -26,7 +27,7 @@ auto broadcast(const Kokkos::Cuda& space, View& v, int root, ncclComm_t comm) ->
 
   Req<NcclSpace> req{space.cuda_stream()};
   if (KC::is_contiguous(v)) {
-    ncclBcast(KC::data_handle(v), KC::span(v), Impl::datatype_v<T>, root, comm, space.cuda_stream());
+    ncclBcast(KC::data_handle(v), KC::span(v), datatype<NccSpace, T>, root, comm, space.cuda_stream());
   } else {
     Kokkos::abort("KokkosComm::Experimental::nccl::broadcast: unimplemented for non-contiguous views");
   }

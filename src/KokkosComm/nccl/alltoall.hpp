@@ -8,9 +8,10 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatype.hpp>
+#include "nccl_space.hpp"
 
 #include "impl/pack_traits.hpp"
-#include "impl/types.hpp"
 
 namespace KokkosComm::Experimental {
 namespace nccl {
@@ -30,14 +31,14 @@ auto alltoall(const ExecSpace &space, const SendView &sv, const RecvView &rv, in
   Req<NcclSpace> req{space.cuda_stream()};
   if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
 #if NCCL_VERSION_CODE >= NCCL_VERSION(2, 28, 0)
-    ncclAlltoAll(KC::data_handle(sv), KC::data_handle(rv), count, Impl::datatype_v<ST>, comm, space.cuda_stream());
+    ncclAlltoAll(KC::data_handle(sv), KC::data_handle(rv), count, datatype<NcclSpace, ST>(), comm, space.cuda_stream());
 #else
     int n_pes;
     ncclCommCount(comm, &n_pes);
     ncclGroupStart();
     for (int r = 0; r < n_pes; ++r) {
-      ncclSend(KC::data_handle(sv) + r * count, count, Impl::datatype_v<ST>, r, comm, space.cuda_stream());
-      ncclRecv(KC::data_handle(rv) + r * count, count, Impl::datatype_v<ST>, r, comm, space.cuda_stream());
+      ncclSend(KC::data_handle(sv) + r * count, count, datatype<NcclSpace, ST>(), r, comm, space.cuda_stream());
+      ncclRecv(KC::data_handle(rv) + r * count, count, datatype<NcclSpace, ST>(), r, comm, space.cuda_stream());
     }
     ncclGroupEnd();
 #endif

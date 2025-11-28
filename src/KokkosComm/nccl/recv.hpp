@@ -8,10 +8,12 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatype.hpp>
+#include "nccl_space.hpp"
 
 #include <KokkosComm/impl/contiguous.hpp>
-#include "impl/types.hpp"
 #include "impl/pack_traits.hpp"
+#include "impl/nccl_check.hpp"
 
 namespace KokkosComm {
 namespace Experimental::nccl {
@@ -25,12 +27,13 @@ auto recv(const ExecSpace &space, RecvView &rv, int peer, ncclComm_t comm) -> Re
 
   Req<NcclSpace> req{space.cuda_stream()};
   if (KC::is_contiguous(rv)) {
-    KC_NCCL_CHECK(ncclRecv(KC::data_handle(rv), KC::span(rv), Impl::datatype_v<T>, peer, comm, space.cuda_stream()));
+    KC_NCCL_CHECK(
+        ncclRecv(KC::data_handle(rv), KC::span(rv), datatype<NcclSpace, T>(), peer, comm, space.cuda_stream()));
   } else {
     using Packer = typename Impl::PackTraits<RecvView>::packer_type;
     auto pckd_rv = KC::Impl::allocate_contiguous_for(space, "KC::nccl::recv pckd_rv", rv);
-    KC_NCCL_CHECK(
-        ncclRecv(KC::data_handle(pckd_rv), KC::span(pckd_rv), Impl::datatype_v<T>, peer, comm, space.cuda_stream()));
+    KC_NCCL_CHECK(ncclRecv(KC::data_handle(pckd_rv), KC::span(pckd_rv), datatype<NcclSpace, T>(), peer, comm,
+                           space.cuda_stream()));
     Packer::unpack_into(space, rv, pckd_rv);
     req.extend_view_lifetime(pckd_rv);
   }

@@ -8,10 +8,11 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include <KokkosComm/datatype.hpp>
+#include "nccl_space.hpp"
 
 #include <KokkosComm/impl/contiguous.hpp>
 #include "impl/pack_traits.hpp"
-#include "impl/types.hpp"
 
 namespace KokkosComm::Experimental {
 namespace nccl {
@@ -33,11 +34,11 @@ auto reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t 
   Req<NcclSpace> req{space.cuda_stream()};
   if (KC::is_contiguous(sv)) {
     if (rank != root and KC::is_contiguous(rv)) {
-      ncclReduce(KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), Impl::datatype_v<ST>, op, root, comm,
+      ncclReduce(KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), op, root, comm,
                  space.cuda_stream());
     } else {
       auto pckd_rv = KC::Impl::allocate_contiguous_for(space, "KC::nccl::reduce pckd_rv", rv);
-      ncclReduce(KC::data_handle(sv), KC::data_handle(pckd_rv), KC::span(sv), Impl::datatype_v<ST>, op, root, comm,
+      ncclReduce(KC::data_handle(sv), KC::data_handle(pckd_rv), KC::span(sv), datatype<NcclSpace, ST>(), op, root, comm,
                  space.cuda_stream());
       RecvPacker::unpack_into(space, rv, pckd_rv);
       req.extend_view_lifetime(pckd_rv);
@@ -45,12 +46,12 @@ auto reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t 
   } else {
     auto send_args = SendPacker::pack(space, sv);
     if (rank != root and KC::is_contiguous(rv)) {
-      ncclReduce(KC::data_handle(send_args.view_), KC::data_handle(rv), KC::span(send_args.view_), Impl::datatype_v<ST>,
-                 op, root, comm, space.cuda_stream());
+      ncclReduce(KC::data_handle(send_args.view_), KC::data_handle(rv), KC::span(send_args.view_),
+                 datatype<NcclSpace, ST>(), op, root, comm, space.cuda_stream());
     } else {
       auto pckd_rv = KC::Impl::allocate_contiguous_for(space, "KC::nccl::reduce pckd_rv", rv);
       ncclReduce(KC::data_handle(send_args.view_), KC::data_handle(pckd_rv), KC::span(send_args.view_),
-                 Impl::datatype_v<ST>, op, root, comm, space.cuda_stream());
+                 datatype<NcclSpace, ST>(), op, root, comm, space.cuda_stream());
       RecvPacker::unpack_into(space, rv, pckd_rv);
       req.extend_view_lifetime(pckd_rv);
     }
