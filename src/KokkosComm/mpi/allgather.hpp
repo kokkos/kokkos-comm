@@ -14,7 +14,8 @@
 
 #include "impl/error_handling.hpp"
 
-namespace KokkosComm::mpi {
+namespace KokkosComm {
+namespace mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
 auto iallgather(const ExecSpace &space, const SView sv, RView rv, MPI_Comm comm) -> Req<MpiSpace> {
@@ -91,4 +92,15 @@ void allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, M
   Kokkos::Tools::popRegion();
 }
 
-}  // namespace KokkosComm::mpi
+}  // namespace mpi
+namespace Experimental::Impl {
+
+template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace>
+struct AllGather<SendView, RecvView, ExecSpace, MpiSpace> {
+  static auto execute(Handle<ExecSpace, MpiSpace> &h, const SendView sv, RecvView rv) -> Req<MpiSpace> {
+    return mpi::iallgather(h.space(), sv, rv, h.comm());
+  }
+};
+
+}  // namespace Experimental::Impl
+}  // namespace KokkosComm

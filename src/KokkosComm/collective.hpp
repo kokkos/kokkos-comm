@@ -14,6 +14,7 @@
 #include "mpi/handle.hpp"
 #include "mpi/req.hpp"
 #include "mpi/broadcast.hpp"
+#include "mpi/allgather.hpp"
 #endif
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
 #include "nccl/nccl_space.hpp"
