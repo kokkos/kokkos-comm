@@ -8,11 +8,37 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include "mpi_space.hpp"
+#include "req.hpp"
 
 #include "impl/types.hpp"
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm::mpi {
+
+template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
+auto iallgather(const ExecSpace &space, const SView sv, RView rv, MPI_Comm comm) -> Req<Mpi> {
+  using ST = typename SView::non_const_value_type;
+  using RT = typename RView::non_const_value_type;
+  static_assert(std::is_same_v<ST, RT>, "KokkosComm::mpi::iallgather: View value types must be identical");
+  Kokkos::Tools::pushRegion("KokkosComm::mpi::iallgather");
+
+  fail_if(!is_contiguous(sv) || !is_contiguous(rv),
+          "KokkosComm::mpi::iallgather: unimplemented for non-contiguous views");
+
+  // Sync: Work in space may have been used to produce view data.
+  space.fence("fence before non-blocking all-gather");
+
+  Req<Mpi> req;
+  // All ranks send/recv same count
+  MPI_Iallgather(data_handle(sv), span(sv), Impl::mpi_type_v<ST>, data_handle(rv), span(sv), Impl::mpi_type_v<RT>, comm,
+                 &req.mpi_request());
+  req.extend_view_lifetime(sv);
+  req.extend_view_lifetime(rv);
+
+  Kokkos::Tools::popRegion();
+  return req;
+}
 
 template <KokkosView SendView, KokkosView RecvView>
 void allgather(const SendView &sv, const RecvView &rv, MPI_Comm comm) {
