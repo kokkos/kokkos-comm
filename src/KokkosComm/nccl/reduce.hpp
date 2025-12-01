@@ -26,8 +26,6 @@ auto reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t 
   using ST         = typename SendView::non_const_value_type;
   using RT         = typename RecvView::non_const_value_type;
   static_assert(std::is_same_v<ST, RT>, "KokkosComm::Experimental::nccl::reduce: View value types must be identical");
-  static_assert(KC::rank<SendView>() <= 1 and KC::rank<RecvView>() <= 1,
-                "KokkosComm::Experimental::nccl::reduce: Views with rank higher than 1 are not supported");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::reduce");
 
   Req<Nccl> req{space.cuda_stream()};
