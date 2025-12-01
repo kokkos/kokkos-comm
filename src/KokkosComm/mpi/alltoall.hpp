@@ -8,12 +8,38 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
+#include "mpi_space.hpp"
+#include "req.hpp"
 
 #include "impl/pack_traits.hpp"
 #include "impl/types.hpp"
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm::mpi {
+
+template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
+auto ialltoall(const ExecSpace &space, const SView sv, RView rv, int count, MPI_Comm comm) -> Req<Mpi> {
+  using ST = typename SView::non_const_value_type;
+  using RT = typename RView::non_const_value_type;
+  static_assert(std::is_same_v<ST, RT>, "KokkosComm::mpi::ialltoall: View value types must be identical");
+  Kokkos::Tools::pushRegion("KokkosComm::mpi::ialltoall");
+
+  fail_if(!is_contiguous(sv) || !is_contiguous(rv),
+          "KokkosComm::mpi::ialltoall: unimplemented for non-contiguous views");
+
+  // Sync: Work in space may have been used to produce view data.
+  space.fence("fence before non-blocking all-gather");
+
+  Req<Mpi> req;
+  // All ranks send/recv same count
+  MPI_Ialltoall(data_handle(sv), count, Impl::mpi_type_v<ST>, data_handle(rv), count, Impl::mpi_type_v<RT>, comm,
+                &req.mpi_request());
+  req.extend_view_lifetime(sv);
+  req.extend_view_lifetime(rv);
+
+  Kokkos::Tools::popRegion();
+  return req;
+}
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
 void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount, const RecvView &rv,
