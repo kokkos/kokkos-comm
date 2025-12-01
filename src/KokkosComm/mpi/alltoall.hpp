@@ -13,12 +13,12 @@
 #include "impl/types.hpp"
 #include "impl/error_handling.hpp"
 
-namespace KokkosComm::Impl {
+namespace KokkosComm::mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
 void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount, const RecvView &rv,
               const size_t recvCount, MPI_Comm comm) {
-  Kokkos::Tools::pushRegion("KokkosComm::Impl::alltoall");
+  Kokkos::Tools::pushRegion("KokkosComm::mpi::alltoall");
 
   using SendScalar = typename SendView::value_type;
   using RecvScalar = typename RecvView::value_type;
@@ -27,7 +27,7 @@ void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount
   static_assert(KokkosComm::rank<RecvView>() <= 1, "alltoall for RecvView::rank > 1 not supported");
 
   // Make sure views are ready
-  space.fence("KokkosComm::Impl::alltoall");
+  space.fence("KokkosComm::mpi::alltoall");
 
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(sv) || !KokkosComm::is_contiguous(rv),
                            "alltoall for non-contiguous views not implemented");
@@ -48,8 +48,8 @@ void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount
     KokkosComm::mpi::fail_if(true, ss.str().data());
   }
 
-  MPI_Alltoall(KokkosComm::data_handle(sv), sendCount, mpi_type_v<SendScalar>, KokkosComm::data_handle(rv), recvCount,
-               mpi_type_v<RecvScalar>, comm);
+  MPI_Alltoall(KokkosComm::data_handle(sv), sendCount, Impl::mpi_type_v<SendScalar>, KokkosComm::data_handle(rv),
+               recvCount, Impl::mpi_type_v<RecvScalar>, comm);
 
   Kokkos::Tools::popRegion();
 }
@@ -57,14 +57,14 @@ void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount
 // in-place alltoall
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 void alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount, MPI_Comm comm) {
-  Kokkos::Tools::pushRegion("KokkosComm::Impl::alltoall");
+  Kokkos::Tools::pushRegion("KokkosComm::mpi::alltoall");
 
   using RecvScalar = typename RecvView::value_type;
 
   static_assert(RecvView::rank <= 1, "alltoall for RecvView::rank > 1 not supported");
 
   // Make sure views are ready
-  space.fence("KokkosComm::Impl::alltoall");
+  space.fence("KokkosComm::mpi::alltoall");
 
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "alltoall for non-contiguous views not implemented");
 
@@ -79,9 +79,9 @@ void alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount
   }
 
   MPI_Alltoall(MPI_IN_PLACE, 0 /*ignored*/, MPI_BYTE /*ignored*/, KokkosComm::data_handle(rv), recvCount,
-               mpi_type_v<RecvScalar>, comm);
+               Impl::mpi_type_v<RecvScalar>, comm);
 
   Kokkos::Tools::popRegion();
 }
 
-}  // namespace KokkosComm::Impl
+}  // namespace KokkosComm::mpi
