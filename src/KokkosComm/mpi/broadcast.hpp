@@ -14,7 +14,8 @@
 
 #include "impl/error_handling.hpp"
 
-namespace KokkosComm::mpi {
+namespace KokkosComm {
+namespace mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView View>
 auto ibroadcast(const ExecSpace& space, View& v, int root, MPI_Comm comm) -> Req<MpiSpace> {
@@ -56,4 +57,15 @@ void broadcast(ExecSpace const& space, View const& v, int root, MPI_Comm comm) {
   Kokkos::Tools::popRegion();
 }
 
-}  // namespace KokkosComm::mpi
+}  // namespace mpi
+namespace Experimental::Impl {
+
+template <KokkosView View, KokkosExecutionSpace ExecSpace>
+struct Broadcast<View, ExecSpace, MpiSpace> {
+  static auto execute(Handle<ExecSpace, MpiSpace>& h, View& v, int root) -> Req<MpiSpace> {
+    return KokkosComm::mpi::ibroadcast(h.space(), v, root, h.comm());
+  }
+};
+
+}  // namespace Experimental::Impl
+}  // namespace KokkosComm

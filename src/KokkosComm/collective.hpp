@@ -9,6 +9,12 @@
 
 #include "fwd.hpp"
 #include "reduction_op.hpp"
+#if defined(KOKKOSCOMM_ENABLE_MPI)
+#include "mpi/mpi_space.hpp"
+#include "mpi/handle.hpp"
+#include "mpi/req.hpp"
+#include "mpi/broadcast.hpp"
+#endif
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
 #include "nccl/nccl_space.hpp"
 #include "nccl/handle.hpp"
