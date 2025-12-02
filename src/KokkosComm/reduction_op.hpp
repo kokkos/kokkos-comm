@@ -21,7 +21,7 @@ namespace {
 
 // clang-format off
 #define DECL_REDUCTION_OP_FOR(operator) \
-  struct operator;                      \
+  struct operator {};                   \
   template <> struct Impl::is_reduction_operator<operator> : public std::true_type {}
 // clang-format on
 
