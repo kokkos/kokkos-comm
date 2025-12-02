@@ -103,8 +103,8 @@ constexpr auto nccl_datatype() -> ncclDataType_t {
     return ncclChar;
   } else if constexpr (std::is_same_v<T, int>) {
     return ncclInt;
-  } else if constexpr (std::is_same_v<T, unsigned>) {
-    return ncclUint;
+  } else if constexpr (std::is_same_v<T, unsigned> and sizeof(unsigned) == 4) {
+    return ncclUint32;
   } else if constexpr (std::is_same_v<T, std::int8_t>) {
     return ncclInt8;
   } else if constexpr (std::is_same_v<T, std::uint8_t>) {
