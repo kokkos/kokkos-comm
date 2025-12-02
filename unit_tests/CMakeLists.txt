@@ -42,7 +42,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fmt)
 
-include(kokkoscomm_test)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
+include(kc-test)
 
 # --- Core API unit tests --- #
 kc_add_unit_test(test.core.p2p CORE NUM_PES 2 FILES test_main.cpp test_sendrecv.cpp)
@@ -58,12 +59,10 @@ if(KOKKOSCOMM_ENABLE_MPI)
     kc_add_unit_test(smoke.mpi.cuda-p2p MPI NUM_PES 2 FILES mpi/test_mpi_cuda_sendrecv.cpp)
     # MPICH needs dynamic cudart (we think, pmodels/mpich#7304)
     if(KOKKOSCOMM_IMPL_MPI_IS_MPICH)
-      # gersemi: off
       # Setting the CUDA_RUNTIME_LIBRARY property on this target to "Shared" doesn't work for
       # reasons I don't understand.
       target_compile_options(smoke.mpi.cuda-p2p PUBLIC --cudart shared)
       target_link_options(smoke.mpi.cuda-p2p PUBLIC --cudart shared)
-      # gersemi: on
     endif()
   endif()
 

@@ -23,5 +23,5 @@ function(kc_add_unit_test name)
     target_link_libraries(${name} PRIVATE NCCL::NCCL)
   endif()
 
-  add_test(NAME ${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${UT_NUM_PES} ${name})
+  add_test(NAME ${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${UT_NUM_PES} ./${name})
 endfunction()
