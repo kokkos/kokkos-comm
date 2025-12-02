@@ -1,3 +1,4 @@
+definitions: [./cmake/kokkoscomm_test.cmake]
 line_length: 120
 list_expansion: favour-inlining
 indent: 2
