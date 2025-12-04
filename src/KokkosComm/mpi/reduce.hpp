@@ -18,7 +18,8 @@
 #include "impl/error_handling.hpp"
 #include "impl/pack_traits.hpp"
 
-namespace KokkosComm::mpi {
+namespace KokkosComm {
+namespace mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
 auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int root, MPI_Comm comm) -> Req<MpiSpace> {
@@ -151,4 +152,15 @@ void reduce(const ExecSpace& space, const SendView& sv, RecvView& rv, MPI_Op op,
   Kokkos::Tools::popRegion();
 }
 
-}  // namespace KokkosComm::mpi
+}  // namespace mpi
+namespace Experimental::Impl {
+
+template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp, KokkosExecutionSpace ExecSpace>
+struct Reduce<SendView, RecvView, RedOp, ExecSpace, MpiSpace> {
+  static auto execute(Handle<ExecSpace, MpiSpace>& h, const SendView sv, RecvView rv, int root) -> Req<MpiSpace> {
+    return mpi::ireduce(h.space(), sv, rv, reduction_op<MpiSpace, RedOp>(), root, h.mpi_comm());
+  }
+};
+
+}  // namespace Experimental::Impl
+}  // namespace KokkosComm

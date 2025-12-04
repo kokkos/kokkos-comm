@@ -48,7 +48,8 @@ include(kc-test)
 # --- Core API unit tests --- #
 kc_add_unit_test(test.core.p2p CORE NUM_PES 2 FILES test_main.cpp test_sendrecv.cpp)
 kc_add_unit_test(test.core.all_reduce CORE NUM_PES 2 FILES test_main.cpp test_allreduce.cpp)
-kc_add_unit_test(test.core.alltoall CORE NUM_PES 2 FILES test_main.cpp test_alltoall.cpp)
+kc_add_unit_test(test.core.all_to_all CORE NUM_PES 2 FILES test_main.cpp test_alltoall.cpp)
+kc_add_unit_test(test.core.reduce CORE NUM_PES 2 FILES test_main.cpp test_reduce.cpp)
 
 kc_add_unit_test(test.core.red_op_conv CORE NUM_PES 1 FILES test_main.cpp test_red_op_conversion.cpp)
 
