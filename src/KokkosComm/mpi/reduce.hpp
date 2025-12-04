@@ -11,6 +11,7 @@
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include <KokkosComm/reduction_op.hpp>
 #include "mpi_space.hpp"
 #include "req.hpp"
 
@@ -32,7 +33,7 @@ auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int 
       not std::is_same_v<typename SView::execution_space, Kokkos::HIP> and
           not std::is_same_v<typename RView::execution_space, Kokkos::HIP>,
 #endif
-      "KokkosComm::mpi::iallreduce: Unsupported with Open MPI + Kokkos CUDA/HIP backend");
+      "KokkosComm::mpi::ireduce: Unsupported with Open MPI + Kokkos CUDA/HIP backend");
 #endif
   using ST   = typename SView::non_const_value_type;
   using RT   = typename RView::non_const_value_type;
