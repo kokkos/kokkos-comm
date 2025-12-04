@@ -9,8 +9,37 @@
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include <KokkosComm/reduction_op.hpp>
+#include "mpi_space.hpp"
+#include "req.hpp"
+
+#include "impl/error_handling.hpp"
+#include "impl/types.hpp"
 
 namespace KokkosComm::mpi {
+
+template <KokkosView SView, KokkosView RView, KokkosExecutionSpace ExecSpace>
+auto iallreduce(const ExecSpace &space, const SView sv, RView rv, MPI_Op op, MPI_Comm comm) -> Req<MpiSpace> {
+  using ST = typename SView::non_const_value_type;
+  using RT = typename RView::non_const_value_type;
+  static_assert(std::is_same_v<ST, RT>, "KokkosComm::mpi::iallreduce: View value types must be identical");
+  Kokkos::Tools::pushRegion("KokkosComm::mpi::iallreduce");
+
+  fail_if(!is_contiguous(sv) || !is_contiguous(rv),
+          "KokkosComm::mpi::iallreduce: unimplemented for non-contiguous views");
+
+  // Sync: Work in space may have been used to produce view data.
+  space.fence("fence before non-blocking all-gather");
+
+  Req<MpiSpace> req;
+  // All ranks send/recv same count
+  MPI_Iallreduce(data_handle(sv), data_handle(rv), span(sv), datatype<MpiSpace, ST>(), op, comm, &req.mpi_request());
+  req.extend_view_lifetime(sv);
+  req.extend_view_lifetime(rv);
+
+  Kokkos::Tools::popRegion();
+  return req;
+}
 
 template <KokkosView SendView, KokkosView RecvView>
 void allreduce(SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm comm) {
