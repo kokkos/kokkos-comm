@@ -20,9 +20,8 @@ For example, for the MPI communication space, we define the following:
 
     namespace KokkosComm {
 
-    struct Mpi {
-      static auto world_size() noexcept -> int { /* ... */ }
-      static auto world_rank() noexcept -> int { /* ... */ }
+    struct MpiSpace {
+      ...
     };
 
     template <>
@@ -31,7 +30,6 @@ For example, for the MPI communication space, we define the following:
     } // end KokkosComm
 
 
-Notice that ``Mpi`` has two static methods, but that these methods are not required. The main point is that ``struct Mpi`` exists.
 To let core API functions know that your communication space is something KokkosComm can use to dispatch messages, you also need to declare the ``Impl::is_communication_space`` specialization using the ``CommunicationSpace`` concept.
 
 
@@ -71,7 +69,7 @@ For example, for the MPI communication space request, we define the following:
     namespace KokkosComm {
 
     template <>
-    class Req<Mpi> { /* ... */ };
+    class Req<MpiSpace> { /* ... */ };
 
     } // end KokkosComm
 
@@ -103,7 +101,7 @@ For example, for the MPI communication space, we create a partial specialization
     namespace KokkosComm::Impl {
 
     template <KokkosView RecvView, KokkosExecutionSpace ExecSpace>
-    struct Recv<RecvView, ExecSpace, Mpi> { /* ... */ };
+    struct Recv<RecvView, ExecSpace, MpiSpace> { /* ... */ };
 
     } // end KokkosComm::Impl
 
