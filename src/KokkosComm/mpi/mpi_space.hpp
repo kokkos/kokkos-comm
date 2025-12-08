@@ -11,26 +11,18 @@
 
 namespace KokkosComm {
 
-// TODO: not sure what members this thing needs
-struct Mpi {
-  // TODO: just an example
-  static int world_size() {
-    int size;
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    return size;
-  }
+/// The MPI communication space.
+struct MpiSpace {
+  using communication_space = MpiSpace;
+  using handle_type         = MPI_Comm;
+  using request_type        = MPI_Request;
+  using datatype_type       = MPI_Datatype;
+  using reduction_op_type   = MPI_Op;
+  using rank_type           = int;
+};
 
-  // TODO: just an example
-  static int world_rank() {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    return rank;
-  }
-
-};  // struct Mpi
-
-// KokkosComm::Mpi is a KokkosComm::CommunicationSpace
+// KokkosComm::MpiSpace is a KokkosComm::CommunicationSpace
 template <>
-struct Impl::is_communication_space<KokkosComm::Mpi> : public std::true_type {};
+struct Impl::is_communication_space<MpiSpace> : public std::true_type {};
 
 }  // namespace KokkosComm

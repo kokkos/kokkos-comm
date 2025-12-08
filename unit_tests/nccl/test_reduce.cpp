@@ -11,7 +11,7 @@
 namespace {
 
 using ExecSpace = Kokkos::Cuda;
-using CommSpace = KokkosComm::Experimental::Nccl;
+using CommSpace = KokkosComm::Experimental::NcclSpace;
 
 template <typename T>
 class Reduce : public testing::Test {
@@ -27,7 +27,8 @@ TYPED_TEST_SUITE(Reduce, ScalarTypes);
 template <typename Scalar>
 auto reduce_contig_1d() -> void {
   auto nccl_ctx = test_utils::nccl::Ctx::init();
-  KokkosComm::Handle<ExecSpace, CommSpace> h(ExecSpace(), nccl_ctx.comm());
+  ExecSpace space(nccl_ctx.stream());
+  KokkosComm::Handle<ExecSpace, CommSpace> h(space, nccl_ctx.comm());
   int rank = h.rank();
   int size = h.size();
   int root = 0;
@@ -41,7 +42,7 @@ auto reduce_contig_1d() -> void {
 
   // Prepare send buffer
   Kokkos::parallel_for(
-      Kokkos::RangePolicy(ExecSpace(), 0, sv.extent(0)), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
+      Kokkos::RangePolicy(space, 0, sv.extent(0)), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
   // Using the same execution space for both operations lets us not need an explicit `fence`
   auto req = KokkosComm::Experimental::reduce(h, sv, rv, root, KokkosComm::Sum{});
   KokkosComm::wait(req);

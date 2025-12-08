@@ -15,7 +15,7 @@
 namespace KokkosComm {
 
 template <>
-class Req<Mpi> {
+class Req<MpiSpace> {
   // a type-erased view. Request uses these to keep temporary views alive for
   // the lifetime of "Immediate" MPI operations
   struct ViewHolderBase {
@@ -52,13 +52,13 @@ class Req<Mpi> {
  private:
   std::shared_ptr<Record> record_;
 
-  friend void wait(Req<Mpi> &req);
-  friend void wait(Req<Mpi> &&req);
-  friend void wait_all(std::span<Req<Mpi>> reqs);
-  friend void wait_any(std::span<Req<Mpi>> reqs);
+  friend void wait(Req<MpiSpace> &req);
+  friend void wait(Req<MpiSpace> &&req);
+  friend void wait_all(std::span<Req<MpiSpace>> reqs);
+  friend void wait_any(std::span<Req<MpiSpace>> reqs);
 };
 
-inline void wait(Req<Mpi> &req) {
+inline void wait(Req<MpiSpace> &req) {
   MPI_Wait(&req.mpi_request(), MPI_STATUS_IGNORE);
   for (auto &f : req.record_->postWaits_) {
     f();
@@ -66,20 +66,20 @@ inline void wait(Req<Mpi> &req) {
   req.record_->postWaits_.clear();
 }
 
-inline void wait(Req<Mpi> &&req) { wait(req); }
+inline void wait(Req<MpiSpace> &&req) { wait(req); }
 
-inline void wait_all(std::span<Req<Mpi>> reqs) {
-  for (Req<Mpi> &req : reqs) {
+inline void wait_all(std::span<Req<MpiSpace>> reqs) {
+  for (Req<MpiSpace> &req : reqs) {
     wait(req);
   }
 }
 
 /// FIXME: This function will loop indefinitely if all requests in the list are equivalent to `MPI_REQUEST_NULL`.
 /// FIXME: This function should return the index of the completed request, if any.
-inline void wait_any(std::span<Req<Mpi>> reqs) {
+inline void wait_any(std::span<Req<MpiSpace>> reqs) {
   // FIXME: Active wait-loop
   while (true) {
-    for (Req<Mpi> &req : reqs) {
+    for (Req<MpiSpace> &req : reqs) {
       int flag;
       MPI_Test(&(req.mpi_request()), &flag, MPI_STATUS_IGNORE);
       if (flag) {

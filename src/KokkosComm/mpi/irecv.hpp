@@ -18,15 +18,15 @@ namespace Impl {
 
 // Recv implementation for Mpi
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-struct Recv<RecvView, ExecSpace, Mpi> {
-  static Req<Mpi> execute(Handle<ExecSpace, Mpi> &h, const RecvView &rv, int src) {
+struct Recv<RecvView, ExecSpace, MpiSpace> {
+  static Req<MpiSpace> execute(Handle<ExecSpace, MpiSpace> &h, const RecvView &rv, int src) {
     using KCPT   = KokkosComm::PackTraits<RecvView>;
     using Packer = typename KCPT::packer_type;
     using Args   = typename Packer::args_type;
 
     const ExecSpace &space = h.space();
 
-    Req<Mpi> req;
+    Req<MpiSpace> req;
     if (KokkosComm::is_contiguous(rv)) {
       space.fence("fence before irecv");
       MPI_Irecv(KokkosComm::data_handle(rv), KokkosComm::span(rv), mpi_type_v<typename RecvView::value_type>, src,

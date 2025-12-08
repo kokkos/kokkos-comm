@@ -20,11 +20,6 @@ find_package(MPI REQUIRED)
 
 include(FetchContent)
 
-# Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
-  cmake_policy(SET CMP0135 NEW)
-endif()
-
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
@@ -33,14 +28,20 @@ FetchContent_Declare(
 )
 # Don't install googletest
 set(INSTALL_GTEST OFF)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(gtest PUBLIC -w)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   target_compile_options(gtest PUBLIC /w)
 endif()
+
+FetchContent_Declare(
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+  GIT_TAG
+    407c905e45ad75fc29bf0f9bb7c5c2fd3475976f #v12.1.0
+)
+FetchContent_MakeAvailable(fmt)
 
 if(KOKKOSCOMM_ENABLE_MPI)
   # Standalone MPI smoke tests (do not use KokkosComm)
@@ -137,6 +138,7 @@ function(add_mpi_test test_name num_procs)
       KokkosComm::KokkosComm
       MPI::MPI_CXX # Explicitly link against MPI
       gtest
+      fmt::fmt
   )
   add_test(
     NAME ${test_name}
@@ -164,6 +166,7 @@ function(add_nccl_test test_name num_procs)
       NCCL::NCCL
       MPI::MPI_CXX # Explicitly link against MPI because it's needed to setup multi-node NCCL comms
       gtest
+      fmt::fmt
   )
   add_test(
     NAME ${test_name}
@@ -179,14 +182,19 @@ target_sources(
   PRIVATE
     test_main.cpp
     test_sendrecv.cpp
+  PRIVATE
+    FILE_SET HEADERS
+    BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+    FILES logging.hpp
 )
 target_compile_features(test-main PRIVATE cxx_std_20)
 target_link_libraries(
   test-main
   PRIVATE
+    GTest::gtest_main
     KokkosComm::KokkosComm
     MPI::MPI_CXX
-    GTest::gtest_main
+    fmt::fmt
 )
 
 if(KokkosComm_ENABLE_MPI)
@@ -215,7 +223,8 @@ if(KokkosComm_ENABLE_NCCL)
     test-main
     PRIVATE
       FILE_SET HEADERS
-      BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/nccl
+      BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+      FILES nccl/utils.hpp
   )
   # Link against NCCL because we depend on raw calls
   target_link_libraries(test-main PRIVATE NCCL::NCCL)

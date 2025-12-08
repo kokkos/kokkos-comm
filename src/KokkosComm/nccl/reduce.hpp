@@ -20,7 +20,7 @@ namespace KC = KokkosComm;
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
 auto reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t op, int root, int rank, ncclComm_t comm)
-    -> Req<Nccl> {
+    -> Req<NcclSpace> {
   using SendPacker = typename Impl::PackTraits<SendView>::packer_type;
   using RecvPacker = typename Impl::PackTraits<RecvView>::packer_type;
   using ST         = typename SendView::non_const_value_type;
@@ -28,7 +28,7 @@ auto reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t 
   static_assert(std::is_same_v<ST, RT>, "KokkosComm::Experimental::nccl::reduce: View value types must be identical");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::reduce");
 
-  Req<Nccl> req{space.cuda_stream()};
+  Req<NcclSpace> req{space.cuda_stream()};
   if (KC::is_contiguous(sv)) {
     if (rank != root and KC::is_contiguous(rv)) {
       ncclReduce(KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), Impl::datatype_v<ST>, op, root, comm,
@@ -65,8 +65,8 @@ auto reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t 
 namespace Impl {
 
 template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp>
-struct Reduce<SendView, RecvView, RedOp, Kokkos::Cuda, Nccl> {
-  static auto execute(Handle<Kokkos::Cuda, Nccl> &h, const SendView sv, RecvView rv, int root) -> Req<Nccl> {
+struct Reduce<SendView, RecvView, RedOp, Kokkos::Cuda, NcclSpace> {
+  static auto execute(Handle<Kokkos::Cuda, NcclSpace> &h, const SendView sv, RecvView rv, int root) -> Req<NcclSpace> {
     return nccl::reduce(h.space(), sv, rv, nccl::Impl::reduction_op_v<RedOp>, root, h.rank(), h.comm());
   }
 };

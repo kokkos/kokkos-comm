@@ -27,7 +27,15 @@ template <typename T>
 concept KokkosExecutionSpace = Kokkos::is_execution_space_v<T>;
 
 template <typename T>
-concept CommunicationSpace = KokkosComm::Impl::is_communication_space<T>::value;
+concept CommunicationSpace = requires {
+  KokkosComm::Impl::is_communication_space<T>::value;
+  typename T::communication_space;
+  typename T::handle_type;
+  typename T::request_type;
+  typename T::datatype_type;
+  typename T::reduction_op_type;
+  typename T::rank_type;
+};
 
 template <typename T>
 concept ReductionOperator = KokkosComm::Impl::is_reduction_operator<T>::value;

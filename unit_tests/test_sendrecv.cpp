@@ -35,7 +35,7 @@ void test_1d(const View1D &v) {
   // This hack will be required as long as we don't define a way to create a "default" NCCL communicator in KokkosComm.
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
   auto nccl_ctx = test_utils::nccl::Ctx::init();
-  KokkosComm::Handle<Kokkos::Cuda, KokkosComm::Experimental::Nccl> h(Kokkos::Cuda(), nccl_ctx.comm());
+  KokkosComm::Handle<Kokkos::Cuda, KokkosComm::Experimental::NcclSpace> h(Kokkos::Cuda(), nccl_ctx.comm());
 #else
   KokkosComm::Handle h;
 #endif
@@ -68,7 +68,7 @@ void test_2d(const View2D &v) {
 
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
   auto nccl_ctx = test_utils::nccl::Ctx::init();
-  KokkosComm::Handle<Kokkos::Cuda, KokkosComm::Experimental::Nccl> h(Kokkos::Cuda(), nccl_ctx.comm());
+  KokkosComm::Handle<Kokkos::Cuda, KokkosComm::Experimental::NcclSpace> h(Kokkos::Cuda(), nccl_ctx.comm());
 #else
   KokkosComm::Handle h;
 #endif

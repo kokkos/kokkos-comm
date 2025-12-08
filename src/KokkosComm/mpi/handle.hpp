@@ -20,10 +20,10 @@ namespace KokkosComm {
 - post-wait
 */
 template <KokkosExecutionSpace ExecSpace>
-class Handle<ExecSpace, Mpi> {
+class Handle<ExecSpace, MpiSpace> {
  public:
   using execution_space = ExecSpace;
-  using transport_type  = Mpi;
+  using transport_type  = MpiSpace;
   using size_type       = int;
 
   explicit Handle(const execution_space &space, MPI_Comm comm) : space_(space), comm_(comm) {}

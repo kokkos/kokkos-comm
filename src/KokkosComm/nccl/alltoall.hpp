@@ -18,13 +18,14 @@ namespace nccl {
 namespace KC = KokkosComm;
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-auto alltoall(const ExecSpace &space, const SendView &sv, const RecvView &rv, int count, ncclComm_t comm) -> Req<Nccl> {
+auto alltoall(const ExecSpace &space, const SendView &sv, const RecvView &rv, int count, ncclComm_t comm)
+    -> Req<NcclSpace> {
   using ST = typename SendView::non_const_value_type;
   using RT = typename RecvView::non_const_value_type;
   static_assert(std::is_same_v<ST, RT>, "KokkosComm::Experimental::nccl::alltoall: View value types must be identical");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::alltoall");
 
-  Req<Nccl> req{space.cuda_stream()};
+  Req<NcclSpace> req{space.cuda_stream()};
   if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
 #if NCCL_VERSION_CODE >= NCCL_VERSION(2, 28, 0)
     ncclAlltoAll(KC::data_handle(sv), KC::data_handle(rv), count, Impl::datatype_v<ST>, comm, space.cuda_stream());
@@ -52,8 +53,8 @@ auto alltoall(const ExecSpace &space, const SendView &sv, const RecvView &rv, in
 namespace Impl {
 
 template <KokkosView SendView, KokkosView RecvView>
-struct AllToAll<SendView, RecvView, Kokkos::Cuda, Nccl> {
-  static auto execute(Handle<Kokkos::Cuda, Nccl> &h, const SendView sv, RecvView rv, int count) -> Req<Nccl> {
+struct AllToAll<SendView, RecvView, Kokkos::Cuda, NcclSpace> {
+  static auto execute(Handle<Kokkos::Cuda, NcclSpace> &h, const SendView sv, RecvView rv, int count) -> Req<NcclSpace> {
     return nccl::alltoall(h.space(), sv, rv, count, h.comm());
   }
 };

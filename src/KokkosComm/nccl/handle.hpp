@@ -13,17 +13,17 @@
 namespace KokkosComm {
 
 template <>
-class Handle<Kokkos::Cuda, Experimental::Nccl> {
+class Handle<Kokkos::Cuda, Experimental::NcclSpace> {
  public:
   using execution_space     = Kokkos::Cuda;
-  using communication_space = Experimental::Nccl;
-  using communicator_type   = ncclComm_t;
-  using datatype_type       = ncclDataType_t;
-  using reduction_op_type   = ncclRedOp_t;
-  using rank_type           = int;
+  using communication_space = Experimental::NcclSpace;
+  using handle_type         = communication_space::handle_type;
+  using datatype_type       = communication_space::datatype_type;
+  using reduction_op_type   = communication_space::reduction_op_type;
+  using rank_type           = communication_space::rank_type;
 
-  explicit Handle(const execution_space& space, communicator_type comm) : space_(space), comm_(comm) {}
-  explicit Handle(communicator_type comm) : Handle(execution_space{}, comm) {}
+  explicit Handle(const execution_space& space, handle_type comm) : space_(space), comm_(comm) {}
+  explicit Handle(handle_type comm) : Handle(execution_space{}, comm) {}
 
   /// This initializes NCCL communicators for multiple GPUs within a single process.
   /// It is the simplest NCCL setup, as it does not rely on MPI, and is ideal for applications that want to use
@@ -62,8 +62,8 @@ class Handle<Kokkos::Cuda, Experimental::Nccl> {
   //   return Handle(execution_space{}, comms[0]);
   // }
 
-  auto comm() -> communicator_type& { return comm_; }
-  auto comm() const -> const communicator_type& { return comm_; }
+  auto comm() -> handle_type& { return comm_; }
+  auto comm() const -> const handle_type& { return comm_; }
   auto space() -> execution_space& { return space_; }
   auto space() const -> const execution_space& { return space_; }
 
@@ -81,7 +81,7 @@ class Handle<Kokkos::Cuda, Experimental::Nccl> {
 
  private:
   execution_space space_;
-  communicator_type comm_;
+  handle_type comm_;
 };
 
 }  // namespace KokkosComm

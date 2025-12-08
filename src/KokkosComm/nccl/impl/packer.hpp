@@ -32,7 +32,7 @@ struct DeepCopy {
   static auto pack(const ExecSpace &space, const View &src) -> PackedNcclView<PackedView> {
     PackedView packed_src = KokkosComm::Impl::allocate_contiguous_for(space, "DeepCopy::pack", src);
     // Use `ncclUint8` because there is no equivalent to `MPI_PACKED`.
-    PackedNcclView<PackedView> packed(packed_src, ncclUint8, span(src) * sizeof(typename PackedView::value_type));
+    PackedNcclView<PackedView> packed(packed_src, ncclUint8, src.size() * sizeof(typename PackedView::value_type));
     Kokkos::deep_copy(space, packed.view_, src);
     return packed;
   }

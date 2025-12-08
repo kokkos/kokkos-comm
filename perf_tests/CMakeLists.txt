@@ -18,20 +18,14 @@ endif()
 
 include(FetchContent)
 
-# Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
-  cmake_policy(SET CMP0135 NEW)
-endif()
-
+FetchContent_Declare(benchmark
+  GIT_REPOSITORY https://github.com/google/benchmark.git
+  GIT_TAG
+    eddb0241389718a23a42db6af5f0164b6e0139af # v1.9.4
+)
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
-FetchContent_Declare(benchmark URL https://github.com/google/benchmark/archive/refs/tags/v1.8.3.zip)
-# FetchContent_MakeAvailable(benchmark) was making install benchmark as well
-# EXCLUDE_FROM_ALL here seems to be the magic
-if(NOT benchmark_POPULATED)
-  FetchContent_Populate(benchmark)
-  add_subdirectory(${benchmark_SOURCE_DIR} ${benchmark_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
-unset(BENCHMARK_ENABLE_TESTING)
+set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(benchmark)
 
 if(KOKKOSCOMM_ENABLE_MPI)
   add_subdirectory(mpi)

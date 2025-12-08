@@ -57,7 +57,7 @@ class Channel {
 
   void wait() {
     Kokkos::Tools::pushRegion("KokkosComm::Channel::wait");
-    std::vector<Req<Mpi>> reqs;
+    std::vector<Req<MpiSpace>> reqs;
     reqs.reserve(send_reqs_.size() + recv_reqs_.size());
     reqs.insert(reqs.end(), send_reqs_.begin(), send_reqs_.end());
     reqs.insert(reqs.end(), recv_reqs_.begin(), recv_reqs_.end());
@@ -66,12 +66,12 @@ class Channel {
   }
 
  private:
-  std::vector<Req<Mpi>> send_reqs_;  // Queue for send requests
-  std::vector<Req<Mpi>> recv_reqs_;  // Queue for receive requests
-  int dest_rank_;                    // Destination rank for send
-  int src_rank_;                     // Source rank for receive
-  int tag_;                          // MPI tag
-  MPI_Comm comm_;                    // MPI communicator
+  std::vector<Req<MpiSpace>> send_reqs_;  // Queue for send requests
+  std::vector<Req<MpiSpace>> recv_reqs_;  // Queue for receive requests
+  int dest_rank_;                         // Destination rank for send
+  int src_rank_;                          // Source rank for receive
+  int tag_;                               // MPI tag
+  MPI_Comm comm_;                         // MPI communicator
 };
 
 }  // namespace KokkosComm

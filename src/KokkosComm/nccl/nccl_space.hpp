@@ -5,14 +5,28 @@
 
 #include <type_traits>
 
+#include <nccl.h>
+#include <cuda.h>
+
 #include <KokkosComm/concepts.hpp>
 
-namespace KokkosComm::Experimental {
+namespace KokkosComm {
+namespace Experimental {
 
-struct Nccl {};
+/// The NCCL communication space.
+struct NcclSpace {
+  using communication_space = NcclSpace;
+  using handle_type         = ncclComm_t;
+  using request_type        = cudaStream_t;
+  using datatype_type       = ncclDataType_t;
+  using reduction_op_type   = ncclRedOp_t;
+  using rank_type           = int;
+};
 
-}  // namespace KokkosComm::Experimental
+}  // namespace Experimental
 
-// Nccl is a KokkosComm::CommunicationSpace
+// KokkosComm::NcclSpace is a KokkosComm::CommunicationSpace
 template <>
-struct KokkosComm::Impl::is_communication_space<KokkosComm::Experimental::Nccl> : public std::true_type {};
+struct Impl::is_communication_space<Experimental::NcclSpace> : public std::true_type {};
+
+}  // namespace KokkosComm

@@ -29,6 +29,7 @@ Documentation Content
 
    design/overview
    design/mpi_interop
+   design/nccl_interop
 
 .. toctree::
    :maxdepth: 1

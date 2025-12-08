@@ -82,10 +82,17 @@ MPI_Datatype mpi_type() {
     return MPI_LONG_DOUBLE;
 
   else if constexpr (std::is_same_v<T, Kokkos::complex<float>>)
+#if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI)
+    return MPI_CXX_COMPLEX;
+#else
     return MPI_COMPLEX;
+#endif
   else if constexpr (std::is_same_v<T, Kokkos::complex<double>>)
+#if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI)
+    return MPI_CXX_DOUBLE_COMPLEX;
+#else
     return MPI_DOUBLE_COMPLEX;
-
+#endif
   else {
     static_assert(std::is_void_v<T>, "mpi_type not implemented");
     return MPI_CHAR;  // unreachable

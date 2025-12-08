@@ -11,7 +11,7 @@
 namespace {
 
 using ExecSpace = Kokkos::Cuda;
-using CommSpace = KokkosComm::Experimental::Nccl;
+using CommSpace = KokkosComm::Experimental::NcclSpace;
 
 template <typename T>
 class AllGather : public testing::Test {
@@ -25,7 +25,8 @@ TYPED_TEST_SUITE(AllGather, ScalarTypes);
 template <typename Scalar>
 auto allgather_0d() -> void {
   auto nccl_ctx = test_utils::nccl::Ctx::init();
-  KokkosComm::Handle<ExecSpace, CommSpace> h(ExecSpace(), nccl_ctx.comm());
+  ExecSpace space(nccl_ctx.stream());
+  KokkosComm::Handle<ExecSpace, CommSpace> h(space, nccl_ctx.comm());
   int rank = h.rank();
   int size = h.size();
 
@@ -34,7 +35,7 @@ auto allgather_0d() -> void {
 
   // Prepare send view, 1 element per sender: their rank
   Kokkos::parallel_for(
-      Kokkos::RangePolicy(ExecSpace(), 0, sv.extent(0)), KOKKOS_LAMBDA(const int) { sv() = rank; });
+      Kokkos::RangePolicy(space, 0, sv.extent(0)), KOKKOS_LAMBDA(const int) { sv() = rank; });
   // Using the same execution space for both operations lets us not need an explicit `fence`
   auto req = KokkosComm::Experimental::allgather(h, sv, rv);
   KokkosComm::wait(req);
@@ -48,7 +49,8 @@ auto allgather_0d() -> void {
 template <typename Scalar>
 auto allgather_contig_1d() -> void {
   auto nccl_ctx = test_utils::nccl::Ctx::init();
-  KokkosComm::Handle<ExecSpace, CommSpace> h(ExecSpace(), nccl_ctx.comm());
+  ExecSpace space(nccl_ctx.stream());
+  KokkosComm::Handle<ExecSpace, CommSpace> h(space, nccl_ctx.comm());
   int rank = h.rank();
   int size = h.size();
 
@@ -58,7 +60,7 @@ auto allgather_contig_1d() -> void {
 
   // Prepare send view
   Kokkos::parallel_for(
-      Kokkos::RangePolicy(ExecSpace(), 0, sv.extent(0)), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
+      Kokkos::RangePolicy(space, 0, sv.extent(0)), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
   // Using the same execution space for both operations lets us not need an explicit `fence`
   auto req = KokkosComm::Experimental::allgather(h, sv, rv);
   KokkosComm::wait(req);

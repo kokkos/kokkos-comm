@@ -1,6 +1,5 @@
 name: H100
 
-
 permissions:
   contents: none
 
@@ -8,58 +7,127 @@ on:
   workflow_call:
 
 jobs:
-  PR_CUDA1250_OPENMPI504:
-    name: PR_CUDA1250_OPENMPI504
-    runs-on: [cuda125-openmpi504-latest-latest]
+  PR_CUDA1262_OPENMPI505:
+    name: PR_CUDA1262_OPENMPI505
 
+    # this label is correct, but the underlying AT2 runner is actually
+    # CUDA 12.6.2 and OpenMPI 5.0.5 <facepalm>
+    runs-on: [cuda125-openmpi504-latest-latest]
     steps:
-      - name: Checkout Kokkos Comm
+      - name: Check NVIDIA GPU
+        run: nvidia-smi
+
+      - name: Kokkos - Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kokkos/kokkos
+          ref: 4.7.01
+          path: kokkos
+      - name: Kokkos - Configure
+        run: >
+          cmake
+          -S kokkos
+          -B kokkos/build
+          -DCMAKE_CXX_COMPILER=$(realpath kokkos/bin/nvcc_wrapper)
+          -DCMAKE_CXX_STANDARD=20
+          -DCMAKE_CXX_EXTENSIONS=OFF
+          -DCMAKE_INSTALL_PREFIX=kokkos/install
+          -DKokkos_ENABLE_CUDA=ON
+          -DKokkos_ARCH_HOPPER90=ON
+          -DKokkos_ENABLE_TESTS=OFF
+          -DKokkos_ENABLE_EXAMPLES=OFF
+          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF
+          -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF
+          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF
+      - name: Kokkos - Build
+        run: cmake --build kokkos/build --parallel $(nproc)
+      - name: Kokkos - Install
+        run: cmake --build kokkos/build --target install --parallel $(nproc)
+      - name: KokkosComm - Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: kokkos-comm
+      - name: KokkosComm - Configure MPI backend
+        run: >
+          cmake
+          -S kokkos-comm
+          -B build-mpi
+          -DCMAKE_CXX_COMPILER=$(realpath kokkos/bin/nvcc_wrapper)
+          -DCMAKE_CXX_STANDARD=20
+          -DCMAKE_CXX_EXTENSIONS=OFF
+          -DCMAKE_CXX_FLAGS="-Werror"
+          -DKokkos_ROOT=kokkos/install
+          -DKokkosComm_ENABLE_MPI=ON
+          -DKokkosComm_ENABLE_TESTS=ON
+          -DKokkosComm_ENABLE_PERFTESTS=ON
+      - name: KokkosComm - Build MPI backend
+        run: cmake --build build-mpi --parallel $(nproc)
+      - name: KokkosComm - Test MPI backend
+        working-directory: build-mpi
+        run: ctest --output-on-failure -V --timeout 1200
+
+  PR_CUDA1262_NCCL2275:
+    name: PR_CUDA1262_NCCL2275
+
+    # this label is correct, but the underlying AT2 runner is actually
+    # CUDA 12.6.2 and OpenMPI 5.0.5 <facepalm>
+    runs-on: [cuda125-openmpi504-latest-latest]
+    steps:
+      - name: Check NVIDIA GPU
+        run: nvidia-smi
+
+      - name: Kokkos - Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kokkos/kokkos
+          ref: 4.7.01
+          path: kokkos
+
+      - name: Kokkos - Configure
+        run: >
+          cmake
+          -S kokkos
+          -B kokkos/build
+          -DCMAKE_CXX_COMPILER=$(realpath kokkos/bin/nvcc_wrapper)
+          -DCMAKE_CXX_STANDARD=20
+          -DCMAKE_CXX_EXTENSIONS=OFF
+          -DCMAKE_INSTALL_PREFIX=kokkos/install
+          -DKokkos_ENABLE_CUDA=ON
+          -DKokkos_ARCH_HOPPER90=ON
+          -DKokkos_ENABLE_TESTS=OFF
+          -DKokkos_ENABLE_EXAMPLES=OFF
+          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF
+          -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF
+          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF
+      - name: Kokkos - Build
+        run: cmake --build kokkos/build --parallel $(nproc)
+
+      - name: Kokkos - Install
+        run: cmake --build kokkos/build --target install --parallel $(nproc)
+
+      - name: KokkosComm - Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           path: kokkos-comm
 
-      - name: Checkout Kokkos
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          repository: kokkos/kokkos
-          ref: 4.5.01
-          path: kokkos
+      - name: KokkosComm - Configure NCCL backend
+        # FIXME_NCCL: no performance tests on NCCL
+        run: >
+          cmake
+          -S kokkos-comm
+          -B build-nccl
+          -DCMAKE_CXX_COMPILER=$(realpath kokkos/bin/nvcc_wrapper)
+          -DCMAKE_CXX_STANDARD=20
+          -DCMAKE_CXX_EXTENSIONS=OFF
+          -DKokkos_ROOT=kokkos/install
+          -DKokkosComm_ENABLE_MPI=OFF
+          -DKokkosComm_ENABLE_NCCL=ON
+          -DKokkosComm_ENABLE_TESTS=ON
+          -DKokkosComm_ENABLE_PERFTESTS=OFF
 
-      - name: nvidia-smi
-        run: nvidia-smi
+      - name: KokkosComm - Build NCCL backend
+        run: cmake --build build-nccl --parallel $(nproc)
 
-      - name: Configure Kokkos
-        run: |
-          cmake -S kokkos -B kokkos/build \
-            -DCMAKE_CXX_COMPILER=$(realpath kokkos/bin/nvcc_wrapper) \
-            -DCMAKE_CXX_STANDARD=20 \
-            -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DCMAKE_INSTALL_PREFIX=kokkos/install \
-            -DKokkos_ENABLE_CUDA=ON \
-            -DKokkos_ARCH_HOPPER90=ON \
-            -DKokkos_ENABLE_TESTS=OFF \
-            -DKokkos_ENABLE_EXAMPLES=OFF \
-            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
-            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF
-
-      - name: Build Kokkos
-        run: cmake --build kokkos/build --target install --parallel $(nproc)
-
-      - name: Configure Kokkos Comm
-        run: |
-          cmake -S kokkos-comm -B build \
-            -DCMAKE_CXX_COMPILER=$(realpath kokkos/bin/nvcc_wrapper) \
-            -DCMAKE_CXX_STANDARD=20 \
-            -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DCMAKE_CXX_FLAGS="-Werror" \
-            -DKokkos_ROOT=kokkos/install \
-            -DKokkosComm_ENABLE_TESTS=ON \
-            -DKokkosComm_ENABLE_PERFTESTS=ON
-
-      - name: Build Kokkos Comm
-        run: cmake --build build --parallel $(nproc)
-
-      - name: Test Kokkos Comm
-        working-directory: build
+      - name: KokkosComm - Test NCCL backend
+        working-directory: build-nccl
         run: ctest --output-on-failure -V --timeout 1200
