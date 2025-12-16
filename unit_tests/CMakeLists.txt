@@ -47,6 +47,7 @@ include(kc-test)
 
 # --- Core API unit tests --- #
 kc_add_unit_test(test.core.p2p CORE NUM_PES 2 FILES test_main.cpp test_sendrecv.cpp)
+kc_add_unit_test(test.core.alltoall CORE NUM_PES 2 FILES test_main.cpp test_alltoall.cpp)
 
 # --- MPI backend unit tests --- #
 if(KOKKOSCOMM_ENABLE_MPI)
