@@ -17,7 +17,7 @@ class NullReporter : public ::benchmark::BenchmarkReporter {
   virtual void Finalize() {}
 };
 
-bool has_output_flag(int argc, char** argv) {
+bool has_output_flag(int argc, char **argv) {
   for (int i = 0; i < argc; ++i) {
     std::string arg = argv[i];
     if (arg.find("--benchmark_out=") == 0) {
@@ -27,9 +27,7 @@ bool has_output_flag(int argc, char** argv) {
   return false;
 }
 
-bool has_output_envvar() {
-  return std::getenv("BENCHMARK_OUT") != nullptr;
-}
+bool has_output_envvar() { return std::getenv("BENCHMARK_OUT") != nullptr; }
 
 // The main is rewritten to allow for MPI initializing and for selecting a
 // reporter according to the process rank
