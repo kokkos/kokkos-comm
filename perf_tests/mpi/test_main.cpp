@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
   else {
     // reporting from other processes is disabled by passing a custom reporter
     NullReporter null;
-    ::benchmark::RunSpecifiedBenchmarks(&null);
+    ::benchmark::RunSpecifiedBenchmarks(&null, &null);
   }
 
   Kokkos::finalize();
