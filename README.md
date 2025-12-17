@@ -1,6 +1,6 @@
 # Kokkos Comm
 
-Performance Portable Explicit Communication interface for the [Kokkos](https://github.com/kokkos/kokkos) C++ Performance Portability Programming ecosystem.
+Kokkos Comm is an experimental performance portable explicit communication interface for the [Kokkos](https://github.com/kokkos/kokkos) ecosystem.
 
 > [!WARNING]
 > This is a work in progress and is not yet ready for general use.
