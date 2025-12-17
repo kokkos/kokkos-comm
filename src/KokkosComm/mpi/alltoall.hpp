@@ -33,8 +33,8 @@ auto ialltoall(const ExecSpace &space, const SView sv, RView rv, int count, MPI_
 
   Req<MpiSpace> req;
   // All ranks send/recv same count
-  MPI_Ialltoall(data_handle(sv), count, datatype<MpiSpace, ST>, data_handle(rv), count, datatype<MpiSpace, RT>, comm,
-                &req.mpi_request());
+  MPI_Ialltoall(data_handle(sv), count, datatype<MpiSpace, ST>(), data_handle(rv), count, datatype<MpiSpace, RT>(),
+                comm, &req.mpi_request());
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 
@@ -117,7 +117,7 @@ namespace Experimental::Impl {
 template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace>
 struct AllToAll<SendView, RecvView, ExecSpace, MpiSpace> {
   static auto execute(Handle<ExecSpace, MpiSpace> &h, const SendView sv, RecvView rv, int count) -> Req<MpiSpace> {
-    return mpi::ialltoall(h.space(), sv, rv, count, h.comm());
+    return mpi::ialltoall(h.space(), sv, rv, count, h.mpi_comm());
   }
 };
 
