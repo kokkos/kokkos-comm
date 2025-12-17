@@ -29,10 +29,12 @@ auto alltoall_contig_1d() -> void {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
   using ExecSpace = Kokkos::Cuda;
   auto nccl_ctx   = test_utils::nccl::Ctx::init();
-  KokkosComm::Handle<ExecSpace, KokkosComm::Experimental::NcclSpace> h(ExecSpace(), nccl_ctx.comm());
+  auto space      = ExecSpace();
+  KokkosComm::Handle<ExecSpace, KokkosComm::Experimental::NcclSpace> h(space, nccl_ctx.comm());
 #else
   using ExecSpace = Kokkos::DefaultExecutionSpace;
-  KokkosComm::Handle<Kokkos::DefaultExecutionSpace, KokkosComm::MpiSpace> h{};
+  auto space      = ExecSpace();
+  KokkosComm::Handle<ExecSpace, KokkosComm::MpiSpace> h(space, MPI_COMM_WORLD);
 #endif
   int rank = h.rank();
   int size = h.size();
@@ -43,9 +45,12 @@ auto alltoall_contig_1d() -> void {
 
   // Prepare send view
   Kokkos::parallel_for(
-      Kokkos::RangePolicy(ExecSpace(), 0, sv.extent(0)), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
-  // Using the same execution space for both operations lets us not need an explicit `fence`
-  KokkosComm::Experimental::alltoall(h, sv, rv, n_contrib);
+      Kokkos::RangePolicy(space, 0, sv.extent(0)), KOKKOS_LAMBDA(int i) { sv(i) = rank + i; });
+  space.fence();
+
+  // Perform all-to-all operation
+  auto req = KokkosComm::Experimental::alltoall(h, sv, rv, n_contrib);
+  KokkosComm::wait(req);
 
   int errs;
   Kokkos::parallel_reduce(
