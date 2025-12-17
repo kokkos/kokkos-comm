@@ -31,11 +31,11 @@ auto allreduce_0d() -> void {
   using ExecSpace = Kokkos::Cuda;
   auto nccl_ctx   = test_utils::nccl::Ctx::init();
   ExecSpace space(nccl_ctx.stream());
-  KokkosComm::Handle<ExecSpace, KokkosComm::NcclSpace> h(space, nccl_ctx.comm());
+  KokkosComm::Handle<ExecSpace, KokkosComm::Experimental::NcclSpace> h(space, nccl_ctx.comm());
 #else
   using ExecSpace = Kokkos::DefaultExecutionSpace;
   ExecSpace space{};
-  KokkosComm::Handle<ExecSpace, KokkosComm::MpiSpace> h{};
+  KokkosComm::Handle<ExecSpace, KokkosComm::MpiSpace> h(space, MPI_COMM_WORLD);
 #endif
   int rank = h.rank();
   int size = h.size();
@@ -62,7 +62,7 @@ auto allreduce_contig_1d() -> void {
   using ExecSpace = Kokkos::Cuda;
   auto nccl_ctx   = test_utils::nccl::Ctx::init();
   auto space      = ExecSpace(nccl_ctx.stream());
-  KokkosComm::Handle<ExecSpace, KokkosComm::NcclSpace> h(space, nccl_ctx.comm());
+  KokkosComm::Handle<ExecSpace, KokkosComm::Experimental::NcclSpace> h(space, nccl_ctx.comm());
 #else
   using ExecSpace = Kokkos::DefaultExecutionSpace;
   auto space      = ExecSpace();
