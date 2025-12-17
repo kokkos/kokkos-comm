@@ -5,6 +5,10 @@ Kokkos Comm is an experimental performance portable explicit communication inter
 > [!WARNING]
 > This is a work in progress and is not yet ready for general use.
 
+**Currently supported backends:**
+- MPI
+- NCCL (experimental)
+
 ## Getting Started
 
 See [how to setup Kokkos Comm](https://kokkos.org/kokkos-comm/getting_started/setup.html) in the documentation.
