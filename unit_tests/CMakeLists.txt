@@ -48,6 +48,8 @@ include(kc-test)
 # --- Core API unit tests --- #
 kc_add_unit_test(test.core.p2p CORE NUM_PES 2 FILES test_main.cpp test_sendrecv.cpp)
 
+kc_add_unit_test(test.core.red_op_conv CORE NUM_PES 1 FILES test_main.cpp test_red_op_conversion.cpp)
+
 # --- MPI backend unit tests --- #
 if(KOKKOSCOMM_ENABLE_MPI)
   # Standalone MPI smoke tests (do not use KokkosComm)
