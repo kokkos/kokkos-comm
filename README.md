@@ -1,13 +1,17 @@
-# KokkosComm
+# Kokkos Comm
 
-Experimental MPI interfaces (and more!) for the [Kokkos](https://github.com/kokkos/kokkos) C++ Performance Portability Programming ecosystem.
+Kokkos Comm is an experimental performance portable explicit communication interface for the [Kokkos](https://github.com/kokkos/kokkos) ecosystem.
 
 > [!WARNING]
 > This is a work in progress and is not yet ready for general use.
 
+**Currently supported backends:**
+- MPI
+- NCCL (experimental)
+
 ## Getting Started
 
-See [how to setup KokkosComm](https://kokkos.org/kokkos-comm/getting_started/setup.html) in the documentation.
+See [how to setup Kokkos Comm](https://kokkos.org/kokkos-comm/getting_started/setup.html) in the documentation.
 
 ## Documentation
 

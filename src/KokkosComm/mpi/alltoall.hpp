@@ -15,7 +15,8 @@
 #include "impl/pack_traits.hpp"
 #include "impl/error_handling.hpp"
 
-namespace KokkosComm::mpi {
+namespace KokkosComm {
+namespace mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
 auto ialltoall(const ExecSpace &space, const SView sv, RView rv, int count, MPI_Comm comm) -> Req<MpiSpace> {
@@ -32,8 +33,8 @@ auto ialltoall(const ExecSpace &space, const SView sv, RView rv, int count, MPI_
 
   Req<MpiSpace> req;
   // All ranks send/recv same count
-  MPI_Ialltoall(data_handle(sv), count, datatype<MpiSpace, ST>, data_handle(rv), count, datatype<MpiSpace, RT>, comm,
-                &req.mpi_request());
+  MPI_Ialltoall(data_handle(sv), count, datatype<MpiSpace, ST>(), data_handle(rv), count, datatype<MpiSpace, RT>(),
+                comm, &req.mpi_request());
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 
@@ -110,4 +111,15 @@ void alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount
   Kokkos::Tools::popRegion();
 }
 
-}  // namespace KokkosComm::mpi
+}  // namespace mpi
+namespace Experimental::Impl {
+
+template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace>
+struct AllToAll<SendView, RecvView, ExecSpace, MpiSpace> {
+  static auto execute(Handle<ExecSpace, MpiSpace> &h, const SendView sv, RecvView rv, int count) -> Req<MpiSpace> {
+    return mpi::ialltoall(h.space(), sv, rv, count, h.mpi_comm());
+  }
+};
+
+}  // namespace Experimental::Impl
+}  // namespace KokkosComm
