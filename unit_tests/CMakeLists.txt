@@ -51,6 +51,7 @@ kc_add_unit_test(test.core.all_reduce CORE NUM_PES 2 FILES test_main.cpp test_al
 kc_add_unit_test(test.core.all_to_all CORE NUM_PES 2 FILES test_main.cpp test_alltoall.cpp)
 kc_add_unit_test(test.core.reduce CORE NUM_PES 2 FILES test_main.cpp test_reduce.cpp)
 
+kc_add_unit_test(test.core.datatype_conv CORE NUM_PES 1 FILES test_main.cpp test_datatype_conversion.cpp)
 kc_add_unit_test(test.core.red_op_conv CORE NUM_PES 1 FILES test_main.cpp test_red_op_conversion.cpp)
 
 # --- MPI backend unit tests --- #
