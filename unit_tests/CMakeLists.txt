@@ -72,7 +72,7 @@ if(KOKKOSCOMM_ENABLE_MPI)
 
   if(Kokkos_ENABLE_HIP)
     find_package(hip REQUIRED)
-    kc_add_unit_test(smoke.mpi.hip-p2p MPI NUM_PES 2 FILES mpi/test_mpi_cuda_sendrecv.cpp OPTIONS -xhip LIBRARIES hip::host)
+    kc_add_unit_test(smoke.mpi.hip-p2p MPI NUM_PES 2 FILES mpi/test_mpi_hip_sendrecv.cpp OPTIONS -xhip LIBRARIES hip::host)
   endif()
 
   # Make sure GTest is working
