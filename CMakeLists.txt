@@ -6,8 +6,7 @@ cmake_minimum_required(VERSION 3.23)
 
 project(
   KokkosComm
-  LANGUAGES
-    CXX
+  LANGUAGES CXX
   VERSION 0.2.0
   DESCRIPTION "Experimental MPI interfaces (and more!) for the Kokkos C++ Performance Portability Programming ecosystem"
   HOMEPAGE_URL "https://kokkos.org/kokkos-comm/"
@@ -21,12 +20,14 @@ option(KokkosComm_ENABLE_TESTS "Build KokkosComm tests" OFF)
 option(KokkosComm_ENABLE_MPI "Build KokkosComm with MPI transport" ON)
 option(KokkosComm_ENABLE_NCCL "Build KokkosComm with NCCL transport" OFF)
 option(KokkosComm_ABORT_ON_ERROR "Runtime error checks trigger a global abort" OFF)
+option(KokkosComm_ENABLE_GPU_AWARE_MPI "Provided MPI is GPU-aware" OFF)
 
 # Resolve options
 set(KOKKOSCOMM_ENABLE_PERFTESTS ${KokkosComm_ENABLE_PERFTESTS} CACHE BOOL "" FORCE)
 set(KOKKOSCOMM_ENABLE_TESTS ${KokkosComm_ENABLE_TESTS} CACHE BOOL "" FORCE)
 set(KOKKOSCOMM_ENABLE_MPI ${KokkosComm_ENABLE_MPI} CACHE BOOL "" FORCE)
 set(KOKKOSCOMM_ENABLE_NCCL ${KokkosComm_ENABLE_NCCL} CACHE BOOL "" FORCE)
+set(KOKKOSCOMM_ENABLE_GPU_AWARE_MPI ${KokkosComm_ENABLE_GPU_AWARE_MPI} CACHE BOOL "" FORCE)
 
 find_package(Kokkos REQUIRED)
 if(KOKKOSCOMM_ENABLE_MPI)

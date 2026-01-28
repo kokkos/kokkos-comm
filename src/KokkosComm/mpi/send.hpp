@@ -11,8 +11,8 @@
 #include <KokkosComm/datatype.hpp>
 #include "comm_mode.hpp"
 
+#include <KokkosComm/impl/host_staging.hpp>
 #include "impl/pack_traits.hpp"
-#include "impl/error_handling.hpp"
 
 namespace KokkosComm::mpi {
 
@@ -34,14 +34,26 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
     }
   };
 
+#if defined(KOKKOSCOMM_ENABLE_GPU_AWARE_MPI)
   if (is_contiguous(sv)) {
-    space.fence("fence before send");
+    space.fence("fence before GPU-aware `MPI_Send`");
     mpi_send_fn(data_handle(sv), span(sv), datatype<MpiSpace, T>());
   } else {
     auto args = Packer::pack(space, sv);
-    space.fence("fence before send");
+    space.fence("fence packing before GPU-aware `MPI_Send`");
     mpi_send_fn(data_handle(args.view), args.count, args.datatype);
   }
+#else
+  auto host_sv = KokkosComm::Impl::stage_for(sv);
+  space.fence("fence host staging before `MPI_Send`");
+  if (is_contiguous(host_sv)) {
+    mpi_send_fn(data_handle(host_sv), span(host_sv), datatype<MpiSpace, T>());
+  } else {
+    auto args = Packer::pack(space, host_sv);
+    space.fence("fence packing before `MPI_Send`");
+    mpi_send_fn(data_handle(args.view), args.count, args.datatype);
+  }
+#endif
 
   Kokkos::Tools::popRegion();
 }

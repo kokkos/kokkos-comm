@@ -10,6 +10,7 @@
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
 
+#include <KokkosComm/impl/host_staging.hpp>
 #include "impl/pack_traits.hpp"
 #include "impl/error_handling.hpp"
 
@@ -30,22 +31,34 @@ void recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *statu
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::recv");
+  using T      = typename RecvView::non_const_value_type;
+  using Packer = typename PackTraits<RecvView>::packer_type;
 
-  using KCPT   = KokkosComm::PackTraits<RecvView>;
-  using Packer = typename KCPT::packer_type;
-  using Args   = typename Packer::args_type;
-
-  if (!KokkosComm::is_contiguous(rv)) {
-    Args args = Packer::allocate_packed_for(space, "packed", rv);
-    space.fence("Fence after allocation before MPI_Recv");
-    MPI_Recv(KokkosComm::data_handle(args.view), args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
-    Packer::unpack_into(space, rv, args.view);
+#if defined(KOKKOSCOMM_ENABLE_GPU_AWARE_MPI)
+  if (is_contiguous(rv)) {
+    space.fence("fence before GPU-aware `MPI_Recv`");  // prevent work in `space` from writing to recv buffer
+    MPI_Recv(data_handle(rv), span(rv), datatype<MpiSpace, T>(), src, tag, comm, MPI_STATUS_IGNORE);
   } else {
-    using RecvScalar = typename RecvView::value_type;
-    space.fence("Fence before MPI_Recv");  // prevent work in `space` from writing to recv buffer
-    MPI_Recv(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, RecvScalar>(), src, tag, comm,
-             MPI_STATUS_IGNORE);
+    auto args = Packer::allocate_packed_for(space, "packed `MPI_Recv`", rv);
+    space.fence("fence packing before GPU-aware `MPI_Recv`");
+    MPI_Recv(data_handle(args.view), args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
+    Packer::unpack_into(space, rv, args.view);
   }
+#else
+  auto host_rv = KokkosComm::Impl::stage_for(rv);
+  space.fence("fence host staging before `MPI_Recv`");
+  if (is_contiguous(host_rv)) {
+    MPI_Recv(data_handle(host_rv), span(host_rv), datatype<MpiSpace, T>(), src, tag, comm, MPI_STATUS_IGNORE);
+  } else {
+    auto args = Packer::allocate_packed_for(space, "packed `MPI_Recv`", host_rv);
+    space.fence("fence packing before `MPI_Recv`");
+    MPI_Recv(data_handle(args.view), args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
+    // TODO: Can we unpack directly into `rv` instead of `host_rv`?
+    Packer::unpack_into(space, host_rv, args.view);
+    KokkosComm::Impl::copy_back(space, rv, host_rv);
+    space.fence("fence copy back after `MPI_Recv`");
+  }
+#endif
 
   Kokkos::Tools::popRegion();
 }
