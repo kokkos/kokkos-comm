@@ -10,9 +10,6 @@
 #cmakedefine KOKKOSCOMM_ENABLE_MPI
 #cmakedefine KOKKOSCOMM_IMPL_MPI_IS_MPICH
 #cmakedefine KOKKOSCOMM_IMPL_MPI_IS_OPENMPI
-
-#if defined(KOKKOSCOMM_ENABLE_MPI) && __has_include(<mpi-ext.h>)
-#define KOKKOSCOMM_IMPL_MPIEXT_H
-#endif
+#cmakedefine KOKKOSCOMM_IMPL_MPI_HAS_MPIEXT_H
 
 #cmakedefine KOKKOSCOMM_ENABLE_NCCL

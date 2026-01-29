@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include <KokkosComm/KokkosComm.hpp>
 
-#if defined(KOKKOSCOMM_IMPL_MPIEXT_H)
+#if defined(KOKKOSCOMM_IMPL_HAS_MPIEXT_H)
 #include <mpi-ext.h>
 #endif
 
@@ -20,7 +20,7 @@ namespace {
 void view_access_via_mpi_extension() {
 #if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI) && defined(KOKKOS_ENABLE_CUDA)
 
-#if defined(KOKKOSCOMM_IMPL_MPIEXT_H)
+#if defined(KOKKOSCOMM_IMPL_HAS_MPIEXT_H)
   EXPECT_EQ(1, MPIX_Query_cuda_support());
 #else
   GTEST_SKIP() << "mpi-ext.h not available";
@@ -48,7 +48,7 @@ void doit() {
   }
 
   const int n = 1024 * 1024;
-  Kokkos::View<double *> a("a", n);
+  Kokkos::View<double*> a("a", n);
 
   if (0 == rank) {
     Kokkos::parallel_for(
