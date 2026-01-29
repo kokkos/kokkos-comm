@@ -16,19 +16,19 @@ System requirements
       - Requirement
 
     * - CMake
-      - 3.23+
+      - 3.25+
 
     * - C++ compiler
       - Conforming to ISO C++20 standard
 
     * - Kokkos
-      - 4.0+
+      - 4.7+
 
     * - MPI
       - Conforming to MPI-3+ standard
 
     * - NCCL
-      - 2.0+
+      - 2+
 
 
 KokkosComm will attempt to support the `same systems and toolchains as Kokkos <https://kokkos.org/kokkos-core-wiki/requirements.html>`_.
@@ -126,11 +126,27 @@ You can enable communication backends by configuring with ``-DKokkosComm_ENABLE_
 
     * * ``KokkosComm_ENABLE_MPI``
       * ``ON``
-      * Build with MPI backend
+      * Build with MPI backend.
 
     * * ``KokkosComm_ENABLE_NCCL``
       * ``OFF``
-      * Build with NCCL backend (experimental)
+      * Build with NCCL backend (experimental).
+
+Behavior tuning
+---------------
+
+.. list-table::
+    :widths: 40 10 70
+    :header-rows: 1
+    :align: left
+
+    * - CMake option
+      - Default
+      - Description
+
+    * * ``KokkosComm_ABORT_ON_ERROR``
+      * ``OFF``
+      * Runtime check failures trigger a global abort.
 
 General options
 ---------------
@@ -146,11 +162,15 @@ General options
 
     * * ``KokkosComm_ENABLE_TESTS``
       * ``OFF``
-      * Build unit tests
+      * Build unit tests.
 
     * * ``KokkosComm_ENABLE_PERFTESTS``
       * ``OFF``
-      * Build performance tests
+      * Build performance tests.
+
+    * * ``KokkosComm_INSTALL_CMAKE_PACKAGE``
+      * ``${PROJECT_IS_TOP_LEVEL}``
+      * Install as CMake package. Defaults to ``ON`` for standalone builds, ``OFF`` otherwise.
 
 
 Known quirks

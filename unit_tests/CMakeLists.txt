@@ -3,8 +3,7 @@ cmake_minimum_required(VERSION 3.25)
 project(
   KokkosCommUnitTests
   VERSION 0.2.0
-  LANGUAGES
-    CXX
+  LANGUAGES CXX
   DESCRIPTION "Unit tests for the Kokkos Comm experimental explicit communication interfaces"
 )
 
@@ -66,18 +65,8 @@ if(KokkosComm_ENABLE_MPI)
     if(KOKKOSCOMM_IMPL_MPI_IS_MPICH)
       # Setting the CUDA_RUNTIME_LIBRARY property on this target to "Shared" doesn't work for
       # reasons I don't understand.
-      target_compile_options(
-        smoke.mpi.cuda-p2p
-        PUBLIC
-          --cudart
-          shared
-      )
-      target_link_options(
-        smoke.mpi.cuda-p2p
-        PUBLIC
-          --cudart
-          shared
-      )
+      target_compile_options(smoke.mpi.cuda-p2p PUBLIC --cudart shared)
+      target_link_options(smoke.mpi.cuda-p2p PUBLIC --cudart shared)
     endif()
   endif()
 
