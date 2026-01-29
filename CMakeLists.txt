@@ -10,7 +10,6 @@ project(
 )
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-include(mpi-vendor)
 
 option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" OFF)
 option(KokkosComm_ENABLE_TESTS "Build KokkosComm tests" OFF)
@@ -24,13 +23,31 @@ set(KOKKOSCOMM_ENABLE_TESTS ${KokkosComm_ENABLE_TESTS} CACHE BOOL "" FORCE)
 set(KOKKOSCOMM_ENABLE_MPI ${KokkosComm_ENABLE_MPI} CACHE BOOL "" FORCE)
 set(KOKKOSCOMM_ENABLE_NCCL ${KokkosComm_ENABLE_NCCL} CACHE BOOL "" FORCE)
 
-find_package(Kokkos REQUIRED)
-if(KOKKOSCOMM_ENABLE_MPI)
+message(STATUS "Kokkos Comm version: ${CMAKE_PROJECT_VERSION}")
+set(KOKKOSCOMM_ENABLED_BACKENDS "")
+
+# --- DEPENDENCIES --- #
+find_package(Kokkos 4.7.0 REQUIRED)
+if(KokkosComm_ENABLE_MPI)
   find_package(MPI REQUIRED)
+  include(mpi-vendor)
+  kokkoscomm_set_mpi_vendor_variables()
+  list(APPEND KOKKOSCOMM_ENABLED_BACKENDS "MPI")
 endif()
-kokkoscomm_set_mpi_vendor_variables()
-if(KOKKOSCOMM_ENABLE_NCCL)
+if(KokkosComm_ENABLE_NCCL)
   find_package(NCCL REQUIRED)
+  list(APPEND KOKKOSCOMM_ENABLED_BACKENDS "NCCL")
+endif()
+
+if(NOT KOKKOSCOMM_ENABLED_BACKENDS)
+  message(FATAL_ERROR "No Kokkos Comm backends enabled! Enable at least one of: MPI, NCCL")
+else()
+  list(
+    JOIN KOKKOSCOMM_ENABLED_BACKENDS
+    ";"
+    BACKENDS_STRING
+  )
+  message(STATUS "Enabled Kokkos Comm backends: ${BACKENDS_STRING}")
 endif()
 
 add_subdirectory(src/KokkosComm)
