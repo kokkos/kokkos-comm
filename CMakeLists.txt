@@ -1,8 +1,4 @@
-# 3.9: MPI::MPI_CXX
-# 3.12: CMAKE_PROJECT_VERSION_MAJOR
-# 3.15: PUBLIC_HEADER files for interface libraries
-# 3.23: FILE_SETs for easy export of header-only libraries
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.25)
 
 project(
   KokkosComm
