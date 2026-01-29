@@ -176,25 +176,3 @@ target_link_libraries(
     KokkosComm::KokkosCommFlags
     Kokkos::kokkos
 )
-
-# Install library
-install(
-  TARGETS
-    KokkosComm
-    KokkosCommFlags
-  EXPORT KokkosCommTargets
-  FILE_SET
-  kokkoscomm_public_headers
-  FILE_SET
-  kokkoscomm_impl_headers
-  FILE_SET
-  kokkoscomm_mpi_headers
-  FILE_SET
-  kokkoscomm_mpi_impl_headers
-  FILE_SET
-  kokkoscomm_nccl_headers
-  FILE_SET
-  kokkoscomm_nccl_impl_headers
-  FILE_SET
-  kokkoscomm_config_headers
-)

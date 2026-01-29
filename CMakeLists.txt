@@ -15,6 +15,7 @@ option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" OFF)
 option(KokkosComm_ENABLE_TESTS "Build KokkosComm tests" OFF)
 option(KokkosComm_ENABLE_MPI "Build KokkosComm with MPI transport" ON)
 option(KokkosComm_ENABLE_NCCL "Build KokkosComm with NCCL transport" OFF)
+option(KokkosComm_INSTALL_CMAKE_PACKAGE "Install a CMake package config file" ${PROJECT_IS_TOP_LEVEL})
 option(KokkosComm_ABORT_ON_ERROR "Runtime error checks trigger a global abort" OFF)
 
 # Resolve options
@@ -60,46 +61,47 @@ if(KOKKOSCOMM_ENABLE_PERFTESTS)
   add_subdirectory(perf_tests)
 endif()
 
-# -- PACKAGING -- #
-include(CMakePackageConfigHelpers)
-include(GNUInstallDirs)
+# --- PACKAGING --- #
+# Install library
+install(TARGETS KokkosComm EXPORT KokkosCommTargets FILE_SET HEADERS)
 
-# Generate version config header
-set(KOKKOSCOMM_VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR} CACHE STRING "" FORCE)
-set(KOKKOSCOMM_VERSION_MINOR ${CMAKE_PROJECT_VERSION_MINOR} CACHE STRING "" FORCE)
-set(KOKKOSCOMM_VERSION_PATCH ${CMAKE_PROJECT_VERSION_PATCH} CACHE STRING "" FORCE)
-configure_file(
-  ${PROJECT_SOURCE_DIR}/cmake/KokkosComm_config.hpp.in
-  ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp
-  @ONLY
-)
+if(KokkosComm_INSTALL_CMAKE_PACKAGE)
+  include(CMakePackageConfigHelpers)
+  include(GNUInstallDirs)
 
-# Generate package config file
-configure_package_config_file(
-  ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
-  ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
-  NO_SET_AND_CHECK_MACRO
-  NO_CHECK_REQUIRED_COMPONENTS_MACRO
-)
+  # Extract last commit hash
+  execute_process(
+    COMMAND
+      git rev-parse HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE KOKKOSCOMM_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  # Generate version config header
+  configure_file(${PROJECT_SOURCE_DIR}/cmake/KokkosComm_config.hpp.in ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp)
 
-# Generate package version file
-write_basic_package_version_file(
-  ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake
-  COMPATIBILITY SameMajorVersion
-  ARCH_INDEPENDENT # KokkosComm is a header-only library
-)
-
-# Install CMake package files
-install(
-  FILES
+  # Generate package config file
+  configure_package_config_file(
+    ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
     ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
+    NO_SET_AND_CHECK_MACRO
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO
+  )
+
+  # Generate package version file
+  write_basic_package_version_file(
     ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
-)
-install(
-  EXPORT KokkosCommTargets
-  FILE KokkosCommTargets.cmake
-  NAMESPACE KokkosComm::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
-)
+    COMPATIBILITY ExactVersion
+    ARCH_INDEPENDENT # KokkosComm is a header-only library
+  )
+
+  # Install CMake package config files
+  install(
+    FILES
+      ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake
+      ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
+  )
+  install(EXPORT KokkosCommTargets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm NAMESPACE KokkosComm::)
+endif()
