@@ -51,8 +51,11 @@ else()
   message(STATUS "Enabled Kokkos Comm backends: ${BACKENDS_STRING}")
 endif()
 
+# --- LIBRARY --- #
+add_library(KokkosComm INTERFACE)
 add_subdirectory(src/KokkosComm)
-if(KOKKOSCOMM_ENABLE_TESTS)
+add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
+
   enable_testing() # so we can run ctest at the top-level build dir
   add_subdirectory(unit_tests)
 endif()
