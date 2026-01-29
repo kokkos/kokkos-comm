@@ -2,27 +2,28 @@ cmake_minimum_required(VERSION 3.25)
 
 project(
   KokkosComm
-  LANGUAGES
-    CXX
+  LANGUAGES CXX
   VERSION 0.2.0
-  DESCRIPTION "Experimental MPI interfaces (and more!) for the Kokkos C++ Performance Portability Programming ecosystem"
+  DESCRIPTION
+    "Experimental explicit communication interfaces for the Kokkos C++ Performance Portability Programming ecosystem"
   HOMEPAGE_URL "https://kokkos.org/kokkos-comm/"
 )
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-option(KokkosComm_ENABLE_PERFTESTS "Build KokkosComm perf tests" OFF)
-option(KokkosComm_ENABLE_TESTS "Build KokkosComm tests" OFF)
-option(KokkosComm_ENABLE_MPI "Build KokkosComm with MPI transport" ON)
-option(KokkosComm_ENABLE_NCCL "Build KokkosComm with NCCL transport" OFF)
+# --- OPTIONS --- #
+option(KokkosComm_ENABLE_PERFTESTS "Build Kokkos Comm perf tests" OFF)
+option(KokkosComm_ENABLE_TESTS "Build Kokkos Comm unit tests" OFF)
 option(KokkosComm_INSTALL_CMAKE_PACKAGE "Install a CMake package config file" ${PROJECT_IS_TOP_LEVEL})
+
+option(KokkosComm_ENABLE_MPI "Build Kokkos Comm with MPI backend" ON)
+option(KokkosComm_ENABLE_NCCL "Build Kokkos Comm with NCCL backend" OFF)
 option(KokkosComm_ABORT_ON_ERROR "Runtime error checks trigger a global abort" OFF)
 
-# Resolve options
-set(KOKKOSCOMM_ENABLE_PERFTESTS ${KokkosComm_ENABLE_PERFTESTS} CACHE BOOL "" FORCE)
-set(KOKKOSCOMM_ENABLE_TESTS ${KokkosComm_ENABLE_TESTS} CACHE BOOL "" FORCE)
-set(KOKKOSCOMM_ENABLE_MPI ${KokkosComm_ENABLE_MPI} CACHE BOOL "" FORCE)
-set(KOKKOSCOMM_ENABLE_NCCL ${KokkosComm_ENABLE_NCCL} CACHE BOOL "" FORCE)
+# Resolve options that must be PP-defined
+set(KOKKOSCOMM_ENABLE_MPI ${KokkosComm_ENABLE_MPI})
+set(KOKKOSCOMM_ENABLE_NCCL ${KokkosComm_ENABLE_NCCL})
+set(KOKKOSCOMM_ABORT_ON_ERROR ${KokkosComm_ABORT_ON_ERROR})
 
 message(STATUS "Kokkos Comm version: ${CMAKE_PROJECT_VERSION}")
 set(KOKKOSCOMM_ENABLED_BACKENDS "")
@@ -43,11 +44,7 @@ endif()
 if(NOT KOKKOSCOMM_ENABLED_BACKENDS)
   message(FATAL_ERROR "No Kokkos Comm backends enabled! Enable at least one of: MPI, NCCL")
 else()
-  list(
-    JOIN KOKKOSCOMM_ENABLED_BACKENDS
-    ";"
-    BACKENDS_STRING
-  )
+  list(JOIN KOKKOSCOMM_ENABLED_BACKENDS ";" BACKENDS_STRING)
   message(STATUS "Enabled Kokkos Comm backends: ${BACKENDS_STRING}")
 endif()
 
@@ -56,10 +53,12 @@ add_library(KokkosComm INTERFACE)
 add_subdirectory(src/KokkosComm)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
 
+# --- TESTING --- #
+if(KokkosComm_ENABLE_TESTS)
   enable_testing() # so we can run ctest at the top-level build dir
   add_subdirectory(unit_tests)
 endif()
-if(KOKKOSCOMM_ENABLE_PERFTESTS)
+if(KokkosComm_ENABLE_PERFTESTS)
   enable_testing() # so we can run ctest at the top-level build dir
   add_subdirectory(perf_tests)
 endif()
@@ -74,8 +73,7 @@ if(KokkosComm_INSTALL_CMAKE_PACKAGE)
 
   # Extract last commit hash
   execute_process(
-    COMMAND
-      git rev-parse HEAD
+    COMMAND git rev-parse HEAD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     OUTPUT_VARIABLE KOKKOSCOMM_COMMIT_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE

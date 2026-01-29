@@ -5,7 +5,7 @@ project(
   VERSION 0.2.0
   LANGUAGES
     CXX
-  DESCRIPTION "Performance tests for the KokkosComm experimental communication interfaces"
+  DESCRIPTION "Performance tests for the Kokkos Comm experimental explicit communication interfaces"
 )
 
 enable_testing()
@@ -18,15 +18,16 @@ endif()
 
 include(FetchContent)
 
-FetchContent_Declare(benchmark
+FetchContent_Declare(
+  benchmark
   GIT_REPOSITORY https://github.com/google/benchmark.git
   GIT_TAG
-    eddb0241389718a23a42db6af5f0164b6e0139af # v1.9.4
+    192ef10025eb2c4cdd392bc502f0c852196baa48 # v1.9.5
 )
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(benchmark)
 
-if(KOKKOSCOMM_ENABLE_MPI)
+if(KokkosComm_ENABLE_MPI)
   add_subdirectory(mpi)
-endif(KOKKOSCOMM_ENABLE_MPI)
+endif()
