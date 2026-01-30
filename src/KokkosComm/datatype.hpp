@@ -157,9 +157,4 @@ template <CommunicationSpace CS, KokkosView V>
   return datatype<CS, std::remove_cvref_t<typename V::value_type>>();
 }
 
-template <CommunicationSpace CS, typename T>
-[[nodiscard]] constexpr auto datatype_for(T&&) -> typename CS::datatype_type {
-  return datatype<CS, std::remove_cvref_t<T>>();
-}
-
 }  // namespace KokkosComm
