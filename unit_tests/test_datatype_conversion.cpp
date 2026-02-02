@@ -76,15 +76,25 @@ auto check_datatype_conversion(typename CS::datatype_type dtype) -> void {
   } else if constexpr (std::is_same_v<T, std::uint64_t>) {
     ASSERT_EQ(MPI_UINT64_T, dtype);
   } else if constexpr (std::is_same_v<T, std::size_t>) {
-    if constexpr (sizeof(std::size_t) == 1) ASSERT_EQ(MPI_UINT8_T, dtype);
-    if constexpr (sizeof(std::size_t) == 2) ASSERT_EQ(MPI_UINT16_T, dtype);
-    if constexpr (sizeof(std::size_t) == 4) ASSERT_EQ(MPI_UINT32_T, dtype);
-    if constexpr (sizeof(std::size_t) == 8) ASSERT_EQ(MPI_UINT64_T, dtype);
+    if constexpr (sizeof(std::size_t) == 1) {
+      ASSERT_EQ(MPI_UINT8_T, dtype);
+    } else if constexpr (sizeof(std::size_t) == 2) {
+      ASSERT_EQ(MPI_UINT16_T, dtype);
+    } else if constexpr (sizeof(std::size_t) == 4) {
+      ASSERT_EQ(MPI_UINT32_T, dtype);
+    } else if constexpr (sizeof(std::size_t) == 8) {
+      ASSERT_EQ(MPI_UINT64_T, dtype);
+    }
   } else if constexpr (std::is_same_v<T, std::ptrdiff_t>) {
-    if constexpr (sizeof(std::ptrdiff_t) == 1) ASSERT_EQ(MPI_INT8_T, dtype);
-    if constexpr (sizeof(std::ptrdiff_t) == 2) ASSERT_EQ(MPI_INT16_T, dtype);
-    if constexpr (sizeof(std::ptrdiff_t) == 4) ASSERT_EQ(MPI_INT32_T, dtype);
-    if constexpr (sizeof(std::ptrdiff_t) == 8) ASSERT_EQ(MPI_INT64_T, dtype);
+    if constexpr (sizeof(std::ptrdiff_t) == 1) {
+      ASSERT_EQ(MPI_INT8_T, dtype);
+    } else if constexpr (sizeof(std::ptrdiff_t) == 2) {
+      ASSERT_EQ(MPI_INT16_T, dtype);
+    } else if constexpr (sizeof(std::ptrdiff_t) == 4) {
+      ASSERT_EQ(MPI_INT32_T, dtype);
+    } else if constexpr (sizeof(std::ptrdiff_t) == 8) {
+      ASSERT_EQ(MPI_INT64_T, dtype);
+    }
   } else if constexpr (std::is_same_v<T, float>) {
     ASSERT_EQ(MPI_FLOAT, dtype);
   } else if constexpr (std::is_same_v<T, double>) {
@@ -124,13 +134,21 @@ auto check_datatype_conversion(typename CS::datatype_type dtype) -> void {
   } else if constexpr (std::is_same_v<T, std::uint64_t>) {
     ASSERT_EQ(ncclUint64, dtype);
   } else if constexpr (std::is_same_v<T, std::size_t>) {
-    if constexpr (sizeof(std::size_t) == 1) ASSERT_EQ(ncclUint8, dtype);
-    if constexpr (sizeof(std::size_t) == 4) ASSERT_EQ(ncclUint32, dtype);
-    if constexpr (sizeof(std::size_t) == 8) ASSERT_EQ(ncclUint64, dtype);
+    if constexpr (sizeof(std::size_t) == 1) {
+      ASSERT_EQ(ncclUint8, dtype);
+    } else if constexpr (sizeof(std::size_t) == 4) {
+      ASSERT_EQ(ncclUint32, dtype);
+    } else if constexpr (sizeof(std::size_t) == 8) {
+      ASSERT_EQ(ncclUint64, dtype);
+    }
   } else if constexpr (std::is_same_v<T, std::ptrdiff_t>) {
-    if constexpr (sizeof(std::ptrdiff_t) == 1) ASSERT_EQ(ncclInt8, dtype);
-    if constexpr (sizeof(std::ptrdiff_t) == 4) ASSERT_EQ(ncclInt32, dtype);
-    if constexpr (sizeof(std::ptrdiff_t) == 8) ASSERT_EQ(ncclInt64, dtype);
+    if constexpr (sizeof(std::ptrdiff_t) == 1) {
+      ASSERT_EQ(ncclInt8, dtype);
+    } else if constexpr (sizeof(std::ptrdiff_t) == 4) {
+      ASSERT_EQ(ncclInt32, dtype);
+    } else if constexpr (sizeof(std::ptrdiff_t) == 8) {
+      ASSERT_EQ(ncclInt64, dtype);
+    }
   } else if constexpr (std::is_same_v<T, float>) {
     ASSERT_EQ(ncclFloat, dtype);
   } else if constexpr (std::is_same_v<T, double>) {
