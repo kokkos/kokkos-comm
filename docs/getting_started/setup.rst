@@ -170,7 +170,7 @@ General options
 
     * * ``KokkosComm_INSTALL_CMAKE_PACKAGE``
       * ``${PROJECT_IS_TOP_LEVEL}``
-      * Install as CMake package. Defaults to ``ON`` for standalone builds, ``OFF`` otherwise.
+      * Install CMake config files together with the library. Defaults to ``ON`` for standalone builds, ``OFF`` otherwise. Note that library files are always installed.
 
 
 Known quirks
