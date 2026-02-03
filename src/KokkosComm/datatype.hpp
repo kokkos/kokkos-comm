@@ -138,6 +138,14 @@ constexpr auto nccl_datatype() -> ncclDataType_t {
 
 }  // namespace Impl
 
+/// Converts a type `T` to its communication space `CS` equivalent.
+///
+/// When `CS` is:
+/// - `MpiSpace`, returns the corresponding `MPI_Datatype` type.
+/// - `NcclSpace`, returns the corresponding `ncclDataType_t` type.
+///
+/// Non-system data types (i.e. the data types not natively supported by `CS`) are not convertible. This notably includes
+/// user-defined types.
 template <CommunicationSpace CS, typename T>
 [[nodiscard]] constexpr auto datatype() -> typename CS::datatype_type {
   if constexpr (std::is_same_v<CS, MpiSpace>) {
@@ -152,6 +160,7 @@ template <CommunicationSpace CS, typename T>
   }
 }
 
+/// Returns the `CS` data type equivalent for the value type of the Kokkos View `V`.
 template <CommunicationSpace CS, KokkosView V>
 [[nodiscard]] constexpr auto datatype_for(const V&) -> typename CS::datatype_type {
   return datatype<CS, std::remove_cvref_t<typename V::value_type>>();

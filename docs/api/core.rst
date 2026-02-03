@@ -281,3 +281,32 @@ NCCL specialization
 
         Both ``wait_all`` and ``wait_any`` use active polling loops rather than blocking synchronization. While this
         increases CPU utilization, it avoids the overhead of spawning threads or completing requests sequentially.
+
+Utility
+=======
+
+.. cpp:namespace:: KokkosComm
+
+.. cpp:function:: template <CommunicationSpace CommSpace, typename T> auto datatype() -> CS::datatype_type
+
+    Converts a type ``T`` to its communication space ``CS`` equivalent.
+
+    When ``CS`` is:
+
+    * ``MpiSpace``, returns the corresponding ``MPI_Datatype`` type.
+    * ``NcclSpace``, returns the corresponding ``ncclDataType_t`` type.
+
+    :tparam CS: The target communication space backend to use for data type conversion.
+    :tparam T: The type to convert from.
+
+    .. note::
+
+        Non-system data types (i.e. the data types not natively supported by the communication space) are not convertible.
+        This notably includes user-defined types.
+
+.. cpp:function:: template <CommunicationSpace CommSpace, KokkosView V> auto datatype_for(V&) -> CS::datatype_type
+
+    Returns the ``CS`` data type equivalent for the value type of the Kokkos View ``V``.
+
+    :tparam CS: The target communication space backend to use for data type conversion.
+    :tparam V: The Kokkos View to convert the value type from.
