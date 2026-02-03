@@ -14,7 +14,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # --- OPTIONS --- #
 option(KokkosComm_ENABLE_PERFTESTS "Build Kokkos Comm perf tests" OFF)
 option(KokkosComm_ENABLE_TESTS "Build Kokkos Comm unit tests" OFF)
-option(KokkosComm_INSTALL_CMAKE_PACKAGE "Install a CMake package config file" ${PROJECT_IS_TOP_LEVEL})
+option(KokkosComm_INSTALL_CMAKE_PACKAGE "Create and install a CMake config-file package" ${PROJECT_IS_TOP_LEVEL})
 
 option(KokkosComm_ENABLE_MPI "Build Kokkos Comm with MPI backend" ON)
 option(KokkosComm_ENABLE_NCCL "Build Kokkos Comm with NCCL backend" OFF)
@@ -29,6 +29,7 @@ message(STATUS "Kokkos Comm version: ${CMAKE_PROJECT_VERSION}")
 set(KOKKOSCOMM_ENABLED_BACKENDS "")
 
 # --- DEPENDENCIES --- #
+# Require Kokkos 4.7+
 find_package(Kokkos 4.7.0 REQUIRED)
 if(KokkosComm_ENABLE_MPI)
   find_package(MPI REQUIRED)
@@ -37,7 +38,8 @@ if(KokkosComm_ENABLE_MPI)
   list(APPEND KOKKOSCOMM_ENABLED_BACKENDS "MPI")
 endif()
 if(KokkosComm_ENABLE_NCCL)
-  find_package(NCCL REQUIRED)
+  # Require NCCL 2+
+  find_package(NCCL 2.0 REQUIRED)
   list(APPEND KOKKOSCOMM_ENABLED_BACKENDS "NCCL")
 endif()
 
@@ -64,14 +66,28 @@ if(KokkosComm_ENABLE_PERFTESTS)
 endif()
 
 # --- PACKAGING --- #
-# Install library
+# Install the Kokkos Comm library (only headers)
 install(TARGETS KokkosComm EXPORT KokkosCommTargets FILE_SET HEADERS)
 
+# There are two possible scenarios:
+#
+# 1. Kokkos Comm is built and installed in a standalone, and the consuming project imports it using `find_package` in
+#    its CML.
+#    In this case, the creation and installation of a CMake config-file package is enabled by default. Installing the
+#    CMake config-file package ensures that all targets and variables defined/configured during the standalone
+#    Kokkos Comm build are available to projects that `find_package` it.
+#    See the related CMake documentation on config-file packages: https://cmake.org/cmake/help/latest/guide/using-dependencies/index.html#libraries-providing-config-file-packages
+#
+# 2. Kokkos Comm is built via add_subdirectory.
+#    In this case, we don't include the CMake config-file package in the final build/install by default. Since the user
+#    is building Kokkos Comm alongside its project, they can configure it _in situ_. However, the headers are still
+#    installed, since if the dependent project is itself installed, it will need to have the Kokkos Comm headers
+#    (but not the CMake config-file package).
 if(KokkosComm_INSTALL_CMAKE_PACKAGE)
   include(CMakePackageConfigHelpers)
   include(GNUInstallDirs)
 
-  # Extract last commit hash
+  # Extract HEAD commit hash
   execute_process(
     COMMAND git rev-parse HEAD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -86,8 +102,7 @@ if(KokkosComm_INSTALL_CMAKE_PACKAGE)
     ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
     ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake
     INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
-    NO_SET_AND_CHECK_MACRO
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO
+    PATH_VARS PROJECT_NAME PROJECT_VERSION
   )
 
   # Generate package version file
@@ -97,12 +112,17 @@ if(KokkosComm_INSTALL_CMAKE_PACKAGE)
     ARCH_INDEPENDENT # KokkosComm is a header-only library
   )
 
-  # Install CMake package config files
+  # Install CMake config-file package
   install(
     FILES
       ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake
       ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
   )
-  install(EXPORT KokkosCommTargets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm NAMESPACE KokkosComm::)
+  install(
+    EXPORT KokkosCommTargets
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
+    FILE KokkosCommTargets.cmake
+    NAMESPACE KokkosComm::
+  )
 endif()
