@@ -6,22 +6,20 @@ target_sources(
       BASE_DIRS ${PROJECT_SOURCE_DIR}/src
       FILES
         # Objects
-        nccl/nccl_space.hpp
-        nccl/handle.hpp
-        nccl/req.hpp
+        nccl_space.hpp
+        handle.hpp
+        req.hpp
         # Point-to-point
-        nccl/send.hpp
-        nccl/recv.hpp
+        send.hpp
+        recv.hpp
         # Collectives
-        nccl/broadcast.hpp
-        nccl/allgather.hpp
-        nccl/alltoall.hpp
-        nccl/allreduce.hpp
-        nccl/reduce.hpp
+        broadcast.hpp
+        allgather.hpp
+        alltoall.hpp
+        allreduce.hpp
+        reduce.hpp
     # Implementation detail NCCL headers
-    FILE_SET HEADERS
-      BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-      FILES nccl/impl/pack_traits.hpp nccl/impl/packer.hpp nccl/impl/types.hpp
+    FILE_SET HEADERS BASE_DIRS ${PROJECT_SOURCE_DIR}/src FILES impl/pack_traits.hpp impl/packer.hpp impl/types.hpp
 )
 
 target_link_libraries(KokkosComm INTERFACE NCCL::NCCL)
