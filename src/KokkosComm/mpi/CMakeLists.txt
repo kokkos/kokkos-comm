@@ -27,7 +27,7 @@ target_sources(
     # Implementation detail MPI headers
     FILE_SET HEADERS
       BASE_DIRS ${PROJECT_SOURCE_DIR}/src
-      FILES mpi/impl/pack_traits.hpp mpi/impl/packer.hpp mpi/impl/tags.hpp mpi/impl/error_handling.hpp
+      FILES impl/pack_traits.hpp impl/packer.hpp impl/tags.hpp impl/error_handling.hpp
 )
 
 target_link_libraries(KokkosComm INTERFACE MPI::MPI_CXX)
