@@ -71,18 +71,19 @@ install(TARGETS KokkosComm EXPORT KokkosCommTargets FILE_SET HEADERS)
 
 # There are two possible scenarios:
 #
-# 1. Kokkos Comm is built and installed in a standalone, and the consuming project imports it using `find_package` in
+# 1. Kokkos Comm is built and installed in a standalone, and the consuming project imports it via `find_package` in
 #    its CML.
-#    In this case, the creation and installation of a CMake config-file package is enabled by default. Installing the
-#    CMake config-file package ensures that all targets and variables defined/configured during the standalone
-#    Kokkos Comm build are available to projects that `find_package` it.
+#    In this case, the creation and installation of the CMake config-file package in the final build/install is
+#    *enabled* by default. Installing the CMake config-file package ensures that all targets and variables
+#    defined/configured during the standalone Kokkos Comm build are available to projects that `find_package` it.
 #    See the related CMake documentation on config-file packages: https://cmake.org/cmake/help/latest/guide/using-dependencies/index.html#libraries-providing-config-file-packages
 #
-# 2. Kokkos Comm is built via add_subdirectory.
-#    In this case, we don't include the CMake config-file package in the final build/install by default. Since the user
-#    is building Kokkos Comm alongside its project, they can configure it _in situ_. However, the headers are still
-#    installed, since if the dependent project is itself installed, it will need to have the Kokkos Comm headers
-#    (but not the CMake config-file package).
+# 2. Kokkos Comm is built via `add_subdirectory`, as part of the CML of the consuming project.
+#    In this case, the creation and installation of the CMake config-file package in the final build/install is
+#    *disabled* by default. Since the user builds Kokkos Comm alongside their project, it can be configured _in situ_.
+#
+# However, in both cases the headers are installed, since if the dependent project is itself installed, it will need to
+# have the Kokkos Comm headers available (but not necessarily the CMake config-file package).
 if(KokkosComm_INSTALL_CMAKE_PACKAGE)
   include(CMakePackageConfigHelpers)
   include(GNUInstallDirs)
