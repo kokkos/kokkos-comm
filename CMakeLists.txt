@@ -82,13 +82,14 @@ install(TARGETS KokkosComm EXPORT KokkosCommTargets FILE_SET HEADERS)
 # There are two possible scenarios:
 #
 # 1. Kokkos Comm is built and installed in a standalone, and the consuming project imports it via `find_package` in
-#    its CML.
+#    its CMake build process.
 #    In this case, the creation and installation of the CMake config-file package in the final build/install is
 #    *enabled* by default. Installing the CMake config-file package ensures that all targets and variables
 #    defined/configured during the standalone Kokkos Comm build are available to projects that `find_package` it.
 #    See the related CMake documentation on config-file packages: https://cmake.org/cmake/help/latest/guide/using-dependencies/index.html#libraries-providing-config-file-packages
 #
-# 2. Kokkos Comm is built via `add_subdirectory`, as part of the CML of the consuming project.
+# 2. Kokkos Comm is built via `add_subdirectory` or `FetchContent`, as part of the CMake build process of the consuming
+#    project.
 #    In this case, the creation and installation of the CMake config-file package in the final build/install is
 #    *disabled* by default. Since the user builds Kokkos Comm alongside their project, it can be configured _in situ_.
 #
