@@ -31,7 +31,7 @@ System requirements
       - 2+
 
 
-KokkosComm will attempt to support the `same systems and toolchains as Kokkos <https://kokkos.org/kokkos-core-wiki/requirements.html>`_.
+Kokkos Comm will attempt to support the `same systems and toolchains as Kokkos <https://kokkos.org/kokkos-core-wiki/get-started/requirements.html>`_.
 
 
 Installation
