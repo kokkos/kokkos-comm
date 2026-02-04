@@ -66,6 +66,16 @@ if(KokkosComm_ENABLE_PERFTESTS)
 endif()
 
 # --- PACKAGING --- #
+# Extract HEAD commit hash
+execute_process(
+  COMMAND git rev-parse HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE KOKKOSCOMM_COMMIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+# Generate configuration header
+configure_file(${PROJECT_SOURCE_DIR}/cmake/KokkosComm_config.hpp.in ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp)
+
 # Install the Kokkos Comm library (only headers)
 install(TARGETS KokkosComm EXPORT KokkosCommTargets FILE_SET HEADERS)
 
@@ -87,16 +97,6 @@ install(TARGETS KokkosComm EXPORT KokkosCommTargets FILE_SET HEADERS)
 if(KokkosComm_INSTALL_CMAKE_PACKAGE)
   include(CMakePackageConfigHelpers)
   include(GNUInstallDirs)
-
-  # Extract HEAD commit hash
-  execute_process(
-    COMMAND git rev-parse HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE KOKKOSCOMM_COMMIT_HASH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  # Generate version config header
-  configure_file(${PROJECT_SOURCE_DIR}/cmake/KokkosComm_config.hpp.in ${PROJECT_BINARY_DIR}/src/KokkosComm/config.hpp)
 
   # Generate package config file
   configure_package_config_file(
