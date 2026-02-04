@@ -75,7 +75,10 @@ version = f"{get_version('../')}-dev{get_HEAD_short_hash()}"
 release = f"latest"
 
 # -- General configuration ---------------------------------------------------
-extensions = []
+extensions = [
+    "sphinx_copybutton",
+    "sphinx_last_updated_by_git",
+]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
