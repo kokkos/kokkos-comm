@@ -144,8 +144,8 @@ constexpr auto nccl_datatype() -> ncclDataType_t {
 /// - `MpiSpace`, returns the corresponding `MPI_Datatype` type.
 /// - `NcclSpace`, returns the corresponding `ncclDataType_t` type.
 ///
-/// Non-system data types (i.e. the data types not natively supported by `CS`) are not convertible. This notably includes
-/// user-defined types.
+/// Non-system data types (i.e. the data types not natively supported by `CS`) are not convertible. This notably
+/// includes user-defined types.
 template <CommunicationSpace CS, typename T>
 [[nodiscard]] constexpr auto datatype() -> typename CS::datatype_type {
   if constexpr (std::is_same_v<CS, MpiSpace>) {
