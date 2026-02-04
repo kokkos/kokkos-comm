@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 project(
   KokkosCommUnitTests
-  VERSION 0.2.0
+  VERSION 0.0.2
   LANGUAGES CXX
   DESCRIPTION "Unit tests for the Kokkos Comm experimental explicit communication interfaces"
 )
