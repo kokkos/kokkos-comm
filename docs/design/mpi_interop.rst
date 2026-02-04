@@ -4,4 +4,4 @@ MPI interoperability
 
 .. admonition:: TODO!
 
-    Present KokkosComm objectives for interoperability with MPI.
+    Present Kokkos Comm objectives for interoperability with MPI.

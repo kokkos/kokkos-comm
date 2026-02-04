@@ -3,14 +3,14 @@ Testing
 *******
 
 The unit tests (``unit_tests``) and performance tests/benchmarks (``perf_tests``) are conceptually maintained as separate CMake projects contained in the same source tree.
-This enforces some discipline with respect to testing the KokkosComm installation, since the tests don't have any special privileges.
+This enforces some discipline with respect to testing the Kokkos Comm installation, since the tests don't have any special privileges.
 During a build with tests enabled, they just get included at the very end of the build.
 
 
 Testing the install
 ====================
 
-1. Do a standard KokkosComm build and install with tests disabled (see the `Setup section <../getting_started/setup.html>`_). This build does not need to include unit tests or performance tests -- they will later be compiled against this install.
+1. Do a standard Kokkos Comm build and install with tests disabled (see the `Setup section <../getting_started/setup.html>`_). This build does not need to include unit tests or performance tests -- they will later be compiled against this install.
 
 2. Do another build with the ``unit_tests`` directory as the source. You will need to provide ``-DKokkosComm_ROOT=<KOKKOSCOMM_INSTALL_DIR>/lib64/cmake`` just as any other external project would.
 
@@ -40,7 +40,7 @@ Complete workflow
     $ # Catch failing commands
     $ set -eou pipefail
 
-    $ # Clone KokkosComm
+    $ # Clone Kokkos Comm
     $ git clone https://github.com/kokkos/kokkos-comm.git
     $ cd kokkos-comm
 
@@ -70,7 +70,7 @@ Complete workflow
     $ # Install Kokkos
     $ cmake --install "$KOKKOS_BUILD_DIR" --prefix "$KOKKOS_INSTALL_DIR"
 
-    $ # Configure KokkosComm
+    $ # Configure Kokkos Comm
     $ [ -d "$KOKKOSCOMM_BUILD_DIR" ] && rm --recursive --force "$KOKKOSCOMM_BUILD_DIR"
     $ cmake -S "$KOKKOSCOMM_SRC_DIR" \
             -B "$KOKKOSCOMM_BUILD_DIR" \
@@ -79,17 +79,17 @@ Complete workflow
             -DKokkosComm_ENABLE_TESTS=OFF \
             -DKokkosComm_ENABLE_PERFTESTS=OFF
 
-    $ # Build KokkosComm
+    $ # Build Kokkos Comm
     $ cmake --build "$KOKKOSCOMM_BUILD_DIR" --parallel $(nproc) --verbose
 
-    $ # Install KokkosComm
+    $ # Install Kokkos Comm
     $ [ -d "$KOKKOSCOMM_INSTALL_DIR" ] && rm --recursive --force "$KOKKOSCOMM_INSTALL_DIR"
     $ cmake --install "$KOKKOSCOMM_BUILD_DIR" --prefix "$KOKKOSCOMM_INSTALL_DIR"
 
-    $ # Remove KokkosComm build files
+    $ # Remove Kokkos Comm build files
     $ rm --recursive --force "$KOKKOSCOMM_BUILD_DIR"
 
-    $ # Configure KokkosComm unit tests
+    $ # Configure Kokkos Comm unit tests
     $ [ -d "$KOKKOSCOMM_UNIT_TESTS_BUILD_DIR" ] && rm --recursive --force "$KOKKOSCOMM_UNIT_TESTS_BUILD_DIR"
     $ cmake -S "$KOKKOSCOMM_SRC_DIR"/unit_tests \
             -B "$KOKKOSCOMM_UNIT_TESTS_BUILD_DIR" \
@@ -97,13 +97,13 @@ Complete workflow
             -DKokkos_ROOT="$KOKKOS_INSTALL_DIR" \
             -DKokkosComm_ROOT="$KOKKOSCOMM_INSTALL_DIR"
 
-    $ # Build KokkosComm unit tests
+    $ # Build Kokkos Comm unit tests
     $ cmake --build "$KOKKOSCOMM_UNIT_TESTS_BUILD_DIR" --parallel $(nproc) --verbose
 
-    $ # Run KokkosComm unit tests
+    $ # Run Kokkos Comm unit tests
     $ ctest -V --test-dir "$KOKKOSCOMM_UNIT_TESTS_BUILD_DIR"
 
-    $ # Configure KokkosComm performance tests
+    $ # Configure Kokkos Comm performance tests
     $ [ -d "$KOKKOSCOMM_PERF_TESTS_BUILD_DIR" ] && rm --recursive --force "$KOKKOSCOMM_PERF_TESTS_BUILD_DIR"
     $ cmake -S "$KOKKOSCOMM_SRC_DIR"/perf_tests \
             -B "$KOKKOSCOMM_PERF_TESTS_BUILD_DIR" \
@@ -112,8 +112,8 @@ Complete workflow
             -DKokkosComm_ROOT="$KOKKOSCOMM_INSTALL_DIR" \
             -DKOKKOSCOMM_ENABLE_MPI=ON # not defined if not built alongside KokkosComm
 
-    $ # Build KokkosComm performance tests
+    $ # Build Kokkos Comm performance tests
     $ cmake --build "$KOKKOSCOMM_PERF_TESTS_BUILD_DIR" --parallel $(nproc) --verbose
 
-    $ # Run KokkosComm performance tests
+    $ # Run Kokkos Comm performance tests
     $ ctest -V --test-dir "$KOKKOSCOMM_PERF_TESTS_BUILD_DIR"
