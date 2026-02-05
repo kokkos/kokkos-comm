@@ -6,10 +6,11 @@
 #include <Kokkos_Core_fwd.hpp>
 
 #include "fwd.hpp"
+#if defined(KOKKOSCOMM_ENABLE_MPI)
+#include "mpi/isend.hpp"
+#include "mpi/irecv.hpp"
+#endif
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-#include "nccl/nccl_space.hpp"
-#include "nccl/handle.hpp"
-#include "nccl/req.hpp"
 #include "nccl/send.hpp"
 #include "nccl/recv.hpp"
 #endif
