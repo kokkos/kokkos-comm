@@ -5,6 +5,7 @@ from datetime import datetime
 import re
 import subprocess
 
+
 # -- Utilities ----------------------------------------------------------------
 def get_version(src_dir: str) -> str:
     """
@@ -29,7 +30,7 @@ def get_version(src_dir: str) -> str:
     ValueError
         If the version cannot be found in the file.
     """
-    cmake_file = src_dir + 'CMakeLists.txt'
+    cmake_file = src_dir + "CMakeLists.txt"
 
     # Define a regex pattern to capture the version string after 'VERSION'.
     # Explanation:
@@ -37,8 +38,8 @@ def get_version(src_dir: str) -> str:
     #   - [^)]*?: lazily matches any characters except the closing parenthesis.
     #   - \bVERSION\s+: matches the word "VERSION" followed by one or more spaces.
     #   - ([\d\.]+): capture group for the version number (digits and dots).
-    pattern = re.compile(r'project\([^)]*\bVERSION\s+([\d\.]+)', re.IGNORECASE)
-    with open(cmake_file, 'r', encoding='utf-8') as f:
+    pattern = re.compile(r"project\([^)]*\bVERSION\s+([\d\.]+)", re.IGNORECASE)
+    with open(cmake_file, "r", encoding="utf-8") as f:
         content = f.read()
 
     match = pattern.search(content)
@@ -46,6 +47,7 @@ def get_version(src_dir: str) -> str:
         return match.group(1)
     else:
         raise ValueError("Version information not found in the CMakeLists.txt file.")
+
 
 def get_HEAD_short_hash() -> str:
     """
@@ -59,12 +61,13 @@ def get_HEAD_short_hash() -> str:
         FileNotFoundError: If git is not installed or not in PATH.
     """
     result = subprocess.run(
-        ['git', 'rev-parse', '--short', 'HEAD'],
+        ["git", "rev-parse", "--short", "HEAD"],
         capture_output=True,
         text=True,
-        check=True
+        check=True,
     )
     return result.stdout.strip()
+
 
 # -- Project information -----------------------------------------------------
 project = "Kokkos Comm"
@@ -72,7 +75,7 @@ author = "Kokkos Project Contributors"
 copyright = f"2024-{datetime.now().year}, {author}"
 
 version = f"{get_version('../')}-dev{get_HEAD_short_hash()}"
-release = f"latest"
+release = "latest"
 
 # -- General configuration ---------------------------------------------------
 extensions = [
@@ -82,6 +85,10 @@ extensions = [
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+# Make `sphinx_last_updated_by_git` more lenient
+git_untracked_show_sourcelink = False
+git_untracked_check_dependencies = False
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = "furo"
