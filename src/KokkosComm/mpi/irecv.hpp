@@ -8,6 +8,7 @@
 #include <KokkosComm/datatype.hpp>
 #include "mpi_space.hpp"
 #include "handle.hpp"
+#include "req.hpp"
 
 #include "impl/pack_traits.hpp"
 #include "impl/tags.hpp"

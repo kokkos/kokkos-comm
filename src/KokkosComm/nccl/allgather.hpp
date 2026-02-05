@@ -10,6 +10,8 @@
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
 #include "nccl_space.hpp"
+#include "handle.hpp"
+#include "req.hpp"
 
 #include "impl/pack_traits.hpp"
 
