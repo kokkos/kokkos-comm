@@ -37,7 +37,7 @@ function(kc_add_perf_test name)
   target_sources(${name} PRIVATE ${PT_FILES})
   target_compile_features(${name} PRIVATE cxx_std_20)
   target_compile_options(${name} PRIVATE ${PT_OPTIONS})
-  target_include_directories(${name} PRIVATE ${UT_INCLUDES})
+  target_include_directories(${name} PRIVATE ${PT_INCLUDES})
   target_link_libraries(${name} PRIVATE benchmark::benchmark ${PT_LIBRARIES})
 
   if(PT_CORE)
