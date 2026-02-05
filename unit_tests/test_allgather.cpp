@@ -29,10 +29,10 @@ auto allgather_0d() -> void {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
   using ExecSpace = Kokkos::Cuda;
   auto nccl_ctx   = test_utils::nccl::Ctx::init();
-  KokkosComm::Handle<ExecSpace, KokkosComm::Nccl> h(ExecSpace(), nccl_ctx.comm());
+  KokkosComm::Handle<ExecSpace, KokkosComm::Experimental::NcclSpace> h(ExecSpace(), nccl_ctx.comm());
 #else
   using ExecSpace = Kokkos::DefaultExecutionSpace;
-  KokkosComm::Handle<Kokkos::DefaultExecutionSpace, KokkosComm::Mpi> h{};
+  KokkosComm::Handle<ExecSpace, KokkosComm::MpiSpace> h{};
 #endif
   int rank = h.rank();
   int size = h.size();
@@ -58,10 +58,10 @@ auto allgather_contig_1d() -> void {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
   using ExecSpace = Kokkos::Cuda;
   auto nccl_ctx   = test_utils::nccl::Ctx::init();
-  KokkosComm::Handle<ExecSpace, KokkosComm::Nccl> h(ExecSpace(), nccl_ctx.comm());
+  KokkosComm::Handle<ExecSpace, KokkosComm::Experimental::NcclSpace> h(ExecSpace(), nccl_ctx.comm());
 #else
   using ExecSpace = Kokkos::DefaultExecutionSpace;
-  KokkosComm::Handle<Kokkos::DefaultExecutionSpace, KokkosComm::Mpi> h{};
+  KokkosComm::Handle<ExecSpace, KokkosComm::MpiSpace> h{};
 #endif
   int rank = h.rank();
   int size = h.size();
