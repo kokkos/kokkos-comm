@@ -17,7 +17,7 @@ struct PackTraits {
 /*! \brief This can be specialized to do custom behavior for a particular view*/
 template <KokkosView View>
 struct PackTraits<View> {
-  using packer_type = mpi::Impl::Packer::DeepCopy<View>;
+  using packer_type = Packer::DeepCopy<View>;
 };
 
 }  // namespace KokkosComm::mpi::Impl
