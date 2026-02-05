@@ -31,12 +31,10 @@ template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::recv");
 
-  using KCPT   = KokkosComm::PackTraits<RecvView>;
-  using Packer = typename KCPT::packer_type;
-  using Args   = typename Packer::args_type;
+  using Packer = typename Impl::PackTraits<RecvView>::packer_type;
 
   if (!KokkosComm::is_contiguous(rv)) {
-    Args args = Packer::allocate_packed_for(space, "packed", rv);
+    auto args = Packer::allocate_packed_for(space, "packed", rv);
     space.fence("Fence after allocation before MPI_Recv");
     MPI_Recv(KokkosComm::data_handle(args.view), args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
     Packer::unpack_into(space, rv, args.view);

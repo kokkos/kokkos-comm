@@ -20,7 +20,7 @@ template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm, SendMode) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::send");
   using T      = typename SendView::non_const_value_type;
-  using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
+  using Packer = typename Impl::PackTraits<SendView>::packer_type;
 
   auto mpi_send_fn = [dest, tag, comm](void *view, int cnt, MPI_Datatype dtype) {
     if constexpr (std::is_same_v<SendMode, CommModeStandard>) {
@@ -38,7 +38,7 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
     space.fence("fence before send");
     mpi_send_fn(data_handle(sv), span(sv), datatype<MpiSpace, T>());
   } else {
-    auto args = Packer::pack(space, sv);
+    auto args = Packer::pack(space, "pkd_sv", sv);
     space.fence("fence before send");
     mpi_send_fn(data_handle(args.view), args.count, args.datatype);
   }

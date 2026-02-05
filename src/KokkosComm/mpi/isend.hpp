@@ -41,10 +41,9 @@ Req<MpiSpace> isend_impl(Handle<ExecSpace, MpiSpace> &h, const SendView &sv, int
                  dest, tag, h.mpi_comm(), &req.mpi_request());
     req.extend_view_lifetime(sv);
   } else {
-    using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
-    using Args   = typename Packer::args_type;
+    using Packer = typename mpi::Impl::PackTraits<SendView>::packer_type;
 
-    Args args = Packer::pack(h.space(), sv);
+    auto args = Packer::pack(h.space(), "pkd_sv", sv);
     h.space().fence("fence before isend");
     mpi_isend_fn(args.view.data(), args.count, args.datatype, dest, tag, h.mpi_comm(), &req.mpi_request());
     req.extend_view_lifetime(args.view);
