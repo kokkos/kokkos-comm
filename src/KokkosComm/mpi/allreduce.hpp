@@ -13,13 +13,18 @@
 #include "mpi_space.hpp"
 #include "req.hpp"
 
+#include <KokkosComm/impl/static_assert_helper.hpp>
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm {
 namespace mpi {
 
 template <KokkosView SView, KokkosView RView, KokkosExecutionSpace ExecSpace>
-auto iallreduce(const ExecSpace &space, const SView sv, RView rv, MPI_Op op, MPI_Comm comm) -> Req<MpiSpace> {
+auto iallreduce(const ExecSpace& space, const SView sv, RView rv, MPI_Op op, MPI_Comm comm) -> Req<MpiSpace> {
+#if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI) && (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP))
+  static_assert(Impl::dependent_false<ExecSpace>,
+                "KokkosComm::mpi::iallreduce: Unsupported with Open MPI + Kokkos CUDA/HIP backend");
+#else
   using ST = typename SView::non_const_value_type;
   using RT = typename RView::non_const_value_type;
   static_assert(std::is_same_v<ST, RT>, "KokkosComm::mpi::iallreduce: View value types must be identical");
@@ -39,10 +44,11 @@ auto iallreduce(const ExecSpace &space, const SView sv, RView rv, MPI_Op op, MPI
 
   Kokkos::Tools::popRegion();
   return req;
+#endif
 }
 
 template <KokkosView SendView, KokkosView RecvView>
-void allreduce(SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm comm) {
+void allreduce(SendView const& sv, RecvView const& rv, MPI_Op op, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::allreduce");
 
   using SendScalar = typename SendView::value_type;
@@ -65,7 +71,7 @@ void allreduce(SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm comm)
 }
 
 template <KokkosView View>
-void allreduce(View const &v, MPI_Op op, MPI_Comm comm) {
+void allreduce(View const& v, MPI_Op op, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::allreduce");
 
   using Scalar = typename View::value_type;
@@ -81,7 +87,7 @@ void allreduce(View const &v, MPI_Op op, MPI_Comm comm) {
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-void allreduce(ExecSpace const &space, SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm comm) {
+void allreduce(ExecSpace const& space, SendView const& sv, RecvView const& rv, MPI_Op op, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::allreduce");
 
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(sv) || !KokkosComm::is_contiguous(rv),
@@ -94,7 +100,7 @@ void allreduce(ExecSpace const &space, SendView const &sv, RecvView const &rv, M
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView View>
-void allreduce(ExecSpace const &space, View const &v, MPI_Op op, MPI_Comm comm) {
+void allreduce(ExecSpace const& space, View const& v, MPI_Op op, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::allreduce");
 
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(v), "allreduce for non-contiguous views not implemented");
@@ -110,7 +116,7 @@ namespace Experimental::Impl {
 
 template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp, KokkosExecutionSpace ExecSpace>
 struct AllReduce<SendView, RecvView, RedOp, ExecSpace, MpiSpace> {
-  static auto execute(Handle<ExecSpace, MpiSpace> &h, const SendView &sv, RecvView rv) -> Req<MpiSpace> {
+  static auto execute(Handle<ExecSpace, MpiSpace>& h, const SendView& sv, RecvView rv) -> Req<MpiSpace> {
     return mpi::iallreduce(h.space(), sv, rv, reduction_op<MpiSpace, RedOp>(), h.mpi_comm());
   }
 };

@@ -27,6 +27,9 @@ TYPED_TEST_SUITE(AllReduce, ScalarTypes);
 
 template <typename Scalar>
 auto allreduce_0d() -> void {
+#if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI) && (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP))
+  GTEST_SKIP() << "Unimplemented test for Open MPI + CUDA/HIP";
+#else
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
   using ExecSpace = Kokkos::Cuda;
   auto nccl_ctx   = test_utils::nccl::Ctx::init();
@@ -52,12 +55,16 @@ auto allreduce_0d() -> void {
 
   int errs;
   Kokkos::parallel_reduce(
-      rv.extent(0), KOKKOS_LAMBDA(const int, int &lsum) { lsum += (rv() != size * (size - 1) / 2); }, errs);
+      rv.extent(0), KOKKOS_LAMBDA(const int, int& lsum) { lsum += (rv() != size * (size - 1) / 2); }, errs);
   EXPECT_EQ(errs, 0);
+#endif
 }
 
 template <typename Scalar>
 auto allreduce_contig_1d() -> void {
+#if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI) && (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP))
+  GTEST_SKIP() << "Unimplemented test for Open MPI + CUDA/HIP";
+#else
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
   using ExecSpace = Kokkos::Cuda;
   auto nccl_ctx   = test_utils::nccl::Ctx::init();
@@ -72,8 +79,8 @@ auto allreduce_contig_1d() -> void {
   int size = h.size();
 
   int n_contrib = 10;
-  Kokkos::View<Scalar *> sv("sv", n_contrib);
-  Kokkos::View<Scalar *> rv("rv", n_contrib);
+  Kokkos::View<Scalar*> sv("sv", n_contrib);
+  Kokkos::View<Scalar*> rv("rv", n_contrib);
 
   // Prepare send buffer
   Kokkos::parallel_for(
@@ -86,8 +93,9 @@ auto allreduce_contig_1d() -> void {
   // Fill in this reduction which verifies that each element computed the correct value
   Kokkos::parallel_reduce(
       rv.extent(0),
-      KOKKOS_LAMBDA(const int i, int &lsum) { lsum += (rv(i) != ((size * (size - 1)) / 2 + (size * i))); }, errs);
+      KOKKOS_LAMBDA(const int i, int& lsum) { lsum += (rv(i) != ((size * (size - 1)) / 2 + (size * i))); }, errs);
   EXPECT_EQ(errs, 0);
+#endif
 }
 
 TYPED_TEST(AllReduce, 0D) { allreduce_0d<typename TestFixture::Scalar>(); }
