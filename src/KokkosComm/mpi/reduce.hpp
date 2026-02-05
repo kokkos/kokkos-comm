@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
 
@@ -12,7 +14,6 @@
 #include "mpi_space.hpp"
 #include "req.hpp"
 
-#include <KokkosComm/impl/static_assert_helper.hpp>
 #include "impl/error_handling.hpp"
 #include "impl/pack_traits.hpp"
 
@@ -21,9 +22,17 @@ namespace KokkosComm::mpi {
 template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
 auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int root, MPI_Comm comm) -> Req<MpiSpace> {
 #if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI) && (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP))
-  static_assert(KokkosComm::Impl::dependent_false<ExecSpace>,
-                "KokkosComm::mpi::ireduce: Unsupported with Open MPI + Kokkos CUDA/HIP backend");
-#else
+  // Unsupported if running Open MPI and Views are in CUDA or HIP execution spaces
+  static_assert(
+#if defined(KOKKOS_ENABLE_CUDA)
+      not std::is_same_v<typename SView::execution_space, Kokkos::Cuda> and
+          not std::is_same_v<typename RView::execution_space, Kokkos::Cuda>,
+#elif defined(KOKKOS_ENABLE_HIP)
+      not std::is_same_v<typename SView::execution_space, Kokkos::HIP> and
+          not std::is_same_v<typename RView::execution_space, Kokkos::HIP>,
+#endif
+      "KokkosComm::mpi::iallreduce: Unsupported with Open MPI + Kokkos CUDA/HIP backend");
+#endif
   using ST   = typename SView::non_const_value_type;
   using RT   = typename RView::non_const_value_type;
   using SPkr = typename Impl::PackTraits<SView>::packer_type;
@@ -80,7 +89,6 @@ auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int 
 
   Kokkos::Tools::popRegion();
   return req;
-#endif
 }
 
 template <KokkosView SendView, KokkosView RecvView>
