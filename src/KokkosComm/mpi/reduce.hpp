@@ -21,7 +21,7 @@ namespace KokkosComm::mpi {
 template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
 auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int root, MPI_Comm comm) -> Req<MpiSpace> {
 #if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI) && (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP))
-  static_assert(Impl::dependent_false<ExecSpace>,
+  static_assert(KokkosComm::Impl::dependent_false<ExecSpace>,
                 "KokkosComm::mpi::ireduce: Unsupported with Open MPI + Kokkos CUDA/HIP backend");
 #else
   using ST   = typename SView::non_const_value_type;
