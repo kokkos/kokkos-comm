@@ -2,7 +2,7 @@
 Implementing a ``CommunicationSpace``
 *************************************
 
-`PR #109 <https://github.com/kokkos/kokkos-comm/pulls/109>`_ introduced the concept of multiple communication spaces. A ``CommunicationSpace`` defines what KokkosComm actually does when you call, e.g., ``KokkosComm::send``.
+`PR #109 <https://github.com/kokkos/kokkos-comm/pull/109>`_ introduced the concept of multiple communication spaces. A ``CommunicationSpace`` defines what KokkosComm actually does when you call, e.g., ``KokkosComm::send``.
 
 Your implementation is a struct or class that represents your communication space. Then, you need partial specializations for some associated types (handles, requests, etc.), for each core API functions.
 
