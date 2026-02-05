@@ -128,6 +128,13 @@ if(KokkosComm_ENABLE_MPI)
     LIBRARIES KokkosComm::KokkosComm
   )
   kc_add_unit_test(
+    test.mpi.ireduce
+    MPI
+    NUM_PES 2
+    FILES test_main.cpp mpi/test_ireduce.cpp
+    LIBRARIES KokkosComm::KokkosComm
+  )
+  kc_add_unit_test(
     test.mpi.allreduce
     MPI
     NUM_PES 2
