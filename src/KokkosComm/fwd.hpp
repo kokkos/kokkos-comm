@@ -28,7 +28,7 @@ using FallbackCommunicationSpace = MpiSpace;
 #endif
 
 template <CommunicationSpace CommSpace = DefaultCommunicationSpace>
-class Req;
+class Request;
 
 template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace   = DefaultCommunicationSpace>
