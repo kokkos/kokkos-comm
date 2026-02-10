@@ -6,7 +6,7 @@
 #include <type_traits>
 
 #include <nccl.h>
-#include <cuda.h>
+#include <cuda_runtime.h>
 
 #include <KokkosComm/concepts.hpp>
 
@@ -17,7 +17,7 @@ namespace Experimental {
 struct NcclSpace {
   using communication_space = NcclSpace;
   using handle_type         = ncclComm_t;
-  using request_type        = cudaStream_t;
+  using request_type        = cudaEvent_t;
   using datatype_type       = ncclDataType_t;
   using reduction_op_type   = ncclRedOp_t;
   using rank_type           = int;
