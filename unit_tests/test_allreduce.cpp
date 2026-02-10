@@ -27,6 +27,7 @@ TYPED_TEST_SUITE(AllReduce, ScalarTypes);
 
 template <typename Scalar>
 auto allreduce_0d() -> void {
+// FIXME_EXTERNAL #215
 #if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI) && (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP))
   GTEST_SKIP() << "Unimplemented test for Open MPI + CUDA/HIP";
 #else
