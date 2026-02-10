@@ -27,6 +27,7 @@ using FallbackCommunicationSpace = MpiSpace;
 #error at least one communication space must be enabled
 #endif
 
+/// @brief Template class for request wrappers.
 template <CommunicationSpace CommSpace = DefaultCommunicationSpace>
 class Request;
 

@@ -12,7 +12,7 @@ Send
 
 .. warning:: This is not a blocking operation despite being named like ``MPI_Send``.
 
-.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto send(Handle<ExecSpace, CommSpace> &h, SendView &sv, int dest) -> Req<CommSpace>
+.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto send(Handle<ExecSpace, CommSpace> &h, SendView &sv, int dest) -> Request<CommSpace>
 
     Initiates a non-blocking send operation.
 
@@ -24,10 +24,10 @@ Send
     :param sv: The Kokkos view to send.
     :param dest: The destination rank.
 
-    :return: A request object of type ``Req<CommSpace>`` representing the non-blocking send operation.
+    :return: A request object of type ``Request<CommSpace>`` representing the non-blocking send operation.
 
 
-.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto send(SendView &sv, int dest) -> Req<CommSpace>
+.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto send(SendView &sv, int dest) -> Request<CommSpace>
 
     Initiates a non-blocking send operation using a default handle.
 
@@ -38,7 +38,7 @@ Send
     :param sv: The Kokkos view to send.
     :param dest: The destination rank.
 
-    :return: A request object of type ``Req<CommSpace>`` representing the non-blocking send operation.
+    :return: A request object of type ``Request<CommSpace>`` representing the non-blocking send operation.
 
 **Example usage:**
 
@@ -50,7 +50,7 @@ Receive
 
 .. warning:: This is not a blocking operation despite being named like ``MPI_Recv``.
 
-.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto recv(Handle<ExecSpace, CommSpace> &h, RecvView &sv, int dest) -> Req<CommSpace>
+.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto recv(Handle<ExecSpace, CommSpace> &h, RecvView &sv, int dest) -> Request<CommSpace>
 
     Initiates a non-blocking receive operation.
 
@@ -62,12 +62,12 @@ Receive
     :param rv: The Kokkos view where the received data will be stored.
     :param src: The source rank from which to receive data.
 
-    :return: A request object of type ``Req<CommSpace>`` representing the non-blocking receive operation.
+    :return: A request object of type ``Request<CommSpace>`` representing the non-blocking receive operation.
 
     This function initiates a non-blocking receive operation using the specified execution space and transport mechanism. The data will be received into the provided view from the specified source rank and message tag. The function returns a request object that can be used to check the status of the receive operation or to wait for its completion.
 
 
-.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto recv(RecvView &sv, int dest) -> Req<CommSpace>
+.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto recv(RecvView &sv, int dest) -> Request<CommSpace>
 
     Initiates a non-blocking receive operation using a default handle.
 
@@ -78,7 +78,7 @@ Receive
     :param rv: The Kokkos view where the received data will be stored.
     :param src: The source rank from which to receive data.
 
-    :return: A request object of type ``Req<CommSpace>`` representing the non-blocking receive operation.
+    :return: A request object of type ``Request<CommSpace>`` representing the non-blocking receive operation.
 
 **Example usage:**
 
@@ -106,8 +106,11 @@ Related types
 
 .. cpp:namespace:: KokkosComm
 
-.. cpp:class:: template <CommunicationSpace CommSpace = DefaultCommSpace> Req
+.. cpp:class:: template <CommunicationSpace CommSpace = DefaultCommSpace> Request
 
-    A template class to handle requests with different communication backend types.
+    Template class for request wrappers of different communication space types.
 
     :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
+
+Common interfaces
+-----------------

@@ -69,7 +69,7 @@ For example, for the MPI communication space request, we define the following:
     namespace KokkosComm {
 
     template <>
-    class Req<MpiSpace> { /* ... */ };
+    class Request<MpiSpace> { /* ... */ };
 
     } // end KokkosComm
 
@@ -126,7 +126,7 @@ An asynchronous/non-blocking message send:
 
     template <KokkosView SendView, KokkosExecutionSpace ExecSpace>
     struct Send<SendView, ExecSpace, MyCommSpace> {
-      static auto execute(Handle<ExecSpace, MyCommSpace> &h, const SendView &sv, int dest) -> Req<MyCommSpace> {
+      static auto execute(Handle<ExecSpace, MyCommSpace> &h, const SendView &sv, int dest) -> Request<MyCommSpace> {
         // actual implementation of `send` with your communication backend
       }
     };
@@ -148,7 +148,7 @@ An asynchronous/non-blocking message receive.
 
     template <KokkosView RecvView, KokkosExecutionSpace ExecSpace>
     struct Recv<RecvView, ExecSpace, MyCommSpace> {
-      static auto execute(Handle<ExecSpace, MyCommSpace> &h, const RecvView &sv, int src) -> Req<MyCommSpace> {
+      static auto execute(Handle<ExecSpace, MyCommSpace> &h, const RecvView &sv, int src) -> Request<MyCommSpace> {
         // actual implementation of `recv` with your communication backend
       }
     };
@@ -170,7 +170,7 @@ A global barrier.
 
     template <KokkosExecutionSpace ExecSpace>
     struct Recv<ExecSpace, MyCommSpace> {
-      static auto execute(Handle<ExecSpace, MyCommSpace> &&h) -> Req<MyCommSpace> {
+      static auto execute(Handle<ExecSpace, MyCommSpace> &&h) -> Request<MyCommSpace> {
         // actual implementation of `barrier` with your communication backend
       }
     };
