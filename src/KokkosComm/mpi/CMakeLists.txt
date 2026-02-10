@@ -8,7 +8,7 @@ target_sources(
         # Objects
         mpi_space.hpp
         handle.hpp
-        req.hpp
+        request.hpp
         comm_mode.hpp
         # Point-to-point
         send.hpp
