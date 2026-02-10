@@ -15,7 +15,7 @@
 #include "mpi/channel.hpp"
 #include "mpi/comm_mode.hpp"
 #include "mpi/handle.hpp"
-#include "mpi/req.hpp"
+#include "mpi/request.hpp"
 
 #include "mpi/irecv.hpp"
 #include "mpi/isend.hpp"
@@ -36,7 +36,7 @@
 #include "nccl/nccl_space.hpp"
 
 #include "nccl/handle.hpp"
-#include "nccl/req.hpp"
+#include "nccl/request.hpp"
 
 #include "nccl/recv.hpp"
 #include "nccl/send.hpp"

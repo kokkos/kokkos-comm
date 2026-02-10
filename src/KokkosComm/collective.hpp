@@ -8,6 +8,9 @@
 #include "fwd.hpp"
 #include "reduction_op.hpp"
 #if defined(KOKKOSCOMM_ENABLE_MPI)
+#include "mpi/mpi_space.hpp"
+#include "mpi/handle.hpp"
+#include "mpi/request.hpp"
 #include "mpi/broadcast.hpp"
 #include "mpi/allgather.hpp"
 #include "mpi/alltoall.hpp"
@@ -15,9 +18,12 @@
 #include "mpi/reduce.hpp"
 #endif
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
+#include "nccl/nccl_space.hpp"
+#include "nccl/handle.hpp"
+#include "nccl/request.hpp"
 #include "nccl/broadcast.hpp"
-#include "nccl/alltoall.hpp"
 #include "nccl/allgather.hpp"
+#include "nccl/alltoall.hpp"
 #include "nccl/allreduce.hpp"
 #include "nccl/reduce.hpp"
 #endif
@@ -27,7 +33,7 @@ namespace KokkosComm::Experimental {
 /// Copy the `v` view from the `root` rank to all ranks' `v` view.
 template <KokkosView View, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
-auto broadcast(Handle<ExecSpace, CommSpace>& h, View v, int root) -> Req<CommSpace> {
+auto broadcast(Handle<ExecSpace, CommSpace>& h, View v, int root) -> Request<CommSpace> {
   return Impl::Broadcast<View, ExecSpace, CommSpace>::execute(h, v, root);
 }
 
@@ -37,7 +43,7 @@ auto broadcast(Handle<ExecSpace, CommSpace>& h, View v, int root) -> Req<CommSpa
 /// Note: this assumes the span of the `rv` view to be `h.size() * KokkosComm::span(sv)`.
 template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
-auto allgather(Handle<ExecSpace, CommSpace>& h, const SendView sv, RecvView rv) -> Req<CommSpace> {
+auto allgather(Handle<ExecSpace, CommSpace>& h, const SendView sv, RecvView rv) -> Request<CommSpace> {
   return Impl::AllGather<SendView, RecvView, ExecSpace, CommSpace>::execute(h, sv, rv);
 }
 
@@ -49,7 +55,7 @@ auto allgather(Handle<ExecSpace, CommSpace>& h, const SendView sv, RecvView rv) 
 /// Note: this assumes the span of both `sv` and `rv` views to be `h.size * count`.
 template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace = DefaultCommunicationSpace>
-auto alltoall(Handle<ExecSpace, CommSpace>& h, const SendView sv, RecvView rv, int count) -> Req<CommSpace> {
+auto alltoall(Handle<ExecSpace, CommSpace>& h, const SendView sv, RecvView rv, int count) -> Request<CommSpace> {
   return Impl::AllToAll<SendView, RecvView, ExecSpace, CommSpace>::execute(h, sv, rv, count);
 }
 
@@ -57,7 +63,7 @@ auto alltoall(Handle<ExecSpace, CommSpace>& h, const SendView sv, RecvView rv, i
 template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp,
           KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace   = DefaultCommunicationSpace>
-auto allreduce(Handle<ExecSpace, CommSpace>& h, const SendView sv, RecvView rv, RedOp) -> Req<CommSpace> {
+auto allreduce(Handle<ExecSpace, CommSpace>& h, const SendView sv, RecvView rv, RedOp) -> Request<CommSpace> {
   return Impl::AllReduce<SendView, RecvView, RedOp, ExecSpace, CommSpace>::execute(h, sv, rv);
 }
 
@@ -67,7 +73,7 @@ auto allreduce(Handle<ExecSpace, CommSpace>& h, const SendView sv, RecvView rv, 
 template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp,
           KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
           CommunicationSpace CommSpace   = DefaultCommunicationSpace>
-auto reduce(Handle<ExecSpace, CommSpace>& h, const SendView sv, RecvView rv, int root, RedOp) -> Req<CommSpace> {
+auto reduce(Handle<ExecSpace, CommSpace>& h, const SendView sv, RecvView rv, int root, RedOp) -> Request<CommSpace> {
   return Impl::Reduce<SendView, RecvView, RedOp, ExecSpace, CommSpace>::execute(h, sv, rv, root);
 }
 
