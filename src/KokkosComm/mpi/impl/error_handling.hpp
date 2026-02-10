@@ -7,6 +7,7 @@
 #include <string_view>
 
 #include <mpi.h>
+#include <Kokkos_Core.hpp>
 
 namespace KokkosComm::mpi {
 

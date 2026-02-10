@@ -25,12 +25,12 @@ class Handle<ExecSpace, MpiSpace> {
   using transport_type  = MpiSpace;
   using size_type       = int;
 
-  explicit Handle(const execution_space &space, MPI_Comm comm) : space_(space), comm_(comm) {}
+  explicit Handle(const execution_space& space, MPI_Comm comm) : space_(space), comm_(comm) {}
   explicit Handle(MPI_Comm comm) : Handle(Kokkos::DefaultExecutionSpace{}, comm) {}
   Handle() : Handle(Kokkos::DefaultExecutionSpace{}, MPI_COMM_WORLD) {}
 
-  MPI_Comm &mpi_comm() { return comm_; }
-  const execution_space &space() const { return space_; }
+  MPI_Comm& mpi_comm() { return comm_; }
+  const execution_space& space() const { return space_; }
 
   size_type size() {
     size_type ret;

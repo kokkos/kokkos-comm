@@ -10,16 +10,16 @@
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
 #include "mpi_space.hpp"
-#include "req.hpp"
+#include "handle.hpp"
+#include "request.hpp"
 
-#include "impl/pack_traits.hpp"
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm {
 namespace mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
-auto ialltoall(const ExecSpace &space, const SView sv, RView rv, int count, MPI_Comm comm) -> Req<MpiSpace> {
+auto ialltoall(const ExecSpace& space, const SView sv, RView rv, int count, MPI_Comm comm) -> Request<MpiSpace> {
   using ST = typename SView::non_const_value_type;
   using RT = typename RView::non_const_value_type;
   static_assert(std::is_same_v<ST, RT>, "KokkosComm::mpi::ialltoall: View value types must be identical");
@@ -31,10 +31,10 @@ auto ialltoall(const ExecSpace &space, const SView sv, RView rv, int count, MPI_
   // Sync: Work in space may have been used to produce view data.
   space.fence("fence before non-blocking all-gather");
 
-  Req<MpiSpace> req;
+  Request<MpiSpace> req;
   // All ranks send/recv same count
   MPI_Ialltoall(data_handle(sv), count, datatype<MpiSpace, ST>(), data_handle(rv), count, datatype<MpiSpace, RT>(),
-                comm, &req.mpi_request());
+                comm, req.request_ptr());
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 
@@ -43,7 +43,7 @@ auto ialltoall(const ExecSpace &space, const SView sv, RView rv, int count, MPI_
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount, const RecvView &rv,
+void alltoall(const ExecSpace& space, const SendView& sv, const size_t sendCount, const RecvView& rv,
               const size_t recvCount, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::alltoall");
 
@@ -83,7 +83,7 @@ void alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount
 
 // in-place alltoall
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-void alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount, MPI_Comm comm) {
+void alltoall(const ExecSpace& space, const RecvView& rv, const size_t recvCount, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::alltoall");
 
   using RecvScalar = typename RecvView::value_type;
@@ -116,7 +116,7 @@ namespace Experimental::Impl {
 
 template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace>
 struct AllToAll<SendView, RecvView, ExecSpace, MpiSpace> {
-  static auto execute(Handle<ExecSpace, MpiSpace> &h, const SendView sv, RecvView rv, int count) -> Req<MpiSpace> {
+  static auto execute(Handle<ExecSpace, MpiSpace>& h, const SendView sv, RecvView rv, int count) -> Request<MpiSpace> {
     return mpi::ialltoall(h.space(), sv, rv, count, h.mpi_comm());
   }
 };

@@ -10,8 +10,8 @@
 void noop(benchmark::State, MPI_Comm) {}
 
 template <typename Space, typename View>
-void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, int ny, int rx, int ry, int rs,
-               const View &v) {
+void send_recv(benchmark::State&, MPI_Comm comm, const Space& space, int nx, int ny, int rx, int ry, int rs,
+               const View& v) {
   KokkosComm::Handle<> h{space, comm};
 
   // 2D index of nbrs in minus and plus direction (periodic)
@@ -35,7 +35,7 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, in
   auto ym1_s = Kokkos::subview(v, make_pair(1, nx + 1), 1, Kokkos::ALL);
   auto ym1_r = Kokkos::subview(v, make_pair(1, nx + 1), 0, Kokkos::ALL);
 
-  std::vector<KokkosComm::Req<>> reqs;
+  std::vector<KokkosComm::Request<>> reqs;
   // std::cerr << get_rank(rx, ry) << " -> " << get_rank(xp1, ry) << "\n";
   reqs.push_back(KokkosComm::send(h, xp1_s, get_rank(xp1, ry)));
   reqs.push_back(KokkosComm::send(h, xm1_s, get_rank(xm1, ry)));
@@ -51,9 +51,9 @@ void send_recv(benchmark::State &, MPI_Comm comm, const Space &space, int nx, in
   KokkosComm::wait_all(reqs);
 }
 
-void benchmark_2dhalo(benchmark::State &state) {
+void benchmark_2dhalo(benchmark::State& state) {
   using Scalar    = double;
-  using grid_type = Kokkos::View<Scalar ***, Kokkos::LayoutRight>;
+  using grid_type = Kokkos::View<Scalar***, Kokkos::LayoutRight>;
 
   // problem size per rank
   int nx     = 512;

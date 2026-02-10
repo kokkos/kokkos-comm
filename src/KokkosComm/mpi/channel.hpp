@@ -8,7 +8,7 @@
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
-#include "req.hpp"
+#include "request.hpp"
 
 namespace KokkosComm {
 
@@ -26,7 +26,7 @@ class Channel {
     // Add a new request to the send_reqs_ vector
     send_reqs_.emplace_back();
     MPI_Send_init(KokkosComm::data_handle(view), KokkosComm::span(view), datatype<MpiSpace, value_type>(), dest_rank_,
-                  tag_, comm_, &(send_reqs_.back().mpi_request()));
+                  tag_, comm_, send_reqs_.back().request_ptr());
     Kokkos::Tools::popRegion();
   }
 
@@ -37,7 +37,7 @@ class Channel {
     using value_type = typename RecvView::value_type;
     recv_reqs_.emplace_back();
     MPI_Recv_init(KokkosComm::data_handle(view), KokkosComm::span(view), datatype<MpiSpace, value_type>(), src_rank_,
-                  tag_, comm_, &(recv_reqs_.back().mpi_request()));
+                  tag_, comm_, recv_reqs_.back().request_ptr());
     Kokkos::Tools::popRegion();
   }
 
@@ -45,10 +45,10 @@ class Channel {
     Kokkos::Tools::pushRegion("KokkosComm::Channel::start");
     std::vector<MPI_Request> mpi_reqs;
     for (auto& req : send_reqs_) {
-      mpi_reqs.push_back(req.mpi_request());
+      mpi_reqs.push_back(req.request());
     }
     for (auto& req : recv_reqs_) {
-      mpi_reqs.push_back(req.mpi_request());
+      mpi_reqs.push_back(req.request());
     }
     Kokkos::fence();
     MPI_Startall(mpi_reqs.size(), mpi_reqs.data());
@@ -57,21 +57,21 @@ class Channel {
 
   void wait() {
     Kokkos::Tools::pushRegion("KokkosComm::Channel::wait");
-    std::vector<Req<MpiSpace>> reqs;
+    std::vector<Request<MpiSpace>> reqs;
     reqs.reserve(send_reqs_.size() + recv_reqs_.size());
-    reqs.insert(reqs.end(), send_reqs_.begin(), send_reqs_.end());
-    reqs.insert(reqs.end(), recv_reqs_.begin(), recv_reqs_.end());
+    reqs.insert(reqs.end(), std::make_move_iterator(send_reqs_.begin()), std::make_move_iterator(send_reqs_.end()));
+    reqs.insert(reqs.end(), std::make_move_iterator(recv_reqs_.begin()), std::make_move_iterator(recv_reqs_.end()));
     wait_all(reqs);
     Kokkos::Tools::popRegion();
   }
 
  private:
-  std::vector<Req<MpiSpace>> send_reqs_;  // Queue for send requests
-  std::vector<Req<MpiSpace>> recv_reqs_;  // Queue for receive requests
-  int dest_rank_;                         // Destination rank for send
-  int src_rank_;                          // Source rank for receive
-  int tag_;                               // MPI tag
-  MPI_Comm comm_;                         // MPI communicator
+  std::vector<Request<MpiSpace>> send_reqs_;  // Queue for send requests
+  std::vector<Request<MpiSpace>> recv_reqs_;  // Queue for receive requests
+  int dest_rank_;                             // Destination rank for send
+  int src_rank_;                              // Source rank for receive
+  int tag_;                                   // MPI tag
+  MPI_Comm comm_;                             // MPI communicator
 };
 
 }  // namespace KokkosComm

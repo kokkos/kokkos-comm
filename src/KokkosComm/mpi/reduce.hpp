@@ -13,7 +13,8 @@
 #include <KokkosComm/datatype.hpp>
 #include <KokkosComm/reduction_op.hpp>
 #include "mpi_space.hpp"
-#include "req.hpp"
+#include "handle.hpp"
+#include "request.hpp"
 
 #include "impl/error_handling.hpp"
 #include "impl/pack_traits.hpp"
@@ -22,7 +23,8 @@ namespace KokkosComm {
 namespace mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
-auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int root, MPI_Comm comm) -> Req<MpiSpace> {
+auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int root, MPI_Comm comm)
+    -> Request<MpiSpace> {
 // FIXME_EXTERNAL #215
 #if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI) && (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP))
   // Unsupported if running Open MPI and Views are in CUDA or HIP execution spaces
@@ -51,22 +53,22 @@ auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int 
     return _r;
   }();
 
-  Req<MpiSpace> req;
+  Request<MpiSpace> req;
   if (is_contiguous(sv)) {
     if (rank == root and not is_contiguous(rv)) {
       auto pkd_rv = RPkr::allocate_packed_for(space, "KC::mpi::ireduce c_sv pkd_rv", rv);
       space.fence("fence `pkd_rv` packing before MPI call");
       MPI_Ireduce(data_handle(sv), data_handle(pkd_rv.view), span(sv), datatype<MpiSpace, ST>(), op, root, comm,
-                  &req.mpi_request());
+                  req.request_ptr());
       // Implicitly extend `pkd_rv` lifetime because of lambda capture
-      req.call_after_mpi_wait([=]() {
+      req.add_callback([=]() {
         RPkr::unpack_into(space, rv, pkd_rv.view);
         space.fence("fence `pkd_rv` unpacking after MPI call");
       });
     } else {
       space.fence("fence before MPI call");
       MPI_Ireduce(data_handle(sv), data_handle(rv), span(sv), datatype<MpiSpace, ST>(), op, root, comm,
-                  &req.mpi_request());
+                  req.request_ptr());
     }
   } else {
     auto pkd_sv = SPkr::pack(space, "pkd_sv", sv);
@@ -75,15 +77,15 @@ auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int 
       auto pkd_rv = RPkr::allocate_packed_for(space, "KC::mpi::ireduce nc_sv pkd_rv", rv);
       space.fence("fence `pkd_rv` packing before MPI call");
       MPI_Ireduce(data_handle(pkd_sv.view), data_handle(pkd_rv.view), pkd_sv.count, pkd_sv.datatype, op, root, comm,
-                  &req.mpi_request());
+                  req.request_ptr());
       // Implicitly extend `pkd_rv` lifetime because of lambda capture
-      req.call_after_mpi_wait([=]() {
+      req.add_callback([=]() {
         RPkr::unpack_into(space, rv, pkd_rv.view);
         space.fence("fence `pkd_rv` unpacking after MPI call");
       });
     } else {
       MPI_Ireduce(data_handle(pkd_sv.view), data_handle(rv), pkd_sv.count, pkd_sv.datatype, op, root, comm,
-                  &req.mpi_request());
+                  req.request_ptr());
     }
     req.extend_view_lifetime(pkd_sv.view);
   }
@@ -157,7 +159,7 @@ namespace Experimental::Impl {
 
 template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp, KokkosExecutionSpace ExecSpace>
 struct Reduce<SendView, RecvView, RedOp, ExecSpace, MpiSpace> {
-  static auto execute(Handle<ExecSpace, MpiSpace>& h, const SendView sv, RecvView rv, int root) -> Req<MpiSpace> {
+  static auto execute(Handle<ExecSpace, MpiSpace>& h, const SendView sv, RecvView rv, int root) -> Request<MpiSpace> {
     return mpi::ireduce(h.space(), sv, rv, reduction_op<MpiSpace, RedOp>(), root, h.mpi_comm());
   }
 };

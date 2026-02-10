@@ -10,7 +10,8 @@
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
 #include "mpi_space.hpp"
-#include "req.hpp"
+#include "handle.hpp"
+#include "request.hpp"
 
 #include "impl/error_handling.hpp"
 
@@ -18,7 +19,7 @@ namespace KokkosComm {
 namespace mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
-auto iallgather(const ExecSpace &space, const SView sv, RView rv, MPI_Comm comm) -> Req<MpiSpace> {
+auto iallgather(const ExecSpace& space, const SView sv, RView rv, MPI_Comm comm) -> Request<MpiSpace> {
   using ST = typename SView::non_const_value_type;
   using RT = typename RView::non_const_value_type;
   static_assert(std::is_same_v<ST, RT>, "KokkosComm::mpi::iallgather: View value types must be identical");
@@ -30,10 +31,10 @@ auto iallgather(const ExecSpace &space, const SView sv, RView rv, MPI_Comm comm)
   // Sync: Work in space may have been used to produce view data.
   space.fence("fence before non-blocking all-gather");
 
-  Req<MpiSpace> req;
+  Request<MpiSpace> req;
   // All ranks send/recv same count
   MPI_Iallgather(data_handle(sv), span(sv), datatype<MpiSpace, ST>, data_handle(rv), span(sv), datatype<MpiSpace, RT>,
-                 comm, &req.mpi_request());
+                 comm, req.request_ptr());
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 
@@ -42,7 +43,7 @@ auto iallgather(const ExecSpace &space, const SView sv, RView rv, MPI_Comm comm)
 }
 
 template <KokkosView SendView, KokkosView RecvView>
-void allgather(const SendView &sv, const RecvView &rv, MPI_Comm comm) {
+void allgather(const SendView& sv, const RecvView& rv, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Mpi::allgather");
 
   using SendScalar = typename SendView::value_type;
@@ -63,7 +64,7 @@ void allgather(const SendView &sv, const RecvView &rv, MPI_Comm comm) {
 
 // in-place allgather
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-void allgather(const ExecSpace &space, const RecvView &rv, const size_t recvCount, MPI_Comm comm) {
+void allgather(const ExecSpace& space, const RecvView& rv, const size_t recvCount, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Mpi::allgather");
 
   using RecvScalar = typename RecvView::value_type;
@@ -80,7 +81,7 @@ void allgather(const ExecSpace &space, const RecvView &rv, const size_t recvCoun
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-void allgather(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Comm comm) {
+void allgather(const ExecSpace& space, const SendView& sv, const RecvView& rv, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Mpi::allgather");
 
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(sv) || !KokkosComm::is_contiguous(rv),
@@ -97,7 +98,7 @@ namespace Experimental::Impl {
 
 template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace>
 struct AllGather<SendView, RecvView, ExecSpace, MpiSpace> {
-  static auto execute(Handle<ExecSpace, MpiSpace> &h, const SendView sv, RecvView rv) -> Req<MpiSpace> {
+  static auto execute(Handle<ExecSpace, MpiSpace>& h, const SendView sv, RecvView rv) -> Request<MpiSpace> {
     return mpi::iallgather(h.space(), sv, rv, h.comm());
   }
 };

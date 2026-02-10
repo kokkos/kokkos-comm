@@ -13,7 +13,8 @@
 #include <KokkosComm/datatype.hpp>
 #include <KokkosComm/reduction_op.hpp>
 #include "mpi_space.hpp"
-#include "req.hpp"
+#include "handle.hpp"
+#include "request.hpp"
 
 #include "impl/error_handling.hpp"
 
@@ -21,7 +22,7 @@ namespace KokkosComm {
 namespace mpi {
 
 template <KokkosView SView, KokkosView RView, KokkosExecutionSpace ExecSpace>
-auto iallreduce(const ExecSpace& space, const SView sv, RView rv, MPI_Op op, MPI_Comm comm) -> Req<MpiSpace> {
+auto iallreduce(const ExecSpace& space, const SView sv, RView rv, MPI_Op op, MPI_Comm comm) -> Request<MpiSpace> {
 // FIXME_EXTERNAL #215
 #if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI) && (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP))
   // Unsupported if running Open MPI and Views are in CUDA or HIP execution spaces
@@ -46,9 +47,9 @@ auto iallreduce(const ExecSpace& space, const SView sv, RView rv, MPI_Op op, MPI
   // Sync: Work in space may have been used to produce view data.
   space.fence("fence before non-blocking all-gather");
 
-  Req<MpiSpace> req;
+  Request<MpiSpace> req;
   // All ranks send/recv same count
-  MPI_Iallreduce(data_handle(sv), data_handle(rv), span(sv), datatype<MpiSpace, ST>(), op, comm, &req.mpi_request());
+  MPI_Iallreduce(data_handle(sv), data_handle(rv), span(sv), datatype<MpiSpace, ST>(), op, comm, req.request_ptr());
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 
@@ -125,10 +126,10 @@ namespace Experimental::Impl {
 
 template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp, KokkosExecutionSpace ExecSpace>
 struct AllReduce<SendView, RecvView, RedOp, ExecSpace, MpiSpace> {
-  static auto execute(Handle<ExecSpace, MpiSpace>& h, const SendView& sv, RecvView rv) -> Req<MpiSpace> {
+  static auto execute(Handle<ExecSpace, MpiSpace>& h, const SendView& sv, RecvView rv) -> Request<MpiSpace> {
     return mpi::iallreduce(h.space(), sv, rv, reduction_op<MpiSpace, RedOp>(), h.mpi_comm());
   }
-};
+};  // namespace Experimental::Impl
 
 }  // namespace Experimental::Impl
 }  // namespace KokkosComm

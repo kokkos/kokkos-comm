@@ -8,7 +8,7 @@
 #include <KokkosComm/datatype.hpp>
 #include "mpi_space.hpp"
 #include "handle.hpp"
-#include "req.hpp"
+#include "request.hpp"
 
 #include "impl/pack_traits.hpp"
 #include "impl/tags.hpp"
@@ -20,23 +20,23 @@ namespace Impl {
 // Recv implementation for Mpi
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 struct Recv<RecvView, ExecSpace, MpiSpace> {
-  static Req<MpiSpace> execute(Handle<ExecSpace, MpiSpace> &h, const RecvView &rv, int src) {
+  static Request<MpiSpace> execute(Handle<ExecSpace, MpiSpace>& h, const RecvView& rv, int src) {
     using Packer = typename mpi::Impl::PackTraits<RecvView>::packer_type;
 
-    const ExecSpace &space = h.space();
+    const ExecSpace& space = h.space();
 
-    Req<MpiSpace> req;
+    Request<MpiSpace> req;
     if (KokkosComm::is_contiguous(rv)) {
       space.fence("fence before irecv");
       MPI_Irecv(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, typename RecvView::value_type>(),
-                src, POINTTOPOINT_TAG, h.mpi_comm(), &req.mpi_request());
+                src, POINTTOPOINT_TAG, h.mpi_comm(), req.request_ptr());
       req.extend_view_lifetime(rv);
     } else {
       auto args = Packer::allocate_packed_for(space, "TODO", rv);
       space.fence("fence before irecv");
-      MPI_Irecv(args.view.data(), args.count, args.datatype, src, POINTTOPOINT_TAG, h.mpi_comm(), &req.mpi_request());
+      MPI_Irecv(args.view.data(), args.count, args.datatype, src, POINTTOPOINT_TAG, h.mpi_comm(), req.request_ptr());
       // implicitly extends args.view and rv lifetime due to lambda capture
-      req.call_after_mpi_wait([=]() { Packer::unpack_into(space, rv, args.view); });
+      req.add_callback([=]() { Packer::unpack_into(space, rv, args.view); });
     }
     return req;
   }
@@ -46,7 +46,7 @@ struct Recv<RecvView, ExecSpace, MpiSpace> {
 namespace mpi {
 
 template <KokkosView RecvView>
-void irecv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Request &req) {
+void irecv(const RecvView& rv, int src, int tag, MPI_Comm comm, MPI_Request& req) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::irecv");
 
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "Only contiguous irecv viewsupported");
