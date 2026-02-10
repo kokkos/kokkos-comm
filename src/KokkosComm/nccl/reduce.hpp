@@ -12,9 +12,8 @@
 #include <KokkosComm/reduction_op.hpp>
 #include "nccl_space.hpp"
 #include "handle.hpp"
-#include "req.hpp"
+#include "request.hpp"
 
-#include <KokkosComm/impl/contiguous.hpp>
 #include "impl/pack_traits.hpp"
 
 namespace KokkosComm::Experimental {
@@ -23,8 +22,8 @@ namespace nccl {
 namespace KC = KokkosComm;
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-auto reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t op, int root, int rank, ncclComm_t comm)
-    -> Req<NcclSpace> {
+auto reduce(const ExecSpace& space, const SendView sv, RecvView rv, ncclRedOp_t op, int root, int rank, ncclComm_t comm)
+    -> Request<NcclSpace> {
   using SendPacker = typename Impl::PackTraits<SendView>::packer_type;
   using RecvPacker = typename Impl::PackTraits<RecvView>::packer_type;
   using ST         = typename SendView::non_const_value_type;
@@ -34,7 +33,7 @@ auto reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t 
                 "KokkosComm::Experimental::nccl::reduce: Views with rank higher than 1 are not supported");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::reduce");
 
-  Req<NcclSpace> req{space.cuda_stream()};
+  Request<NcclSpace> req(space.cuda_stream());
   if (KC::is_contiguous(sv)) {
     if (rank != root and KC::is_contiguous(rv)) {
       ncclReduce(KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), op, root, comm,
@@ -43,8 +42,7 @@ auto reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t 
       auto pckd_rv = KC::Impl::allocate_contiguous_for(space, "KC::nccl::reduce pckd_rv", rv);
       ncclReduce(KC::data_handle(sv), KC::data_handle(pckd_rv), KC::span(sv), datatype<NcclSpace, ST>(), op, root, comm,
                  space.cuda_stream());
-      RecvPacker::unpack_into(space, rv, pckd_rv);
-      req.extend_view_lifetime(pckd_rv);
+      req.add_callback([=]() { RecvPacker::unpack_into(space, rv, pckd_rv); });
     }
   } else {
     auto send_args = SendPacker::pack(space, sv);
@@ -55,8 +53,7 @@ auto reduce(const ExecSpace &space, const SendView sv, RecvView rv, ncclRedOp_t 
       auto pckd_rv = KC::Impl::allocate_contiguous_for(space, "KC::nccl::reduce pckd_rv", rv);
       ncclReduce(KC::data_handle(send_args.view_), KC::data_handle(pckd_rv), KC::span(send_args.view_),
                  datatype<NcclSpace, ST>(), op, root, comm, space.cuda_stream());
-      RecvPacker::unpack_into(space, rv, pckd_rv);
-      req.extend_view_lifetime(pckd_rv);
+      req.add_callback([=]() { RecvPacker::unpack_into(space, rv, pckd_rv); });
     }
     req.extend_view_lifetime(send_args.view_);
   }
@@ -72,7 +69,8 @@ namespace Impl {
 
 template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp>
 struct Reduce<SendView, RecvView, RedOp, Kokkos::Cuda, NcclSpace> {
-  static auto execute(Handle<Kokkos::Cuda, NcclSpace> &h, const SendView sv, RecvView rv, int root) -> Req<NcclSpace> {
+  static auto execute(Handle<Kokkos::Cuda, NcclSpace>& h, const SendView sv, RecvView rv, int root)
+      -> Request<NcclSpace> {
     return nccl::reduce(h.space(), sv, rv, reduction_op<NcclSpace, RedOp>(), root, h.rank(), h.comm());
   }
 };

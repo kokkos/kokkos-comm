@@ -12,7 +12,7 @@
 #include <KokkosComm/reduction_op.hpp>
 #include "nccl_space.hpp"
 #include "handle.hpp"
-#include "req.hpp"
+#include "request.hpp"
 
 #include "impl/pack_traits.hpp"
 
@@ -22,8 +22,8 @@ namespace nccl {
 namespace KC = KokkosComm;
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-auto allreduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, ncclRedOp_t op, ncclComm_t comm)
-    -> Req<NcclSpace> {
+auto allreduce(const ExecSpace& space, const SendView& sv, const RecvView& rv, ncclRedOp_t op, ncclComm_t comm)
+    -> Request<NcclSpace> {
   using ST = typename SendView::non_const_value_type;
   using RT = typename RecvView::non_const_value_type;
   static_assert(std::is_same_v<ST, RT>,
@@ -32,7 +32,7 @@ auto allreduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, n
                 "KokkosComm::Experimental::nccl::allreduce: Views with rank higher than 1 are not supported");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::allreduce");
 
-  Req<NcclSpace> req{space.cuda_stream()};
+  Request<NcclSpace> req(space.cuda_stream());
   if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
     ncclAllReduce(KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), op, comm,
                   space.cuda_stream());
@@ -51,7 +51,7 @@ namespace Impl {
 
 template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp>
 struct AllReduce<SendView, RecvView, RedOp, Kokkos::Cuda, NcclSpace> {
-  static auto execute(Handle<Kokkos::Cuda, NcclSpace> &h, const SendView sv, RecvView rv) -> Req<NcclSpace> {
+  static auto execute(Handle<Kokkos::Cuda, NcclSpace>& h, const SendView sv, RecvView rv) -> Request<NcclSpace> {
     return nccl::allreduce(h.space(), sv, rv, reduction_op<NcclSpace, RedOp>(), h.comm());
   }
 };

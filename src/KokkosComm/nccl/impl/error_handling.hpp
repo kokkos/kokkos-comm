@@ -4,6 +4,8 @@
 #pragma once
 
 #include <cstdio>
+#include <string_view>
+
 #include <nccl.h>
 #include <Kokkos_Core.hpp>
 

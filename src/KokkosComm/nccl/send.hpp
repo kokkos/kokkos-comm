@@ -11,10 +11,10 @@
 #include <KokkosComm/datatype.hpp>
 #include "nccl_space.hpp"
 #include "handle.hpp"
-#include "req.hpp"
+#include "request.hpp"
 
 #include "impl/pack_traits.hpp"
-#include "impl/nccl_check.hpp"
+#include "impl/error_handling.hpp"
 
 namespace KokkosComm {
 namespace Experimental::nccl {
@@ -22,11 +22,11 @@ namespace Experimental::nccl {
 namespace KC = KokkosComm;
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
-auto send(const ExecSpace& space, const SendView& sv, int peer, ncclComm_t comm) -> Req<NcclSpace> {
+auto send(const ExecSpace& space, const SendView& sv, int peer, ncclComm_t comm) -> Request<NcclSpace> {
   using T = typename SendView::non_const_value_type;
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
 
-  Req<NcclSpace> req{space.cuda_stream()};
+  Request<NcclSpace> req(space.cuda_stream());
   if (KC::is_contiguous(sv)) {
     KC_NCCL_CHECK(
         ncclSend(KC::data_handle(sv), KC::span(sv), datatype<NcclSpace, T>(), peer, comm, space.cuda_stream()));
@@ -49,7 +49,7 @@ namespace Impl {
 template <KokkosView SendView>
 struct Send<SendView, Kokkos::Cuda, Experimental::NcclSpace> {
   static auto execute(Handle<Kokkos::Cuda, Experimental::NcclSpace>& h, SendView sv, int peer)
-      -> Req<Experimental::NcclSpace> {
+      -> Request<Experimental::NcclSpace> {
     return Experimental::nccl::send(h.space(), sv, peer, h.comm());
   }
 };

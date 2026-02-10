@@ -11,7 +11,7 @@
 #include <KokkosComm/datatype.hpp>
 #include "nccl_space.hpp"
 #include "handle.hpp"
-#include "req.hpp"
+#include "request.hpp"
 
 #include "impl/pack_traits.hpp"
 
@@ -21,13 +21,13 @@ namespace nccl {
 namespace KC = KokkosComm;
 
 template <KokkosView View>
-auto broadcast(const Kokkos::Cuda& space, View& v, int root, ncclComm_t comm) -> Req<NcclSpace> {
+auto broadcast(const Kokkos::Cuda& space, View& v, int root, ncclComm_t comm) -> Request<NcclSpace> {
   using T = typename View::non_const_value_type;
   static_assert(KC::rank<View>() <= 1,
                 "KokkosComm::Experimental::nccl::broadcast: Views with rank higher than 1 are not supported");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::broadcast");
 
-  Req<NcclSpace> req{space.cuda_stream()};
+  Request<NcclSpace> req(space.cuda_stream());
   if (KC::is_contiguous(v)) {
     ncclBcast(KC::data_handle(v), KC::span(v), datatype<NcclSpace, T>(), root, comm, space.cuda_stream());
   } else {
@@ -44,7 +44,7 @@ namespace Impl {
 
 template <KokkosView View>
 struct Broadcast<View, Kokkos::Cuda, NcclSpace> {
-  static auto execute(Handle<Kokkos::Cuda, NcclSpace>& h, View v, int root) -> Req<NcclSpace> {
+  static auto execute(Handle<Kokkos::Cuda, NcclSpace>& h, View v, int root) -> Request<NcclSpace> {
     return nccl::broadcast(h.space(), v, root, h.comm());
   }
 };

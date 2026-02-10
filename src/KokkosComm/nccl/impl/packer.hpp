@@ -10,7 +10,6 @@
 #include <KokkosComm/traits.hpp>
 
 #include <KokkosComm/impl/contiguous.hpp>
-#include "types.hpp"
 
 namespace KokkosComm::Experimental::nccl::Impl::Packer {
 
@@ -20,7 +19,7 @@ struct PackedNcclView {
   ncclDataType_t datatype_;
   int count_;
 
-  PackedNcclView(const View &view, const ncclDataType_t datatype, const int count)
+  PackedNcclView(const View& view, const ncclDataType_t datatype, const int count)
       : view_(view), datatype_(datatype), count_(count) {}
 };
 
@@ -29,7 +28,7 @@ struct DeepCopy {
   using PackedView = KokkosComm::Impl::contiguous_view_t<View>;
 
   template <KokkosExecutionSpace ExecSpace>
-  static auto pack(const ExecSpace &space, const View &src) -> PackedNcclView<PackedView> {
+  static auto pack(const ExecSpace& space, const View& src) -> PackedNcclView<PackedView> {
     PackedView packed_src = KokkosComm::Impl::allocate_contiguous_for(space, "DeepCopy::pack", src);
     // Use `ncclUint8` because there is no equivalent to `MPI_PACKED`.
     PackedNcclView<PackedView> packed(packed_src, ncclUint8, src.size() * sizeof(typename PackedView::value_type));
@@ -38,7 +37,7 @@ struct DeepCopy {
   }
 
   template <KokkosExecutionSpace ExecSpace>
-  static auto unpack_into(const ExecSpace &space, View &dst, const PackedView &src) -> void {
+  static auto unpack_into(const ExecSpace& space, View& dst, const PackedView& src) -> void {
     Kokkos::deep_copy(space, dst, src);
   }
 };
