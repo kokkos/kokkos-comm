@@ -19,23 +19,23 @@
 namespace KokkosComm {
 namespace Experimental::nccl {
 
-namespace KC = KokkosComm;
-
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 auto recv(const ExecSpace& space, RecvView& rv, int peer, ncclComm_t comm) -> Request<NcclSpace> {
   using T = typename RecvView::non_const_value_type;
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
 
   Request<NcclSpace> req(space.cuda_stream());
-  if (KC::is_contiguous(rv)) {
-    KC_NCCL_CHECK(
-        ncclRecv(KC::data_handle(rv), KC::span(rv), datatype<NcclSpace, T>(), peer, comm, space.cuda_stream()));
+  if (is_contiguous(rv)) {
+    KC_NCCL_CHECK(ncclRecv(data_handle(rv), span(rv), datatype<NcclSpace, T>(), peer, comm, space.cuda_stream()));
   } else {
     using Packer = typename Impl::PackTraits<RecvView>::packer_type;
-    auto pckd_rv = KC::Impl::allocate_contiguous_for(space, "KC::nccl::recv pckd_rv", rv);
-    KC_NCCL_CHECK(ncclRecv(KC::data_handle(pckd_rv), KC::span(pckd_rv), datatype<NcclSpace, T>(), peer, comm,
-                           space.cuda_stream()));
-    req.add_callback([=]() { Packer::unpack_into(space, rv, pckd_rv); });
+    auto pckd_rv = Packer::allocate_packed_for(space, "pckd_rv", rv);
+    KC_NCCL_CHECK(
+        ncclRecv(data_handle(pckd_rv.view_), pckd_rv.count_, pckd_rv.datatype_, peer, comm, space.cuda_stream()));
+    req.add_callback([=]() {
+      Packer::unpack_into(space, rv, pckd_rv.view_);
+      space.fence("fence `pckd_rv` unpacking after NCCL call");
+    });
   }
   req.extend_view_lifetime(rv);
 

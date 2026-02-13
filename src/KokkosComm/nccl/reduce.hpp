@@ -39,7 +39,7 @@ auto reduce(const ExecSpace& space, const SendView& sv, RecvView& rv, ncclRedOp_
       ncclReduce(data_handle(sv), data_handle(rv), span(sv), datatype<NcclSpace, ST>(), op, root, comm,
                  space.cuda_stream());
     } else {
-      auto pckd_rv = RecvPacker::allocate_packed_for(space, "KC::nccl::reduce pckd_rv", rv);
+      auto pckd_rv = RecvPacker::allocate_packed_for(space, "pckd_rv", rv);
       ncclReduce(data_handle(sv), data_handle(pckd_rv.view_), span(sv), datatype<NcclSpace, ST>(), op, root, comm,
                  space.cuda_stream());
       req.add_callback([=]() {
@@ -48,14 +48,14 @@ auto reduce(const ExecSpace& space, const SendView& sv, RecvView& rv, ncclRedOp_
       });
     }
   } else {
-    auto pckd_sv = SendPacker::pack(space, sv);
+    auto pckd_sv = SendPacker::pack(space, "pckd_sv", sv);
     if (rank != root and is_contiguous(rv)) {
-      ncclReduce(data_handle(pckd_sv.view_), data_handle(rv), span(pckd_sv.view_), datatype<NcclSpace, ST>(), op, root,
-                 comm, space.cuda_stream());
+      ncclReduce(data_handle(pckd_sv.view_), data_handle(rv), pckd_sv.count_, pckd_sv.datatype_, op, root, comm,
+                 space.cuda_stream());
     } else {
-      auto pckd_rv = RecvPacker::allocate_packed_for(space, "KC::nccl::reduce pckd_rv", rv);
-      ncclReduce(data_handle(pckd_sv.view_), data_handle(pckd_rv.view_), span(pckd_sv.view_), datatype<NcclSpace, ST>(),
-                 op, root, comm, space.cuda_stream());
+      auto pckd_rv = RecvPacker::allocate_packed_for(space, "pckd_rv", rv);
+      ncclReduce(data_handle(pckd_sv.view_), data_handle(pckd_rv.view_), pckd_sv.count_, pckd_sv.datatype_, op, root,
+                 comm, space.cuda_stream());
       req.add_callback([=]() {
         RecvPacker::unpack_into(space, rv, pckd_rv.view_);
         space.fence("fence `pckd_rv` unpacking after NCCL call");
