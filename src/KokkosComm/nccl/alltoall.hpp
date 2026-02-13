@@ -30,7 +30,7 @@ auto alltoall(const ExecSpace& space, const SendView& sv, const RecvView& rv, in
                 "KokkosComm::Experimental::nccl::alltoall: Views with rank higher than 1 are not supported");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::alltoall");
 
-  Request<NcclSpace> req(space.cuda_stream());
+  Request<NcclSpace> req;
   if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
 #if NCCL_VERSION_CODE >= NCCL_VERSION(2, 28, 0)
     ncclAlltoAll(KC::data_handle(sv), KC::data_handle(rv), count, datatype<NcclSpace, ST>(), comm, space.cuda_stream());
@@ -44,6 +44,7 @@ auto alltoall(const ExecSpace& space, const SendView& sv, const RecvView& rv, in
     }
     ncclGroupEnd();
 #endif
+    req.capture_stream_state(space.cuda_stream());
   } else {
     Kokkos::abort("KokkosComm::Experimental::nccl::alltoall: unimplemented for non-contiguous views");
   }

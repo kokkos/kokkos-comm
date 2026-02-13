@@ -33,15 +33,17 @@ auto reduce(const ExecSpace& space, const SendView& sv, RecvView& rv, ncclRedOp_
                 "KokkosComm::Experimental::nccl::reduce: Views with rank higher than 1 are not supported");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::reduce");
 
-  Request<NcclSpace> req(space.cuda_stream());
+  Request<NcclSpace> req;
   if (is_contiguous(sv)) {
     if (rank != root and is_contiguous(rv)) {
       ncclReduce(data_handle(sv), data_handle(rv), span(sv), datatype<NcclSpace, ST>(), op, root, comm,
                  space.cuda_stream());
+      req.capture_stream_state(space.cuda_stream());
     } else {
       auto pckd_rv = RecvPacker::allocate_packed_for(space, "pckd_rv", rv);
       ncclReduce(data_handle(sv), data_handle(pckd_rv.view_), span(sv), datatype<NcclSpace, ST>(), op, root, comm,
                  space.cuda_stream());
+      req.capture_stream_state(space.cuda_stream());
       req.add_callback([=]() {
         RecvPacker::unpack_into(space, rv, pckd_rv.view_);
         space.fence("fence `pckd_rv` unpacking after NCCL call");
@@ -52,10 +54,12 @@ auto reduce(const ExecSpace& space, const SendView& sv, RecvView& rv, ncclRedOp_
     if (rank != root and is_contiguous(rv)) {
       ncclReduce(data_handle(pckd_sv.view_), data_handle(rv), pckd_sv.count_, pckd_sv.datatype_, op, root, comm,
                  space.cuda_stream());
+      req.capture_stream_state(space.cuda_stream());
     } else {
       auto pckd_rv = RecvPacker::allocate_packed_for(space, "pckd_rv", rv);
       ncclReduce(data_handle(pckd_sv.view_), data_handle(pckd_rv.view_), pckd_sv.count_, pckd_sv.datatype_, op, root,
                  comm, space.cuda_stream());
+      req.capture_stream_state(space.cuda_stream());
       req.add_callback([=]() {
         RecvPacker::unpack_into(space, rv, pckd_rv.view_);
         space.fence("fence `pckd_rv` unpacking after NCCL call");

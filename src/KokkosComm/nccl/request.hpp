@@ -26,17 +26,25 @@ class Request<Experimental::NcclSpace> {
   using request_type        = Experimental::NcclSpace::request_type;
   using rank_type           = Experimental::NcclSpace::rank_type;
 
-  /// @brief Constructs a `Request` from a `cudaStream_t`.
+  /// @brief Constructs a `Request`.
+  explicit Request() : request_(nullptr) {}
+
+  /// @brief Capture the state of a `cudaStream_t` for request encapsulation.
   /// @param stream The stream to capture for request encapsulation.
-  explicit Request(cudaStream_t stream) {
-    cudaEvent_t event;
-    KC_CUDA_CHECK(cudaEventCreateWithFlags(&event, cudaEventBlockingSync | cudaEventDisableTiming));
-    KC_CUDA_CHECK(cudaEventRecord(event, stream));
-    request_ = event;
+  auto capture_stream_state(cudaStream_t stream) noexcept -> void {
+    if (request_ != nullptr) {
+      KC_CUDA_CHECK(cudaEventDestroy(request_));
+    }
+    KC_CUDA_CHECK(cudaEventCreate(&request_, cudaEventDisableTiming));
+    KC_CUDA_CHECK(cudaEventRecord(request_, stream));
   }
 
   /// @brief Destructor.
-  ~Request() { KC_CUDA_CHECK(cudaEventDestroy(request_)); };
+  ~Request() noexcept {
+    if (request_ != nullptr) {
+      KC_CUDA_CHECK(cudaEventDestroy(request_));
+    }
+  };
 
   /// @brief Copy constructor is deleted because a `Request` can only be moved.
   Request(const Request&) = delete;

@@ -27,9 +27,10 @@ auto broadcast(const Kokkos::Cuda& space, View& v, int root, ncclComm_t comm) ->
                 "KokkosComm::Experimental::nccl::broadcast: Views with rank higher than 1 are not supported");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::broadcast");
 
-  Request<NcclSpace> req(space.cuda_stream());
+  Request<NcclSpace> req;
   if (KC::is_contiguous(v)) {
     ncclBcast(KC::data_handle(v), KC::span(v), datatype<NcclSpace, T>(), root, comm, space.cuda_stream());
+    req.capture_stream_state(space.cuda_stream());
   } else {
     Kokkos::abort("KokkosComm::Experimental::nccl::broadcast: unimplemented for non-contiguous views");
   }

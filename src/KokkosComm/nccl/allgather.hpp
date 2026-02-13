@@ -30,10 +30,11 @@ auto allgather(const ExecSpace& space, const SendView& sv, const RecvView& rv, n
                 "KokkosComm::nccl::allgather: Views with rank higher than 1 are not supported");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::allgather");
 
-  Request<NcclSpace> req(space.cuda_stream());
+  Request<NcclSpace> req;
   if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
     ncclAllGather(KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), comm,
                   space.cuda_stream());
+    req.capture_stream_state(space.cuda_stream());
   } else {
     Kokkos::abort("KokkosComm::Experimental::nccl::allgather: unimplemented for non-contiguous views");
   }

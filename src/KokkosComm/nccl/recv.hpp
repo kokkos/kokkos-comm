@@ -24,7 +24,7 @@ auto recv(const ExecSpace& space, RecvView& rv, int peer, ncclComm_t comm) -> Re
   using T = typename RecvView::non_const_value_type;
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
 
-  Request<NcclSpace> req(space.cuda_stream());
+  Request<NcclSpace> req;
   if (is_contiguous(rv)) {
     KC_NCCL_CHECK(ncclRecv(data_handle(rv), span(rv), datatype<NcclSpace, T>(), peer, comm, space.cuda_stream()));
   } else {
@@ -32,6 +32,7 @@ auto recv(const ExecSpace& space, RecvView& rv, int peer, ncclComm_t comm) -> Re
     auto pckd_rv = Packer::allocate_packed_for(space, "pckd_rv", rv);
     KC_NCCL_CHECK(
         ncclRecv(data_handle(pckd_rv.view_), pckd_rv.count_, pckd_rv.datatype_, peer, comm, space.cuda_stream()));
+    req.capture_stream_state(space.cuda_stream());
     req.add_callback([=]() {
       Packer::unpack_into(space, rv, pckd_rv.view_);
       space.fence("fence `pckd_rv` unpacking after NCCL call");

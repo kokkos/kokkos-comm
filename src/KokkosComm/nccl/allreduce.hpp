@@ -32,10 +32,11 @@ auto allreduce(const ExecSpace& space, const SendView& sv, const RecvView& rv, n
                 "KokkosComm::Experimental::nccl::allreduce: Views with rank higher than 1 are not supported");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::allreduce");
 
-  Request<NcclSpace> req(space.cuda_stream());
+  Request<NcclSpace> req;
   if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
     ncclAllReduce(KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), op, comm,
                   space.cuda_stream());
+    req.capture_stream_state(space.cuda_stream());
   } else {
     Kokkos::abort("KokkosComm::Experimental::nccl::allreduce: unimplemented for non-contiguous Views");
   }
