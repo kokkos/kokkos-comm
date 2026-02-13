@@ -48,13 +48,13 @@ class Request<Experimental::NcclSpace> {
   auto operator=(Request&&) -> Request& = default;
 
   /// @return A reference to the underlying `cudaEvent_t` object.
-  [[nodiscard]] auto request() noexcept -> request_type& { return request_; }
+  [[nodiscard]] constexpr auto request() noexcept -> request_type& { return request_; }
   /// @return A const reference to the underlying `cudaEvent_t` object.
-  [[nodiscard]] auto request() const noexcept -> const request_type& { return request_; }
+  [[nodiscard]] constexpr auto request() const noexcept -> const request_type& { return request_; }
   /// @return A pointer to the underlying `cudaEvent_t` object.
-  [[nodiscard]] auto request_ptr() noexcept -> request_type* { return &request_; }
+  [[nodiscard]] constexpr auto request_ptr() noexcept -> request_type* { return &request_; }
   /// @return A const pointer to the underlying `cudaEvent_t` object.
-  [[nodiscard]] auto request_ptr() const noexcept -> const request_type* { return &request_; }
+  [[nodiscard]] constexpr auto request_ptr() const noexcept -> const request_type* { return &request_; }
 
   /// @brief Adds a function to a list of callbacks to be invoked after the request's completion.
   /// @param cb The callback function to register.
