@@ -67,7 +67,7 @@ class Request<MpiSpace> {
 
   /// @brief Checks whether the request is active or not.
   /// @return True if the request is active, false otherwise.
-  [[nodiscard]] constexpr auto is_active() const noexcept -> bool { return request_ != MPI_REQUEST_NULL; }
+  [[nodiscard]] auto is_active() const noexcept -> bool { return request_ != MPI_REQUEST_NULL; }
 
   /// @brief Waits on the request until completion of the associated operation.
   /// The underlying `MPI_Request` object is set to `MPI_REQUEST_NULL` upon return.
@@ -117,11 +117,11 @@ class Request<MpiSpace> {
     callbacks_.clear();
   }
 
-  friend auto wait(Request<MpiSpace>& request) -> void;
-  friend auto wait(Request<MpiSpace>&& request) -> void;
-  friend auto wait_all(std::span<Request<MpiSpace>> requests) -> void;
-  friend auto wait_any(std::span<Request<MpiSpace>> requests) -> std::optional<rank_type>;
-  friend auto test(Request<MpiSpace>& request) -> bool;
+  friend auto wait(Request<communication_space>& request) -> void;
+  friend auto wait(Request<communication_space>&& request) -> void;
+  friend auto wait_all(std::span<Request<communication_space>> requests) -> void;
+  friend auto wait_any(std::span<Request<communication_space>> requests) -> std::optional<rank_type>;
+  friend auto test(Request<communication_space>& request) -> bool;
 };
 
 /// @brief Waits on the request until completion of the associated operation.
