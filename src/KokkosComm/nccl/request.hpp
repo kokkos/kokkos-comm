@@ -30,7 +30,7 @@ class Request<Experimental::NcclSpace> {
   /// @param stream The stream to capture for request encapsulation.
   explicit Request(cudaStream_t stream) {
     cudaEvent_t event;
-    KC_CUDA_CHECK(cudaEventCreateWithFlags(&event, cudaEventBlockingSynchronize | cudaEventDisableTiming));
+    KC_CUDA_CHECK(cudaEventCreateWithFlags(&event, cudaEventBlockingSync | cudaEventDisableTiming));
     KC_CUDA_CHECK(cudaEventRecord(event, stream));
     request_ = event;
   }
@@ -73,8 +73,9 @@ class Request<Experimental::NcclSpace> {
 
   /// @brief Checks whether the request is active or not.
   /// @return True if the request is active, false otherwise.
-  [[nodiscard]] constexpr auto is_active() const noexcept -> bool {
-    return (request_ != cudaSuccess and request_ == cudaErrorNotReady);
+  [[nodiscard]] auto is_active() const noexcept -> bool {
+    cudaError_t err = cudaEventQuery(request_);
+    return (err != cudaSuccess and err == cudaErrorNotReady);
   }
 
   /// @brief Waits on the request until completion of the associated operation.
@@ -83,7 +84,7 @@ class Request<Experimental::NcclSpace> {
       return;
     }
 
-    cudaError_t err = cudaEventSynchronize(record_->request_);
+    cudaError_t err = cudaEventSynchronize(request_);
     // FIXME: Do something smarter with `err` for better error reporting
     nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait: request completion failed");
 
@@ -98,7 +99,7 @@ class Request<Experimental::NcclSpace> {
       return true;
     }
 
-    cudaError_t err = cudaEventQuery(record_->request_);
+    cudaError_t err = cudaEventQuery(request_);
     if (err == cudaSuccess) {
       execute_all_callbacks();
       return true;
@@ -122,11 +123,11 @@ class Request<Experimental::NcclSpace> {
     callbacks_.clear();
   }
 
-  friend auto wait(Request<Experimental::NcclSpace>& request) -> void;
-  friend auto wait(Request<Experimental::NcclSpace>&& request) -> void;
-  friend auto wait_all(std::span<Request<Experimental::NcclSpace>> requests) -> void;
-  friend auto wait_any(std::span<Request<Experimental::NcclSpace>> requests) -> std::optional<rank_type>;
-  friend auto test(Request<Experimental::NcclSpace>& request) -> bool;
+  friend auto wait(Request<communication_space>& request) -> void;
+  friend auto wait(Request<communication_space>&& request) -> void;
+  friend auto wait_all(std::span<Request<communication_space>> requests) -> void;
+  friend auto wait_any(std::span<Request<communication_space>> requests) -> std::optional<rank_type>;
+  friend auto test(Request<communication_space>& request) -> bool;
 };
 
 /// @brief Waits on the request until completion of the associated operation.
@@ -182,7 +183,7 @@ inline auto wait_any(std::span<Request<Experimental::NcclSpace>> requests)
   // synchronization on the first request completion.
   while (true) {
     for (size_t r = 0; r < requests.size(); ++r) {
-      cudaError_t err = cudaEventQuery(reqs[r].request());
+      cudaError_t err = cudaEventQuery(requests[r].request());
       if (err == cudaSuccess) {
         requests[r].execute_all_callbacks();
         return static_cast<typename Request<Experimental::NcclSpace>::rank_type>(r);
@@ -198,6 +199,6 @@ inline auto wait_any(std::span<Request<Experimental::NcclSpace>> requests)
 
 /// @brief Queris the request for completion of the associated operation.
 /// @param request A reference on the request to query its completion.
-inline auto test(Request<Experimental::NcclSpace>& request) -> void { request.test(); }
+inline auto test(Request<Experimental::NcclSpace>& request) -> bool { request.test(); }
 
 }  // namespace KokkosComm
