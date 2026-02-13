@@ -22,8 +22,8 @@ namespace KokkosComm::Experimental {
 namespace nccl {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
-auto reduce(const ExecSpace& space, const SendView& sv, RecvView& rv, ncclRedOp_t op, int root, int rank, ncclComm_t comm)
-    -> Request<NcclSpace> {
+auto reduce(const ExecSpace& space, const SendView& sv, RecvView& rv, ncclRedOp_t op, int root, int rank,
+            ncclComm_t comm) -> Request<NcclSpace> {
   using ST         = typename SendView::non_const_value_type;
   using RT         = typename RecvView::non_const_value_type;
   using SendPacker = typename Impl::PackTraits<SendView>::packer_type;
