@@ -14,7 +14,8 @@ namespace KokkosComm::Impl {
 
 template <KokkosView View>
 struct contiguous_view {
-  using type = Kokkos::View<typename View::non_const_data_type, Kokkos::LayoutRight, typename View::memory_space>;
+  using type =
+      Kokkos::View<typename View::non_const_data_type, typename View::array_layout, typename View::memory_space>;
 };
 
 template <KokkosView View>
