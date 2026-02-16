@@ -65,17 +65,9 @@ class Request<MpiSpace> {
     }
   }
 
-  /// @brief Checks whether the request is active or not.
-  /// @return True if the request is active, false otherwise.
-  [[nodiscard]] auto is_active() const noexcept -> bool { return request_ != MPI_REQUEST_NULL; }
-
   /// @brief Waits on the request until completion of the associated operation.
   /// The underlying `MPI_Request` object is set to `MPI_REQUEST_NULL` upon return.
   auto wait() -> void {
-    if (not is_active()) {
-      return;
-    }
-
     MPI_Status status;
     int err = MPI_Wait(request_ptr(), &status);
     // FIXME: Do something smarter with status` for better error handling and reporting
@@ -87,12 +79,8 @@ class Request<MpiSpace> {
   /// @brief Queries the request for the completion of the associated operation.
   /// If the operation has completed, all callbacks are executed and the underlying `MPI_Request` object is set to
   /// `MPI_REQUEST_NULL` upon return, similarly to having called `wait`.
-  /// @return True if the request has completed, is null, or inactive, false otherwise.
+  /// @return True if the request has completed or is null/inactive, false otherwise.
   [[nodiscard]] auto test() -> bool {
-    if (not is_active()) {
-      return true;
-    }
-
     int has_completed;
     MPI_Status status;
     int err = MPI_Test(request_ptr(), &has_completed, &status);

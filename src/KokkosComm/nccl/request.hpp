@@ -79,19 +79,8 @@ class Request<Experimental::NcclSpace> {
     }
   }
 
-  /// @brief Checks whether the request is active or not.
-  /// @return True if the request is active, false otherwise.
-  [[nodiscard]] auto is_active() const noexcept -> bool {
-    cudaError_t err = cudaEventQuery(request_);
-    return (err != cudaSuccess and err == cudaErrorNotReady);
-  }
-
   /// @brief Waits on the request until completion of the associated operation.
   auto wait() -> void {
-    if (not is_active()) {
-      return;
-    }
-
     cudaError_t err = cudaEventSynchronize(request_);
     // FIXME: Do something smarter with `err` for better error reporting
     nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait: request completion failed");
@@ -101,12 +90,8 @@ class Request<Experimental::NcclSpace> {
 
   /// @brief Queries the request for the completion of the associated operation.
   /// If the operation has completed, all callbacks are executed upon return, similarly to having called `wait`.
-  /// @return True if the request has completed, is null, or inactive, false otherwise.
+  /// @return True if the request has completed or is null/inactive, false otherwise.
   [[nodiscard]] auto test() -> bool {
-    if (not is_active()) {
-      return true;
-    }
-
     cudaError_t err = cudaEventQuery(request_);
     if (err == cudaSuccess) {
       execute_all_callbacks();
