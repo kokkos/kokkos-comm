@@ -28,8 +28,6 @@ auto allreduce(const ExecSpace& space, const SendView& sv, const RecvView& rv, n
   using RT = typename RecvView::non_const_value_type;
   static_assert(std::is_same_v<ST, RT>,
                 "KokkosComm::Experimental::nccl::allreduce: View value types must be identical");
-  static_assert(KC::rank<SendView>() <= 1 and KC::rank<RecvView>() <= 1,
-                "KokkosComm::Experimental::nccl::allreduce: Views with rank higher than 1 are not supported");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::allreduce");
 
   Request<NcclSpace> req;

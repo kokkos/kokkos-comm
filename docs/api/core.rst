@@ -89,6 +89,11 @@ Receive
 Collectives
 ===========
 
+.. important:: 
+    Collective operations act **element-wise** on the input Views. Multi-dimensional Views are treated as a **logically flattened** sequence of values, and the reduction is applied over that sequence. All participating Views must have **identical extents**; mismatched shapes result in undefined behavior.
+
+    The reduction operator must be **associative**, but ordering of partial combinations is **not guaranteed**, and the operation is not required to be commutative.
+
 .. cpp:namespace:: KokkosComm
 
 .. cpp:function:: template <KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto barrier(Handle<ExecSpace, CommSpace> &&h) -> void

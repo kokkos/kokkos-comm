@@ -29,8 +29,6 @@ auto reduce(const ExecSpace& space, const SendView& sv, RecvView& rv, ncclRedOp_
   using SendPacker = typename Impl::PackTraits<SendView>::packer_type;
   using RecvPacker = typename Impl::PackTraits<RecvView>::packer_type;
   static_assert(std::is_same_v<ST, RT>, "KokkosComm::Experimental::nccl::reduce: View value types must be identical");
-  static_assert(KokkosComm::rank<SendView>() <= 1 and KokkosComm::rank<RecvView>() <= 1,
-                "KokkosComm::Experimental::nccl::reduce: Views with rank higher than 1 are not supported");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::reduce");
 
   Request<NcclSpace> req;

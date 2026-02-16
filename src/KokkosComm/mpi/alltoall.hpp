@@ -50,9 +50,6 @@ void alltoall(const ExecSpace& space, const SendView& sv, const size_t sendCount
   using SendScalar = typename SendView::value_type;
   using RecvScalar = typename RecvView::value_type;
 
-  static_assert(KokkosComm::rank<SendView>() <= 1, "alltoall for SendView::rank > 1 not supported");
-  static_assert(KokkosComm::rank<RecvView>() <= 1, "alltoall for RecvView::rank > 1 not supported");
-
   // Make sure views are ready
   space.fence("KokkosComm::mpi::alltoall");
 
@@ -87,8 +84,6 @@ void alltoall(const ExecSpace& space, const RecvView& rv, const size_t recvCount
   Kokkos::Tools::pushRegion("KokkosComm::mpi::alltoall");
 
   using RecvScalar = typename RecvView::value_type;
-
-  static_assert(RecvView::rank <= 1, "alltoall for RecvView::rank > 1 not supported");
 
   // Make sure views are ready
   space.fence("KokkosComm::mpi::alltoall");
