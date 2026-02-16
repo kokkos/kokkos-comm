@@ -97,7 +97,7 @@ class Request<MpiSpace> {
   request_type request_;
   std::vector<std::function<void()>> callbacks_;
 
-  /// @brief Executes all the callback functions registered on the request.
+  /// @brief Executes all the callbacks registered on the request.
   auto execute_all_callbacks() -> void {
     for (auto& cb : callbacks_) {
       cb();
@@ -170,7 +170,7 @@ inline auto wait_any(std::span<Request<MpiSpace>> requests) -> std::optional<typ
   return static_cast<typename Request<MpiSpace>::rank_type>(idx);
 }
 
-/// @brief Queris the request for completion of the associated operation.
+/// @brief Queries the request for completion of the associated operation.
 /// @param request A reference on the request to query its completion.
 inline auto test(Request<MpiSpace>& request) -> bool { return request.test(); }
 
