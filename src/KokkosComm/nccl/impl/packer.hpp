@@ -61,7 +61,7 @@ struct DeepCopy {
   /// @param dst The view to unpack into.
   /// @param src The packed view to unpack from.
   template <KokkosExecutionSpace E>
-  static auto unpack_into(const E& exec, V& dst, const PackedV& src) -> void {
+  static auto unpack_into(const E& exec, const V& dst, const PackedV& src) -> void {
     Kokkos::deep_copy(exec, dst, src);
   }
 };
