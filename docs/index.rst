@@ -35,9 +35,10 @@ Documentation Content
    :maxdepth: 1
    :caption: API Reference
 
-   api/core
+   api/concepts
    api/traits
    api/packing
+   api/core
    api/mpi
 
 .. toctree::

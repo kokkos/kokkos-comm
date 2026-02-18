@@ -1,27 +1,3 @@
-*******************
-Concepts and Traits
-*******************
-
-Concepts
-========
-
-.. cpp:namespace:: KokkosComm
-
-.. cpp:concept:: template <typename T> KokkosView
-
-    Specifies that a type ``T`` is a ``Kokkos::View`` object.
-
-
-.. cpp:concept:: template <typename T> KokkosExecutionSpace
-
-    Specifies that a type ``T`` is a ``Kokkos::ExecutionSpace``.
-
-
-.. cpp:concept:: template <typename T> CommunicationSpace
-
-    Specifies that a type ``T`` is a KokkosComm communication backend.
-
-
 ******
 Traits
 ******
