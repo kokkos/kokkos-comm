@@ -15,48 +15,58 @@ struct Traits {
 };
 
 /*! \brief This can be specialized to do custom behavior for a particular view*/
-template <KokkosView View>
-struct Traits<View> {
-  using non_const_packed_view_type =
-      Kokkos::View<typename View::non_const_data_type, typename View::array_layout, typename View::memory_space>;
+template <KokkosView V>
+struct Traits<V> {
+  using non_const_packed_view_type = Kokkos::View<typename V::non_const_data_type,
+                                                  typename V::execution_space::array_layout, typename V::memory_space>;
   using packed_view_type =
-      Kokkos::View<typename View::data_type, typename View::array_layout, typename View::memory_space>;
+      Kokkos::View<typename V::data_type, typename V::execution_space::array_layout, typename V::memory_space>;
 };
 
-template <KokkosView View>
-constexpr auto data_handle(const View &v) {
-  return v.data();
+/// @returns A pointer to the underlying data.
+template <KokkosView V>
+[[nodiscard]] constexpr auto data_handle(const V& view) -> V::pointer_type {
+  return view.data();
 }
 
-// return span in elements between the elements with the lowest and highest address
-template <KokkosView View>
-constexpr auto span(const View &v) {
-  return v.span();
+/// @returns The span between the elements with the lowest and highest address.
+template <KokkosView V>
+[[nodiscard]] constexpr auto span(const V& view) -> V::size_type {
+  return view.span();
 }
 
-// true iff product of extents is span
-template <KokkosView View>
-bool is_contiguous(const View &v) {
-  return v.span_is_contiguous();
+/// @returns The rank of the View.
+template <KokkosView V>
+[[nodiscard]] constexpr auto rank() -> V::size_type {
+  return V::rank;
+}
+template <KokkosView V>
+[[nodiscard]] constexpr auto rank([[maybe_unused]] const V& view) -> V::size_type {
+  return rank<V>();
 }
 
-template <KokkosView View>
-constexpr size_t rank() {
-  return View::rank;
+/// @returns The number of elements in extent `i`.
+template <KokkosView V>
+[[nodiscard]] constexpr auto extent(const V& view, int i) -> V::size_type {
+  return view.extent(i);
 }
 
-template <KokkosView View>
-constexpr size_t extent(const View &v, const int i) {
-  return v.extent(i);
-}
-template <KokkosView View>
-constexpr size_t stride(const View &v, const int i) {
-  return v.stride(i);
+/// @returns The stride of elements on extent `i`.
+template <KokkosView V>
+[[nodiscard]] constexpr auto stride(const V& view, int i) -> V::size_type {
+  return view.stride(i);
 }
 
-template <KokkosView View>
-constexpr bool is_reference_counted() {
+/// @returns Always true for Kokkos Views.
+template <KokkosView V>
+[[nodiscard]] constexpr auto is_reference_counted() -> bool {
   return true;
+}
+
+/// @returns True if, and only if, the product of extents is equal to the span.
+template <KokkosView V>
+[[nodiscard]] auto is_contiguous(const V& view) -> bool {
+  return view.span_is_contiguous();
 }
 
 }  // namespace KokkosComm
