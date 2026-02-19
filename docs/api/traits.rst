@@ -26,10 +26,11 @@ General traits
     :returns: A pointer to the underlying data allocation.
 
 
-.. cpp:alias:: template <KokkosView V> \
-               [[nodiscard]] constexpr auto rank() noexcept -> size_t
-               template <KokkosView V> \
-               [[nodiscard]] constexpr auto rank([[maybe_unused]] const V& view) noexcept -> size_t
+.. cpp:function:: template <KokkosView V> \
+                  [[nodiscard]] constexpr auto rank() noexcept -> size_t
+
+.. cpp:function:: template <KokkosView V> \
+                  [[nodiscard]] constexpr auto rank([[maybe_unused]] const V& view) noexcept -> size_t
 
     :tparam V: A Kokkos view type.
 
@@ -84,10 +85,10 @@ General traits
     :returns: The stride (number of elements the mapping advances upon increment) of the specified dimension.
 
 
-.. cpp:alias:: template <KokkosView V> \
-               [[nodiscard]] constexpr auto is_reference_counted() noexcept -> bool
-               template <KokkosView V> \
-               [[nodiscard]] constexpr auto is_reference_counted([[maybe_unused]] const V& view) noexcept -> bool
+.. cpp:function:: template <KokkosView V> \
+                  [[nodiscard]] constexpr auto is_reference_counted() noexcept -> bool
+.. cpp:function:: template <KokkosView V> \
+                  [[nodiscard]] constexpr auto is_reference_counted([[maybe_unused]] const V& view) noexcept -> bool
 
     :tparam V: A Kokkos view type.
 
