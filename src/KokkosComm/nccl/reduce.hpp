@@ -42,7 +42,7 @@ auto reduce(const ExecSpace& space, const SendView& sv, RecvView& rv, ncclRedOp_
       ncclReduce(data_handle(sv), data_handle(pckd_rv.view_), span(sv), datatype<NcclSpace, ST>(), op, root, comm,
                  space.cuda_stream());
       req.capture_stream_state(space.cuda_stream());
-      req.add_callback([=]() {
+      req.add_callback([space, rv, pckd_rv]() {
         RecvPacker::unpack_into(space, rv, pckd_rv.view_);
         space.fence("fence `pckd_rv` unpacking after NCCL call");
       });
@@ -58,7 +58,7 @@ auto reduce(const ExecSpace& space, const SendView& sv, RecvView& rv, ncclRedOp_
       ncclReduce(data_handle(pckd_sv.view_), data_handle(pckd_rv.view_), pckd_sv.count_, pckd_sv.datatype_, op, root,
                  comm, space.cuda_stream());
       req.capture_stream_state(space.cuda_stream());
-      req.add_callback([=]() {
+      req.add_callback([space, rv, pckd_rv]() {
         RecvPacker::unpack_into(space, rv, pckd_rv.view_);
         space.fence("fence `pckd_rv` unpacking after NCCL call");
       });

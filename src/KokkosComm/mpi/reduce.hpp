@@ -61,7 +61,7 @@ auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int 
       MPI_Ireduce(data_handle(sv), data_handle(pkd_rv.view), span(sv), datatype<MpiSpace, ST>(), op, root, comm,
                   req.request_ptr());
       // Implicitly extend `pkd_rv` lifetime because of lambda capture
-      req.add_callback([=]() {
+      req.add_callback([space, rv, pkd_rv]() {
         RPkr::unpack_into(space, rv, pkd_rv.view);
         space.fence("fence `pkd_rv` unpacking after MPI call");
       });
@@ -79,7 +79,7 @@ auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int 
       MPI_Ireduce(data_handle(pkd_sv.view), data_handle(pkd_rv.view), pkd_sv.count, pkd_sv.datatype, op, root, comm,
                   req.request_ptr());
       // Implicitly extend `pkd_rv` lifetime because of lambda capture
-      req.add_callback([=]() {
+      req.add_callback([space, rv, pkd_rv]() {
         RPkr::unpack_into(space, rv, pkd_rv.view);
         space.fence("fence `pkd_rv` unpacking after MPI call");
       });

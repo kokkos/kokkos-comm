@@ -36,7 +36,10 @@ struct Recv<RecvView, ExecSpace, MpiSpace> {
       space.fence("fence before irecv");
       MPI_Irecv(args.view.data(), args.count, args.datatype, src, POINTTOPOINT_TAG, h.mpi_comm(), req.request_ptr());
       // implicitly extends args.view and rv lifetime due to lambda capture
-      req.add_callback([=]() { Packer::unpack_into(space, rv, args.view); });
+      req.add_callback([space, rv, args]() {
+        Packer::unpack_into(space, rv, args.view);
+        space.fence("fence `args` unpacking after MPI call");
+      });
     }
     return req;
   }
