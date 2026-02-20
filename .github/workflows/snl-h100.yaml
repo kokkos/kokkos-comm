@@ -17,6 +17,11 @@ jobs:
       - name: Check NVIDIA GPU
         run: nvidia-smi
 
+      - name: Install CMake
+        run: |
+          wget https://github.com/Kitware/CMake/releases/download/v3.25.3/cmake-3.25.3-linux-x86_64.tar.gz
+          tar -C /usr/local --strip-components=1 -xf cmake-3.25.3-linux-x86_64.tar.gz
+
       - name: Kokkos - Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -75,6 +80,11 @@ jobs:
     steps:
       - name: Check NVIDIA GPU
         run: nvidia-smi
+
+      - name: Install CMake
+        run: |
+          wget https://github.com/Kitware/CMake/releases/download/v3.25.3/cmake-3.25.3-linux-x86_64.tar.gz
+          tar -C /usr/local --strip-components=1 -xf cmake-3.25.3-linux-x86_64.tar.gz
 
       - name: Kokkos - Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
