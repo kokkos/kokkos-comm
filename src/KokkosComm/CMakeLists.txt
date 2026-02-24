@@ -117,6 +117,30 @@ if(KOKKOSCOMM_ENABLE_NCCL)
   )
 endif()
 
+if(KokkosComm_ENABLE_STREAMCOMM)
+  target_sources(
+    KokkosComm
+    INTERFACE
+      FILE_SET kokkoscomm_stream_triggering_headers
+      TYPE HEADERS
+      BASE_DIRS ${PROJECT_SOURCE_DIR}/src
+      FILES
+      # 
+        stream-triggering/send.hpp
+	stream-triggering/recv.hpp
+      )
+
+        # Implementation detail MPI headers
+  target_sources(
+    KokkosComm
+    INTERFACE
+      FILE_SET kokkoscomm_stream_triggering_impl_headers
+      TYPE HEADERS
+      BASE_DIRS ${PROJECT_SOURCE_DIR}/src
+      FILES stream-triggering/impl/pack_traits.hpp stream-triggering/impl/packer.hpp stream-triggering/impl/tags.hpp stream-triggering/impl/error_handling.hpp
+  )
+endif()
+
 if(KokkosComm_ABORT_ON_ERROR)
   target_compile_definitions(KokkosComm INTERFACE KOKKOSCOMM_ABORT_ON_ERROR)
 endif()
@@ -170,12 +194,15 @@ endif()
 if(KOKKOSCOMM_ENABLE_NCCL)
   target_link_libraries(KokkosComm INTERFACE NCCL::NCCL)
 endif()
+if(KokkosComm_ENABLE_STREAMCOMM)
+  target_link_libraries(KokkosComm INTERFACE MPIAdvance::stream-triggering)
+endif()
 target_link_libraries(
   KokkosComm
   INTERFACE
     KokkosComm::KokkosCommFlags
     Kokkos::kokkos
-)
+  )
 
 # Install library
 install(
@@ -197,4 +224,8 @@ install(
   kokkoscomm_nccl_impl_headers
   FILE_SET
   kokkoscomm_config_headers
+  FILE_SET
+  kokkoscomm_stream_triggering_headers
+  FILE_SET
+  kokkoscomm_stream_triggering_impl_headers
 )
