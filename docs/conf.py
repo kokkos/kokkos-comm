@@ -80,15 +80,10 @@ release = "latest"
 # -- General configuration ---------------------------------------------------
 extensions = [
     "sphinx_copybutton",
-    "sphinx_last_updated_by_git",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-
-# Make `sphinx_last_updated_by_git` more lenient
-git_untracked_show_sourcelink = False
-git_untracked_check_dependencies = False
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = "furo"
