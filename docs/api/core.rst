@@ -287,26 +287,38 @@ Utility
 
 .. cpp:namespace:: KokkosComm
 
-.. cpp:function:: template <CommunicationSpace CommSpace, typename T> auto datatype() -> CS::datatype_type
+.. warning::
 
-    Converts a type ``T`` to its communication space ``CS`` equivalent.
+    Non-system data types (i.e. the data types not natively supported by the communication space) are not convertible.
+    This notably includes user-defined types.
 
-    When ``CS`` is:
+.. cpp:function:: template <CommunicationSpace C, typename T>\
+                  auto datatype() -> C::datatype_type
+
+    Converts a type ``T`` to its communication space ``C`` equivalent representation.
+
+    When ``C`` is:
 
     * ``MpiSpace``, returns the corresponding ``MPI_Datatype`` type.
     * ``NcclSpace``, returns the corresponding ``ncclDataType_t`` type.
 
-    :tparam CS: The target communication space backend to use for data type conversion.
-    :tparam T: The type to convert from.
+    :tparam C: The target communication space backend to use for data type conversion.
+    :tparam T: The C++-native data type to convert from.
+    :returns: The communication space representation of the C++-native data type.
 
-    .. note::
+.. cpp:function:: template <CommunicationSpace C, KokkosView V>\
+                  auto datatype_for([[maybe_unused]] const V& view) -> C::datatype_type
 
-        Non-system data types (i.e. the data types not natively supported by the communication space) are not convertible.
-        This notably includes user-defined types.
+    :tparam C: The target communication space backend to use for data type conversion.
+    :tparam V: A Kokkos View type.
+    :param view: The Kokkos View to convert the value type from.
+    :returns: The communication space representation of the Kokkos View value type.
 
-.. cpp:function:: template <CommunicationSpace CommSpace, KokkosView V> auto datatype_for(V&) -> CS::datatype_type
+.. cpp:function:: template <CommunicationSpace C, KokkosView V>\
+                  auto datatype_for([[maybe_unused]] C&& comm, [[maybe_unused]] const V& view) -> C::datatype_type
 
-    Returns the ``CS`` data type equivalent for the value type of the Kokkos View ``V``.
-
-    :tparam CS: The target communication space backend to use for data type conversion.
-    :tparam V: The Kokkos View to convert the value type from.
+    :tparam C: The target communication space backend to use for data type conversion.
+    :tparam V: A Kokkos View type.
+    :param comm: A communication space object, immediately consumed.
+    :param view: The Kokkos View to convert the value type from.
+    :returns: The communication space representation of the Kokkos View value type.
