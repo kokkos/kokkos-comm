@@ -17,7 +17,5 @@
 ### Checklist
 <!-- Complete every item that applies. Remove or strikethrough items that are N/A. -->
 
-- [ ] CI is passing
-- [ ] Changes follow the project's guidelines
-- [ ] Tests have been added/updated
-- [ ] Documentation has been updated
+- [ ] Tests are up-to-date
+- [ ] Documentation is up-to-date
