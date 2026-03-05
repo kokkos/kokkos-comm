@@ -12,6 +12,10 @@
 </details>
 
 ### Changes
+
+- **Affected areas:** <!-- core, backends, tests, docs, etc., or "none" -->
+- **Breaking change(s)?** <!-- "yes" or "no", details should be discussed below -->
+
 <!-- Exhaustive list of changes — one item per logical unit (mirrors a clean commit log). -->
 
 ### Checklist
