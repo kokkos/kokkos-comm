@@ -35,7 +35,7 @@ struct DeepCopy {
   /// Returns allocated, uninitialized, contiguous view for packing `src`.
   template <KokkosExecutionSpace ES>
   static auto allocate_packed_for(const ES &space, const std::string &label, const V &src) -> Args {
-    auto packed = KokkosComm::Impl::allocate_contiguous_for(space, label, src);
+    auto packed = KokkosComm::Impl::allocate_contiguous_for(space, src, label);
     return Args(packed, datatype<MpiSpace, T>(), span(packed));
   }
 
