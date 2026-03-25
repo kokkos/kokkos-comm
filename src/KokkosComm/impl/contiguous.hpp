@@ -23,6 +23,12 @@ struct contiguous_view {
 template <KokkosView View>
 using contiguous_view_t = contiguous_view<View>::type;
 
+/// @brief Allocate a contiguous View suitable for packing a non-contiguous View.
+/// @tparam Exec A Kokkos Execution Space type.
+/// @tparam View A Kokkos View type.
+/// @param exec The execution space instance in which to perform the view allocation.
+/// @param v The View to make a suitable contiguous allocation for.
+/// @param label The label to give to the allocated contiguous View. Defaults to "contiguous_view".
 template <KokkosExecutionSpace Exec, KokkosView View>
 auto allocate_contiguous_for(const Exec& exec, const View& v, const std::string& label = "contiguous_view") {
   using ContigView = contiguous_view_t<View>;
@@ -32,6 +38,13 @@ auto allocate_contiguous_for(const Exec& exec, const View& v, const std::string&
   (std::make_index_sequence<rank<View>()>{});
 }
 
+/// @brief Resize a View into a contiguous one suitable for packing a non-contiguous View.
+/// @tparam Exec A Kokkos Execution Space type.
+/// @tparam DstV The Kokkos View type of the destination View to resize.
+/// @tparam DstV The Kokkos View type of the source View to resize for.
+/// @param exec The execution space instance in which to perform the view reallocation.
+/// @param dst The View to resize.
+/// @param src The View to make a suitable contiguous resize for.
 template <KokkosExecutionSpace Exec, KokkosView DstV, KokkosView SrcV>
 auto resize_contiguous_for(const Exec& exec, const DstV& dst, const SrcV& src) {
   static_assert(rank<DstV>() == rank<SrcV>(),
