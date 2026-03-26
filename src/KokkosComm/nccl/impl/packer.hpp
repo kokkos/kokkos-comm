@@ -38,7 +38,7 @@ struct DeepCopy {
   /// @return An allocated, uninitialized, contiguous view fit for packing `view`.
   template <KokkosExecutionSpace E>
   static auto allocate_packed_for(const E& exec, const std::string& label, const V& view) -> PackedNcclView<PackedV> {
-    auto packed = KokkosComm::Impl::allocate_contiguous_for(exec, view, label);
+    auto packed = KokkosComm::Impl::allocate_contiguous_for(exec, label, view);
     return PackedNcclView<PackedV>(packed, datatype<NcclSpace, T>(), span(packed));
   }
 
