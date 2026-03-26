@@ -30,9 +30,10 @@ using contiguous_view_t = contiguous_view<View>::type;
 /// @param v The View to make a suitable contiguous allocation for.
 /// @param label The label to give to the allocated contiguous View. Defaults to "contiguous_view".
 template <KokkosExecutionSpace Exec, KokkosView View>
-auto allocate_contiguous_for(const Exec& exec, const View& v, const std::string& label = "contiguous_view") {
+auto allocate_contiguous_for(const Exec& exec, const std::string& label, const View& v) -> contiguous_view<View> {
   using ContigView = contiguous_view_t<View>;
-  return [&]<size_t... Is>(std::index_sequence<Is...>) {
+  // Unpack `v` extents into the `ContigView` constructor
+  return [&label, &exec, &v ]<size_t... Is>(std::index_sequence<Is...>) {
     return ContigView(Kokkos::view_alloc(exec, Kokkos::WithoutInitializing, label), v.extent(Is)...);
   }
   (std::make_index_sequence<rank<View>()>{});
@@ -46,10 +47,11 @@ auto allocate_contiguous_for(const Exec& exec, const View& v, const std::string&
 /// @param dst The View to resize.
 /// @param src The View to make a suitable contiguous resize for.
 template <KokkosExecutionSpace Exec, KokkosView DstV, KokkosView SrcV>
-auto resize_contiguous_for(const Exec& exec, const DstV& dst, const SrcV& src) {
+auto resize_contiguous_for(const Exec& exec, const DstV& dst, const SrcV& src) -> void {
   static_assert(rank<DstV>() == rank<SrcV>(),
                 "KokkosComm::Impl::resize_contiguous_for: source and destination Views must have the same rank");
-  [&]<size_t... Is>(std::index_sequence<Is...>) {
+  // Unpack `src` extents into `realloc` call
+  [&exec, &dst, &src ]<size_t... Is>(std::index_sequence<Is...>) {
     Kokkos::realloc(Kokkos::view_alloc(exec, Kokkos::WithoutInitializing), dst, src.extent(Is)...);
   }
   (std::make_index_sequence<rank<DstV>()>{});
