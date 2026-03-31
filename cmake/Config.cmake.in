@@ -9,6 +9,7 @@ GET_FILENAME_COMPONENT(KokkosComm_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 include(CMakeFindDependencyMacro)
 find_dependency(MPI)
 find_dependency(Kokkos)
+find_dependency(stream-triggering REQUIRED)
 
 INCLUDE("${KokkosComm_CMAKE_DIR}/KokkosCommTargets.cmake")
 UNSET(KokkosComm_CMAKE_DIR)

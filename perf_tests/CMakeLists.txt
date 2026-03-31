@@ -30,3 +30,11 @@ FetchContent_MakeAvailable(benchmark)
 if(KOKKOSCOMM_ENABLE_MPI)
   add_subdirectory(mpi)
 endif(KOKKOSCOMM_ENABLE_MPI)
+# Find and enable stream triggering
+option(KokkosComm_ENABLE_MPI_ADVANCE "Support MPI Advance backends." ON)
+option(KokkosComm_ENABLE_STREAMCOMM "Support Stream-Triggered Communication." ON)
+# find MPI ADVANCE Stream Triggering
+if(KokkosComm_ENABLE_MPI_ADVANCE)
+  find_package(stream-triggering REQUIRED)
+endif()
+set(KokkosComm_ENABLE_STREAMCOMM KokkosComm_ENABLE_STREAMCOMM_FOUND)
