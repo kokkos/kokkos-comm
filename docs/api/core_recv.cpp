@@ -8,7 +8,7 @@ using CommSpace = DefaultCommunicationSpace;
 int src = 1;
 
 // Create a handle
-KokkosComm::Handle<> handle; // Same as Handle<Execspace, CommSpace>
+KokkosComm::Handle<> handle;  // Same as Handle<Execspace, CommSpace>
 
 // Allocate a view to receive the data
 Kokkos::View<double*> data("recv_view", 100);

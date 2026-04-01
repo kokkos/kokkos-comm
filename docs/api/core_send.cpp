@@ -8,15 +8,14 @@ using CommSpace = DefaultCommunicationSpace;
 Kokkos::View<double*> data("data", 100);
 
 // Fill the view with some data
-Kokkos::parallel_for("fill_data", Kokkos::RangePolicy<ExecSpace>(0, 100), KOKKOS_LAMBDA(int i) {
-  data(i) = static_cast<double>(i);
-});
+Kokkos::parallel_for(
+    "fill_data", Kokkos::RangePolicy<ExecSpace>(0, 100), KOKKOS_LAMBDA(int i) { data(i) = static_cast<double>(i); });
 
 // Destination rank
 int dest = 1;
 
 // Create a handle
-KokkosComm::Handle<> handle; // Same as Handle<Execspace, CommSpace>
+KokkosComm::Handle<> handle;  // Same as Handle<Execspace, CommSpace>
 
 // Initiate a non-blocking send with a handle
 auto req1 = send(handle, data, dest);

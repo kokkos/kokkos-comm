@@ -55,10 +55,10 @@ struct DeepCopy {
     } else {
       auto args = allocate_packed_for(space, label, src);
       Kokkos::deep_copy(space, args.view, src);
-      return args; 
+      return args;
     }
   }
-    
+
   /// Unpacks `src` view into `dst`.
   template <KokkosExecutionSpace ES>
   static auto unpack_into(const ES &space, const V &dst, const PackedV &src) -> void {

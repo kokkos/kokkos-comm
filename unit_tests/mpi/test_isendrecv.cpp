@@ -124,14 +124,10 @@ void isend_comm_mode_0d() {
   }
 }
 
-TYPED_TEST(IsendRecv, 0D_standard) {
-  isend_comm_mode_0d<CommModeStandard, typename TestFixture::Scalar>();
-}
+TYPED_TEST(IsendRecv, 0D_standard) { isend_comm_mode_0d<CommModeStandard, typename TestFixture::Scalar>(); }
 
 TYPED_TEST(IsendRecv, 0D_ready) { isend_comm_mode_0d<CommModeReady, typename TestFixture::Scalar>(); }
 
-TYPED_TEST(IsendRecv, 0D_synchronous) {
-  isend_comm_mode_0d<CommModeSynchronous, typename TestFixture::Scalar>();
-}
+TYPED_TEST(IsendRecv, 0D_synchronous) { isend_comm_mode_0d<CommModeSynchronous, typename TestFixture::Scalar>(); }
 
 }  // namespace
