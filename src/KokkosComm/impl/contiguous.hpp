@@ -25,7 +25,9 @@ template <KokkosView View, KokkosExecutionSpace Space>
 auto allocate_contiguous_for(const Space &space, const std::string &label, View &v) {
   using non_const_packed_view_type = contiguous_view_t<View>;
 
-  if constexpr (KokkosComm::rank<View>() == 1) {
+  if constexpr (0 == KokkosComm::rank<View>()) {
+    return non_const_packed_view_type(Kokkos::view_alloc(space, Kokkos::WithoutInitializing, label), v.extent(0));
+  } else if constexpr (KokkosComm::rank<View>() == 1) {
     return non_const_packed_view_type(Kokkos::view_alloc(space, Kokkos::WithoutInitializing, label), v.extent(0));
   } else if constexpr (KokkosComm::rank<View>() == 2) {
     return non_const_packed_view_type(Kokkos::view_alloc(space, Kokkos::WithoutInitializing, label), v.extent(0),

@@ -100,4 +100,39 @@ TYPED_TEST(MpiSendRecv, 1D_noncontig_synchronous) {
   send_comm_mode_1d_noncontig<CommModeSynchronous, typename TestFixture::Scalar>();
 }
 
+template <CommunicationMode SendMode, typename Scalar>
+void send_comm_mode_0d() {
+  if constexpr (std::is_same_v<SendMode, CommModeReady>) {
+    GTEST_SKIP() << "Skipping test for ready-mode send";
+  }
+
+  Kokkos::View<Scalar> a("a");
+
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  if (size < 2) {
+    GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
+  }
+
+  if (0 == rank) {
+    Kokkos::deep_copy(a, Scalar(42));
+    KokkosComm::mpi::send(Kokkos::DefaultExecutionSpace(), a, 1, 0, MPI_COMM_WORLD, SendMode{});
+  } else if (1 == rank) {
+    KokkosComm::mpi::recv(Kokkos::DefaultExecutionSpace(), a, 0, 0, MPI_COMM_WORLD);
+    auto a_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), a);
+    ASSERT_EQ(a_h(), Scalar(42));
+  }
+}
+
+TYPED_TEST(MpiSendRecv, 0D_standard) {
+  send_comm_mode_0d<CommModeStandard, typename TestFixture::Scalar>();
+}
+
+TYPED_TEST(MpiSendRecv, 0D_ready) { send_comm_mode_0d<CommModeReady, typename TestFixture::Scalar>(); }
+
+TYPED_TEST(MpiSendRecv, 0D_synchronous) {
+  send_comm_mode_0d<CommModeSynchronous, typename TestFixture::Scalar>();
+}
+
 }  // namespace

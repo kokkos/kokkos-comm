@@ -26,6 +26,10 @@ struct MpiArgs {
       : view(_view), datatype(_datatype), count(_count) {}
 };
 
+// We know rank-0 views are always contiguous, so we want the deep-copy thing to be a no-op:
+// allocate_packed_for just returns the provided view
+// pack is a no-op
+// unpack_into is a no-op
 template <KokkosView V>
 struct DeepCopy {
   using PackedV = KokkosComm::Impl::contiguous_view_t<V>;
@@ -35,22 +39,32 @@ struct DeepCopy {
   /// Returns allocated, uninitialized, contiguous view for packing `src`.
   template <KokkosExecutionSpace ES>
   static auto allocate_packed_for(const ES &space, const std::string &label, const V &src) -> Args {
-    auto packed = KokkosComm::Impl::allocate_contiguous_for(space, label, src);
-    return Args(packed, datatype<MpiSpace, T>(), span(packed));
+    if constexpr (0 == KokkosComm::rank<V>()) {
+      return Args(src, datatype<MpiSpace, T>(), 1);
+    } else {
+      auto packed = KokkosComm::Impl::allocate_contiguous_for(space, label, src);
+      return Args(packed, datatype<MpiSpace, T>(), span(packed));
+    }
   }
 
   /// Returns packed view from `src`.
   template <KokkosExecutionSpace ES>
   static auto pack(const ES &space, const std::string &label, const V &src) -> Args {
-    auto args = allocate_packed_for(space, label, src);
-    Kokkos::deep_copy(space, args.view, src);
-    return args;
+    if constexpr (0 == KokkosComm::rank<V>()) {
+      return Args(src, datatype<MpiSpace, T>(), 1);
+    } else {
+      auto args = allocate_packed_for(space, label, src);
+      Kokkos::deep_copy(space, args.view, src);
+      return args; 
+    }
   }
-
+    
   /// Unpacks `src` view into `dst`.
   template <KokkosExecutionSpace ES>
   static auto unpack_into(const ES &space, const V &dst, const PackedV &src) -> void {
-    Kokkos::deep_copy(space, dst, src);
+    if constexpr (0 != KokkosComm::rank<V>()) {
+      Kokkos::deep_copy(space, dst, src);
+    }
   }
 };
 
