@@ -34,9 +34,10 @@ using contiguous_view_t = contiguous_view<View>::type;
 template <KokkosExecutionSpace Exec, KokkosView View>
 auto allocate_contiguous_for(const Exec& exec, const std::string& label, const View& v) -> contiguous_view_t<View> {
   // Unpack `v` extents into the `ContigView` constructor
-  return [&label, &exec, &v]<size_t... Is>(std::index_sequence<Is...>) {
+  return [&label, &exec, &v ]<size_t... Is>(std::index_sequence<Is...>) {
     return contiguous_view_t<View>(Kokkos::view_alloc(exec, Kokkos::WithoutInitializing, label), v.extent(Is)...);
-  }(std::make_index_sequence<rank<View>()>{});
+  }
+  (std::make_index_sequence<rank<View>()>{});
 }
 
 }  // namespace KokkosComm::Impl
