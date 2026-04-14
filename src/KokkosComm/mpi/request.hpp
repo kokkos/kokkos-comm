@@ -152,9 +152,10 @@ inline auto wait_any(std::span<Request<MpiSpace>> requests) -> std::optional<typ
     return std::nullopt;
   }
 
-  std::vector<MPI_Request> mpi_requests(requests.size());
+  std::vector<MPI_Request> mpi_requests;
+  mpi_requests.reserve(requests.size());
   for (auto& req : requests) {
-    mpi_requests.push_back(req.request());
+    mpi_requests.emplace_back(req.request());
   }
   int idx;
   MPI_Status status;
