@@ -69,8 +69,9 @@ struct MpiDatatype {
     MPI_Datatype type = datatype<MpiSpace, ValueType>()();
     for (size_t d = 0; d < KokkosComm::Traits<View>::rank(); ++d) {
       MPI_Datatype newtype;
-      MPI_Type_create_hvector(KCT::extent(src, d) /*count*/, 1 /*block length*/,
-                              KCT::stride(src, d) * sizeof(ValueType), type, &newtype);
+      MPI_Type_create_hvector(
+          KCT::extent(src, d) /*count*/, 1 /*block length*/, KCT::stride(src, d) * sizeof(ValueType), type, &newtype
+      );
       type = newtype;
     }
     MPI_Type_commit(&type);
@@ -85,8 +86,8 @@ struct MpiDatatype {
 
   // unpack is a no-op: rely on MPI's datatype engine
   template <KokkosExecutionSpace ExecSpace>
-  static void unpack_into(const ExecSpace & /*space*/, const View & /*dst*/,
-                          const non_const_packed_view_type & /*src*/) {
+  static void
+  unpack_into(const ExecSpace & /*space*/, const View & /*dst*/, const non_const_packed_view_type & /*src*/) {
     return;
   }
 };

@@ -52,7 +52,8 @@ void doit() {
 
   if (0 == rank) {
     Kokkos::parallel_for(
-        n, KOKKOS_LAMBDA(const int i) { a(i) = i; });
+        n, KOKKOS_LAMBDA(const int i) { a(i) = i; }
+    );
     Kokkos::fence();
 
     std::cerr << "sending buffer is " << a.data() << "-" << a.data() + n << std::endl;

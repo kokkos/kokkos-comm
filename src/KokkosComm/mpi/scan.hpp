@@ -18,8 +18,10 @@ void inclusive_scan(SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm 
 
   using SendScalar = typename SendView::value_type;
   using RecvScalar = typename RecvView::value_type;
-  static_assert(std::is_same_v<std::remove_cv_t<SendScalar>, std::remove_cv_t<RecvScalar> >,
-                "Send and receive views have different value types");
+  static_assert(
+      std::is_same_v<std::remove_cv_t<SendScalar>, std::remove_cv_t<RecvScalar> >,
+      "Send and receive views have different value types"
+  );
 
   static_assert(KokkosComm::rank<SendView>() <= 1, "inclusive_scan for SendView::rank > 1 not supported");
   static_assert(KokkosComm::rank<RecvView>() <= 1, "inclusive_scan for RecvView::rank > 1 not supported");
@@ -45,8 +47,10 @@ void exclusive_scan(SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm 
 
   using SendScalar = typename SendView::value_type;
   using RecvScalar = typename RecvView::value_type;
-  static_assert(std::is_same_v<std::remove_cv_t<SendScalar>, std::remove_cv_t<RecvScalar> >,
-                "Send and receive views have different value types");
+  static_assert(
+      std::is_same_v<std::remove_cv_t<SendScalar>, std::remove_cv_t<RecvScalar> >,
+      "Send and receive views have different value types"
+  );
 
   static_assert(KokkosComm::rank<SendView>() <= 1, "exclusive_scan for SendView::rank > 1 not supported");
   static_assert(KokkosComm::rank<RecvView>() <= 1, "exclusive_scan for RecvView::rank > 1 not supported");
@@ -61,8 +65,9 @@ void exclusive_scan(SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm 
     throw std::runtime_error{"exclusive_scan requires send and receive views to have the same size"};
   }
   int const count = sv.size();
-  MPI_Exscan(KokkosComm::data_handle(sv), KokkosComm::data_handle(rv), count, datatype<MpiSpace, SendScalar>(), op,
-             comm);
+  MPI_Exscan(
+      KokkosComm::data_handle(sv), KokkosComm::data_handle(rv), count, datatype<MpiSpace, SendScalar>(), op, comm
+  );
 
   Kokkos::Tools::popRegion();
 }

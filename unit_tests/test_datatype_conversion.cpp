@@ -23,14 +23,48 @@ class DatatypeConversion : public testing::Test {
 };
 
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-using DatatypeTypes = ::testing::Types<char, int, unsigned, std::int8_t, std::uint8_t, std::int32_t, std::uint32_t,
-                                       std::int64_t, std::uint64_t, std::size_t, std::ptrdiff_t, float, double>;
+using DatatypeTypes = ::testing::Types<
+    char,
+    int,
+    unsigned,
+    std::int8_t,
+    std::uint8_t,
+    std::int32_t,
+    std::uint32_t,
+    std::int64_t,
+    std::uint64_t,
+    std::size_t,
+    std::ptrdiff_t,
+    float,
+    double>;
 #else
-using DatatypeTypes =
-    ::testing::Types<std::byte, char, unsigned char, short, unsigned short, int, unsigned, long, unsigned long,
-                     long long, unsigned long long, std::int8_t, std::uint8_t, std::int16_t, std::uint16_t,
-                     std::int32_t, std::uint32_t, std::int64_t, std::uint64_t, std::size_t, std::ptrdiff_t, float,
-                     double, long double, Kokkos::complex<float>, Kokkos::complex<double>>;
+using DatatypeTypes = ::testing::Types<
+    std::byte,
+    char,
+    unsigned char,
+    short,
+    unsigned short,
+    int,
+    unsigned,
+    long,
+    unsigned long,
+    long long,
+    unsigned long long,
+    std::int8_t,
+    std::uint8_t,
+    std::int16_t,
+    std::uint16_t,
+    std::int32_t,
+    std::uint32_t,
+    std::int64_t,
+    std::uint64_t,
+    std::size_t,
+    std::ptrdiff_t,
+    float,
+    double,
+    long double,
+    Kokkos::complex<float>,
+    Kokkos::complex<double>>;
 #endif
 TYPED_TEST_SUITE(DatatypeConversion, DatatypeTypes);
 

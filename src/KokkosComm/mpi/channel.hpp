@@ -25,8 +25,10 @@ class Channel {
     using value_type = typename SendView::value_type;
     // Add a new request to the send_reqs_ vector
     send_reqs_.emplace_back();
-    MPI_Send_init(KokkosComm::data_handle(view), KokkosComm::span(view), datatype<MpiSpace, value_type>(), dest_rank_,
-                  tag_, comm_, send_reqs_.back().request_ptr());
+    MPI_Send_init(
+        KokkosComm::data_handle(view), KokkosComm::span(view), datatype<MpiSpace, value_type>(), dest_rank_, tag_,
+        comm_, send_reqs_.back().request_ptr()
+    );
     Kokkos::Tools::popRegion();
   }
 
@@ -36,8 +38,10 @@ class Channel {
     Kokkos::Tools::pushRegion("KokkosComm::Channel::recvinit");
     using value_type = typename RecvView::value_type;
     recv_reqs_.emplace_back();
-    MPI_Recv_init(KokkosComm::data_handle(view), KokkosComm::span(view), datatype<MpiSpace, value_type>(), src_rank_,
-                  tag_, comm_, recv_reqs_.back().request_ptr());
+    MPI_Recv_init(
+        KokkosComm::data_handle(view), KokkosComm::span(view), datatype<MpiSpace, value_type>(), src_rank_, tag_, comm_,
+        recv_reqs_.back().request_ptr()
+    );
     Kokkos::Tools::popRegion();
   }
 

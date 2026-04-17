@@ -29,8 +29,9 @@ namespace KokkosComm::nccl {
 
 inline auto fail_if(bool condition, std::string_view error_msg) -> void {
   if (condition) {
-    std::fprintf(stderr, "error: Kokkos Comm (NCCL) failed with `%.*s`\n", static_cast<int>(error_msg.size()),
-                 error_msg.data());
+    std::fprintf(
+        stderr, "error: Kokkos Comm (NCCL) failed with `%.*s`\n", static_cast<int>(error_msg.size()), error_msg.data()
+    );
     Kokkos::abort(error_msg.data());
   }
 }
@@ -38,8 +39,9 @@ inline auto fail_if(bool condition, std::string_view error_msg) -> void {
 inline auto fail_if(bool condition, std::string_view error_msg, ncclComm_t comm) -> void {
   if (condition) {
 #ifdef KOKKOSCOMM_ABORT_ON_ERROR
-    std::fprintf(stderr, "error: Kokkos Comm (NCCL) failed with `%.*s`\n", static_cast<int>(error_msg.size()),
-                 error_msg.data());
+    std::fprintf(
+        stderr, "error: Kokkos Comm (NCCL) failed with `%.*s`\n", static_cast<int>(error_msg.size()), error_msg.data()
+    );
     ncclCommAbort(comm);
 #else
     Kokkos::abort(error_msg.data());

@@ -106,8 +106,9 @@ template <CommunicationSpace CS, ReductionOperator RO>
     return Impl::nccl_reduction_op<RO>();
 #endif
   } else {
-    static_assert(std::is_void_v<CS>,
-                  "KokkosComm::reduction_op: conversion not implemented for this communication space");
+    static_assert(
+        std::is_void_v<CS>, "KokkosComm::reduction_op: conversion not implemented for this communication space"
+    );
     return Impl::mpi_reduction_op<RO>();  // unreachable
   }
 }

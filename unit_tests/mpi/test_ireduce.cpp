@@ -34,7 +34,8 @@ void test_ireduce_1d_contig() {
 
   // Prepare send buffer
   Kokkos::parallel_for(
-      Kokkos::RangePolicy(space, 0, sv.extent(0)), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
+      Kokkos::RangePolicy(space, 0, sv.extent(0)), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; }
+  );
   space.fence();
 
   auto req = KokkosComm::mpi::ireduce(space, sv, rv, MPI_SUM, root, MPI_COMM_WORLD);
@@ -51,7 +52,8 @@ void test_ireduce_1d_contig() {
           }
           lsum += rv(i) != acc;
         },
-        errs);
+        errs
+    );
     ASSERT_EQ(errs, 0);
   }
 #endif

@@ -18,8 +18,8 @@ struct Traits {
 /// @brief A struct that can be specialized to implement custom behavior for a particular Kokkos view.
 template <KokkosView V>
 struct Traits<V> {
-  using non_const_packed_view_type = Kokkos::View<typename V::non_const_data_type,
-                                                  typename V::execution_space::array_layout, typename V::memory_space>;
+  using non_const_packed_view_type = Kokkos::
+      View<typename V::non_const_data_type, typename V::execution_space::array_layout, typename V::memory_space>;
   using packed_view_type =
       Kokkos::View<typename V::data_type, typename V::execution_space::array_layout, typename V::memory_space>;
 };

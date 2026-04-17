@@ -23,9 +23,19 @@ class ReductionOperatorConversion : public testing::Test {
 using RedOpTypes =
     ::testing::Types<KokkosComm::Sum, KokkosComm::Prod, KokkosComm::Min, KokkosComm::Max, KokkosComm::Average>;
 #else
-using RedOpTypes = ::testing::Types<KokkosComm::Sum, KokkosComm::Prod, KokkosComm::Min, KokkosComm::Max,
-                                    KokkosComm::MinLoc, KokkosComm::MaxLoc, KokkosComm::BAnd, KokkosComm::LAnd,
-                                    KokkosComm::BOr, KokkosComm::LOr, KokkosComm::BXor, KokkosComm::LXor>;
+using RedOpTypes = ::testing::Types<
+    KokkosComm::Sum,
+    KokkosComm::Prod,
+    KokkosComm::Min,
+    KokkosComm::Max,
+    KokkosComm::MinLoc,
+    KokkosComm::MaxLoc,
+    KokkosComm::BAnd,
+    KokkosComm::LAnd,
+    KokkosComm::BOr,
+    KokkosComm::LOr,
+    KokkosComm::BXor,
+    KokkosComm::LXor>;
 #endif
 TYPED_TEST_SUITE(ReductionOperatorConversion, RedOpTypes);
 

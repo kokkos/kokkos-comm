@@ -97,7 +97,8 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < nDevices; ++i) {
     CUDA_CHECK(cudaSetDevice(i));
     NCCL_CHECK(
-        ncclAllReduce((const void *)sendbuff[i], (void *)recvbuff[i], size, ncclFloat, ncclSum, comms[i], streams[i]));
+        ncclAllReduce((const void *)sendbuff[i], (void *)recvbuff[i], size, ncclFloat, ncclSum, comms[i], streams[i])
+    );
   }
   NCCL_CHECK(ncclGroupEnd());
 

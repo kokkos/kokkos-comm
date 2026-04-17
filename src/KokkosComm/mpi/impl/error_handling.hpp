@@ -14,8 +14,9 @@ namespace KokkosComm::mpi {
 inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = MPI_COMM_WORLD) -> void {
   if (condition) {
 #ifdef KOKKOSCOMM_ABORT_ON_ERROR
-    std::fprintf(stderr, "error: Kokkos Comm(MPI) failed with `%.*s`\n", static_cast<int>(error_msg.size()),
-                 error_msg.data());
+    std::fprintf(
+        stderr, "error: Kokkos Comm(MPI) failed with `%.*s`\n", static_cast<int>(error_msg.size()), error_msg.data()
+    );
     MPI_Abort(comm, EXIT_FAILURE);
 #else
     Kokkos::abort(error_msg.data());

@@ -41,8 +41,10 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
   } else {
     using RecvScalar = typename RecvView::value_type;
     space.fence("Fence before MPI_Recv");  // prevent work in `space` from writing to recv buffer
-    MPI_Recv(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, RecvScalar>(), src, tag, comm,
-             MPI_STATUS_IGNORE);
+    MPI_Recv(
+        KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, RecvScalar>(), src, tag, comm,
+        MPI_STATUS_IGNORE
+    );
   }
 
   Kokkos::Tools::popRegion();

@@ -29,7 +29,8 @@ void test_alltoall_1d_contig() {
 
   // fill send buffer
   Kokkos::parallel_for(
-      sv.extent(0), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
+      sv.extent(0), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; }
+  );
 
   KokkosComm::mpi::alltoall(Kokkos::DefaultExecutionSpace(), sv, nContrib, rv, nContrib, MPI_COMM_WORLD);
 
@@ -41,7 +42,8 @@ void test_alltoall_1d_contig() {
         const int j   = rank * nContrib + (i % nContrib);  // what index i was at the source
         lsum += rv(i) != src + j;
       },
-      errs);
+      errs
+  );
   EXPECT_EQ(errs, 0);
 }
 
@@ -59,7 +61,8 @@ void test_alltoall_1d_inplace_contig() {
 
   // fill send buffer
   Kokkos::parallel_for(
-      rv.extent(0), KOKKOS_LAMBDA(const int i) { rv(i) = rank + i; });
+      rv.extent(0), KOKKOS_LAMBDA(const int i) { rv(i) = rank + i; }
+  );
 
   KokkosComm::mpi::alltoall(Kokkos::DefaultExecutionSpace(), rv, nContrib, MPI_COMM_WORLD);
 
@@ -71,7 +74,8 @@ void test_alltoall_1d_inplace_contig() {
         const int j   = rank * nContrib + (i % nContrib);  // what index i was at the source
         lsum += rv(i) != src + j;
       },
-      errs);
+      errs
+  );
   EXPECT_EQ(errs, 0);
 }
 

@@ -85,7 +85,8 @@ void test_channel_execspace() {
 
   GTEST_LOG_(INFO) << "Kokkos Execution Space: " << Kokkos::DefaultExecutionSpace::name();
   Kokkos::parallel_for(
-      "init_send_dev", N, KOKKOS_LAMBDA(int i) { send_dev(i) = static_cast<Scalar>(rank * N + i); });
+      "init_send_dev", N, KOKKOS_LAMBDA(int i) { send_dev(i) = static_cast<Scalar>(rank * N + i); }
+  );
   Kokkos::fence();
 
   channel.sendinit(send_dev);
@@ -134,7 +135,8 @@ void test_channel_reuse() {
   int errs = 0;
   for (int i = 0; i < 3; i++) {
     Kokkos::parallel_for(
-        "init_send_dev", N, KOKKOS_LAMBDA(int i) { send_dev(i) = static_cast<Scalar>(rank * N + i); });
+        "init_send_dev", N, KOKKOS_LAMBDA(int i) { send_dev(i) = static_cast<Scalar>(rank * N + i); }
+    );
     Kokkos::fence();
 
     channel.sendinit(send_dev);
