@@ -1,4 +1,4 @@
-#include "KokkosComm.hpp"
+#include <KokkosComm/KokkosComm.hpp>
 #include "test_utils.hpp"
 #include <iostream>
 
