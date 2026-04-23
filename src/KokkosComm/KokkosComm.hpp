@@ -14,8 +14,8 @@
 
 #include "mpi/channel.hpp"
 #include "mpi/comm_mode.hpp"
-#include "mpi/handle.hpp"
-#include "mpi/req.hpp"
+#include "mpi/communicator.hpp"
+#include "mpi/request.hpp"
 
 #include "mpi/irecv.hpp"
 #include "mpi/isend.hpp"
@@ -24,19 +24,26 @@
 
 #include "mpi/broadcast.hpp"
 #include "mpi/allgather.hpp"
-#include "mpi/allreduce.hpp"
 #include "mpi/alltoall.hpp"
+#include "mpi/allreduce.hpp"
 #include "mpi/reduce.hpp"
 #include "mpi/scan.hpp"
 
 #include "mpi/barrier.hpp"
-#elif defined(KOKKOSCOMM_ENABLE_NCCL)
-#include "nccl/nccl_space.hpp"
-
-#include "nccl/handle.hpp"
-#include "nccl/req.hpp"
-#else
-#error at least one communication space must be defined
 #endif
 
-namespace KokkosComm {}  // namespace KokkosComm
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
+#include "nccl/nccl_space.hpp"
+
+#include "nccl/communicator.hpp"
+#include "nccl/request.hpp"
+
+#include "nccl/recv.hpp"
+#include "nccl/send.hpp"
+
+#include "nccl/broadcast.hpp"
+#include "nccl/allgather.hpp"
+#include "nccl/alltoall.hpp"
+#include "nccl/allreduce.hpp"
+#include "nccl/reduce.hpp"
+#endif

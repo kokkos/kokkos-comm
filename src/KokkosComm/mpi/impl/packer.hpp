@@ -3,15 +3,17 @@
 
 #pragma once
 
+#include <string>
+
 #include <mpi.h>
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
 
-// todo: redo this using KokkosComm_contiguous
+#include <KokkosComm/impl/contiguous.hpp>
 
-namespace KokkosComm::Impl {
+namespace KokkosComm::mpi::Impl {
 namespace Packer {
 
 template <KokkosView View>
@@ -24,37 +26,30 @@ struct MpiArgs {
       : view(_view), datatype(_datatype), count(_count) {}
 };
 
-template <KokkosView View>
+template <KokkosView V>
 struct DeepCopy {
-  using non_const_packed_view_type =
-      Kokkos::View<typename View::non_const_data_type, Kokkos::LayoutLeft, typename View::memory_space>;
-  using args_type = MpiArgs<non_const_packed_view_type>;
+  using PackedV = KokkosComm::Impl::contiguous_view_t<V>;
+  using Args    = MpiArgs<PackedV>;
+  using T       = typename PackedV::non_const_value_type;
 
-  using packed_value_type = typename non_const_packed_view_type::value_type;
-
-  template <KokkosExecutionSpace ExecSpace>
-  static args_type allocate_packed_for(const ExecSpace &space, const std::string &label, const View &src) {
-    if constexpr (KokkosComm::rank<View>() == 1) {
-      non_const_packed_view_type packed(Kokkos::view_alloc(space, Kokkos::WithoutInitializing, label), src.extent(0));
-      return args_type(packed, datatype<MpiSpace, packed_value_type>(), KokkosComm::span(packed));
-    } else if constexpr (KokkosComm::rank<View>() == 2) {
-      non_const_packed_view_type packed(Kokkos::view_alloc(space, Kokkos::WithoutInitializing, label), src.extent(0),
-                                        src.extent(1));
-      return args_type(packed, datatype<MpiSpace, packed_value_type>(), KokkosComm::span(packed));
-    } else {
-      static_assert(std::is_void_v<View>, "allocate_packed_for for rank >= 2 views unimplemented");
-    }
+  /// Returns allocated, uninitialized, contiguous view for packing `src`.
+  template <KokkosExecutionSpace ES>
+  static auto allocate_packed_for(const ES &space, const std::string &label, const V &src) -> Args {
+    auto packed = KokkosComm::Impl::allocate_contiguous_for(space, label, src);
+    return Args(packed, datatype<MpiSpace, T>(), span(packed));
   }
 
-  template <KokkosExecutionSpace ExecSpace>
-  static args_type pack(const ExecSpace &space, const View &src) {
-    args_type args = allocate_packed_for(space, "DeepCopy::pack", src);
+  /// Returns packed view from `src`.
+  template <KokkosExecutionSpace ES>
+  static auto pack(const ES &space, const std::string &label, const V &src) -> Args {
+    auto args = allocate_packed_for(space, label, src);
     Kokkos::deep_copy(space, args.view, src);
     return args;
   }
 
-  template <KokkosExecutionSpace ExecSpace>
-  static void unpack_into(const ExecSpace &space, const View &dst, const non_const_packed_view_type &src) {
+  /// Unpacks `src` view into `dst`.
+  template <KokkosExecutionSpace ES>
+  static auto unpack_into(const ES &space, const V &dst, const PackedV &src) -> void {
     Kokkos::deep_copy(space, dst, src);
   }
 };
@@ -74,8 +69,9 @@ struct MpiDatatype {
     MPI_Datatype type = datatype<MpiSpace, ValueType>()();
     for (size_t d = 0; d < KokkosComm::Traits<View>::rank(); ++d) {
       MPI_Datatype newtype;
-      MPI_Type_create_hvector(KCT::extent(src, d) /*count*/, 1 /*block length*/,
-                              KCT::stride(src, d) * sizeof(ValueType), type, &newtype);
+      MPI_Type_create_hvector(
+          KCT::extent(src, d) /*count*/, 1 /*block length*/, KCT::stride(src, d) * sizeof(ValueType), type, &newtype
+      );
       type = newtype;
     }
     MPI_Type_commit(&type);
@@ -90,11 +86,11 @@ struct MpiDatatype {
 
   // unpack is a no-op: rely on MPI's datatype engine
   template <KokkosExecutionSpace ExecSpace>
-  static void unpack_into(const ExecSpace & /*space*/, const View & /*dst*/,
-                          const non_const_packed_view_type & /*src*/) {
+  static void
+  unpack_into(const ExecSpace & /*space*/, const View & /*dst*/, const non_const_packed_view_type & /*src*/) {
     return;
   }
 };
 
 }  // namespace Packer
-}  // namespace KokkosComm::Impl
+}  // namespace KokkosComm::mpi::Impl

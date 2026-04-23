@@ -27,65 +27,67 @@ TYPED_TEST_SUITE(PointToPoint, ScalarTypes);
 
 template <typename Scalar>
 auto p2p_contig_1d() -> void {
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  ExecSpace space(nccl_ctx.stream());
-  KokkosComm::Handle<ExecSpace, CommSpace> h(space, nccl_ctx.comm());
-  int rank = h.rank();
-  int size = h.size();
+  auto nccl_ctx   = test_utils::nccl::Ctx::init();
+  const auto exec = Kokkos::Cuda(nccl_ctx.stream());
+  const auto comm = nccl_ctx.comm();
+  const int size  = nccl_ctx.size();
+  const int rank  = nccl_ctx.rank();
   if (size < 2) {
     GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
   }
   int src = 0;
   int dst = 1;
 
-  Kokkos::View<Scalar *> v("v", 10'000);
+  Kokkos::View<Scalar*> v("v", 10'000);
   if (rank == src) {
     // Prepare send view
     Kokkos::parallel_for(
-        Kokkos::RangePolicy(space, 0, v.extent(0)), KOKKOS_LAMBDA(const int i) { v(i) = i; });
+        Kokkos::RangePolicy(exec, 0, v.extent(0)), KOKKOS_LAMBDA(const int i) { v(i) = i; }
+    );
+
     // Using the same execution space for both operations lets us not need an explicit `fence`
-    auto req = KokkosComm::send(h, v, dst);
-    KokkosComm::wait(req);
+    KokkosComm::Experimental::nccl::send(exec, v, dst, comm).wait();
   } else if (rank == dst) {
-    auto req = KokkosComm::recv(h, v, src);
-    KokkosComm::wait(req);
+    KokkosComm::Experimental::nccl::recv(exec, v, src, comm).wait();
 
     int errs;
     Kokkos::parallel_reduce(
-        v.extent(0), KOKKOS_LAMBDA(const int i, int &lsum) { lsum += v(i) != Scalar(i); }, errs);
+        v.extent(0), KOKKOS_LAMBDA(const int i, int& lsum) { lsum += v(i) != Scalar(i); }, errs
+    );
     ASSERT_EQ(errs, 0);
   }
 }
 
 template <typename Scalar>
 auto p2p_noncontig_1d() -> void {
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  ExecSpace space(nccl_ctx.stream());
-  KokkosComm::Handle<ExecSpace, CommSpace> h(space, nccl_ctx.comm());
-  int rank = h.rank();
-  int size = h.size();
+  auto nccl_ctx   = test_utils::nccl::Ctx::init();
+  const auto exec = Kokkos::Cuda(nccl_ctx.stream());
+  const auto comm = nccl_ctx.comm();
+  const int size  = nccl_ctx.size();
+  const int rank  = nccl_ctx.rank();
   if (size < 2) {
     GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
   }
   int src = 0;
   int dst = 1;
 
-  Kokkos::View<Scalar **, Kokkos::LayoutRight> v("v", 100, 100);
+  Kokkos::View<Scalar**, Kokkos::LayoutRight> v("v", 100, 100);
   auto sv = Kokkos::subview(v, Kokkos::ALL, 2);  // take column 2 (non-contiguous)
   if (rank == src) {
     // Prepare send view
     Kokkos::parallel_for(
-        Kokkos::RangePolicy(space, 0, sv.extent(0)), KOKKOS_LAMBDA(const int i) { sv(i) = i; });
+        Kokkos::RangePolicy(exec, 0, sv.extent(0)), KOKKOS_LAMBDA(const int i) { sv(i) = i; }
+    );
+
     // Using the same execution space for both operations lets us not need an explicit `fence`
-    auto req = KokkosComm::send(h, sv, dst);
-    KokkosComm::wait(req);
+    KokkosComm::Experimental::nccl::send(exec, sv, dst, comm).wait();
   } else if (rank == dst) {
-    auto req = KokkosComm::recv(h, sv, src);
-    KokkosComm::wait(req);
+    KokkosComm::Experimental::nccl::recv(exec, sv, src, comm).wait();
 
     int errs;
     Kokkos::parallel_reduce(
-        sv.extent(0), KOKKOS_LAMBDA(const int i, int &lsum) { lsum += sv(i) != Scalar(i); }, errs);
+        sv.extent(0), KOKKOS_LAMBDA(const int i, int& lsum) { lsum += sv(i) != Scalar(i); }, errs
+    );
     ASSERT_EQ(errs, 0);
   }
 }

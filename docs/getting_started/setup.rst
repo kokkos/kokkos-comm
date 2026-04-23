@@ -2,7 +2,7 @@
 Setup
 *****
 
-This page is intended as a guide to jump start new KokkosComm users.
+This page is intended as a guide to jump start new Kokkos Comm users.
 
 
 System requirements
@@ -31,7 +31,7 @@ System requirements
       - 2+
 
 
-KokkosComm will attempt to support the `same systems and toolchains as Kokkos <https://kokkos.org/kokkos-core-wiki/requirements.html>`_.
+Kokkos Comm will attempt to support the `same systems and toolchains as Kokkos <https://kokkos.org/kokkos-core-wiki/get-started/requirements.html>`_.
 
 
 Installation
@@ -40,13 +40,13 @@ Installation
 Download
 --------
 
-KokkosComm's source code is available on GitHub, which you can obtain using the following command:
+Kokkos Comm's source code is available on GitHub, which you can obtain using the following command:
 
 .. code-block:: console
 
     $ git clone https://github.com/kokkos/kokkos-comm.git
 
-Or using the GitHub CLI tool:
+Or using the GitHub CLI:
 
 .. code-block:: console
 
@@ -55,7 +55,7 @@ Or using the GitHub CLI tool:
 Build
 -----
 
-A basic configure and build of KokkosComm:
+A basic configure and build of Kokkos Comm:
 
 .. code-block:: console
 
@@ -73,7 +73,7 @@ Test
     $ cmake --build <BUILD_DIR>
     $ ctest --test-dir <BUILD_DIR>/unit_tests
 
-For a detailed guide on testing KokkosComm, please refer to the `Testing section <../dev/testing.html>`_.
+For a detailed guide on testing Kokkos Comm, please refer to the `Testing section <../dev/testing.html>`_.
 
 Install
 -------
@@ -86,15 +86,15 @@ Install
 Integration in user applications
 ================================
 
-Similarly to Kokkos, KokkosComm is packaged with a modern CMake build system.
+Similarly to Kokkos, Kokkos Comm is packaged with a modern CMake build system.
 
-Once installed, you can declare KokkosComm as a dependency of your project by adding the following line to your ``CMakeLists.txt``:
+Once installed, you can declare Kokkos Comm as a dependency of your project by adding the following line to your ``CMakeLists.txt``:
 
 .. code-block:: cmake
 
     find_package(KokkosComm REQUIRED)
 
-Then, for every executable or library in your project that depends on KokkosComm:
+Then, for every executable or library in your project that depends on Kokkos Comm:
 
 .. code-block:: cmake
 
@@ -104,11 +104,11 @@ Then, for every executable or library in your project that depends on KokkosComm
 CMake configuration options
 ===========================
 
-This section lists the available options to customize your KokkosComm build/installation.
+This section lists the available options to customize your Kokkos Comm build and/or installation.
 
 .. note: CMake options are set when configuring the project and passed using the syntax ``-D<OPTION>=<VALUE>``.
 
-.. important:: All KokkosComm CMake options are prefixed with ``KokkosComm_``, which is case-sensitive.
+.. important:: All Kokkos Comm CMake options are prefixed with ``KokkosComm_``, which is case-sensitive.
 
 Communication backend selection
 -------------------------------

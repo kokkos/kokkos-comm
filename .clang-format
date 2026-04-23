@@ -4,4 +4,6 @@ SortIncludes: false
 AlignConsecutiveAssignments: true
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: true
+AlignAfterOpenBracket: BlockIndent
+BinPackParameters: false
 ColumnLimit: 120

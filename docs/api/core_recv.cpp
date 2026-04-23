@@ -1,24 +1,22 @@
-#include "KokkosComm/KokkosComm.hpp"
+#include <Kokkos_Core.hpp>
+#include <KokkosComm/KokkosComm.hpp>
 
-// Define the execution space and transport
-using ExecSpace = Kokkos::DefaultExecutionSpace;
-using CommSpace = DefaultCommunicationSpace;
-
-// Source rank
-int src = 1;
-
-// Create a handle
-KokkosComm::Handle<> handle; // Same as Handle<Execspace, CommSpace>
+// Create an execution space instance
+auto exec = Kokkos::DefaultExecutionSpace();
+// Create a communicator
+auto comm = KokkosComm::Communicator<>::duplicate_from_raw(raw_comm_handle, exec).value();
 
 // Allocate a view to receive the data
 Kokkos::View<double*> data("recv_view", 100);
 
+// Source rank
+int src_rank = 1;
+
 // Initiate a non-blocking receive with a handle
-auto req1 = recv(handle, data, src);
+auto req1 = KokkosComm::recv(comm, data, src_rank);
 
-// Initiate a non-blocking receive with a default handle
-auto req2 = recv(data, src);
+// Simulate a blocking receive by waiting immediately
+KokkosComm::recv(comm, data, src_rank).wait();
 
-// Wait for the requests to complete (assuming a wait function exists)
+// Wait for a requests to complete
 KokkosComm::wait(req1);
-KokkosComm::wait(req2);

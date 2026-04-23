@@ -79,7 +79,7 @@ Point-to-point
 
 
 .. cpp:function:: template <CommMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
-                  auto isend(Handle<ExecSpace, Mpi> &h, const SendView &sv, int dest, int tag) -> Req<Mpi>
+                  auto isend(Communicator<MpiSpace, ExecSpace> &h, const SendView &sv, int dest, int tag) -> Request<MpiSpace>
 
     Initiates a non-blocking send operation.
 

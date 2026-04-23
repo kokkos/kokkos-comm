@@ -10,7 +10,8 @@
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
 #include "mpi_space.hpp"
-#include "req.hpp"
+#include "communicator.hpp"
+#include "request.hpp"
 
 #include "impl/error_handling.hpp"
 
@@ -18,7 +19,7 @@ namespace KokkosComm {
 namespace mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView View>
-auto ibroadcast(const ExecSpace& space, View& v, int root, MPI_Comm comm) -> Req<MpiSpace> {
+auto ibroadcast(const ExecSpace& space, View& v, int root, MPI_Comm comm) -> Request<MpiSpace> {
   using T = typename View::non_const_value_type;
   Kokkos::Tools::pushRegion("KokkosComm::mpi::ibroadcast");
   fail_if(!is_contiguous(v), "KokkosComm::mpi::ibroadcast: unimplemented for non-contiguous views");
@@ -26,8 +27,8 @@ auto ibroadcast(const ExecSpace& space, View& v, int root, MPI_Comm comm) -> Req
   // Sync: Work in space may have been used to produce view data.
   space.fence("fence before non-blocking broadcast");
 
-  Req<MpiSpace> req;
-  MPI_Ibcast(data_handle(v), span(v), datatype<MpiSpace, T>, root, comm, &req.mpi_request());
+  Request<MpiSpace> req;
+  MPI_Ibcast(data_handle(v), span(v), datatype_for<MpiSpace>(v), root, comm, req.request_ptr());
   req.extend_view_lifetime(v);
 
   Kokkos::Tools::popRegion();
@@ -62,8 +63,8 @@ namespace Experimental::Impl {
 
 template <KokkosView View, KokkosExecutionSpace ExecSpace>
 struct Broadcast<View, ExecSpace, MpiSpace> {
-  static auto execute(Handle<ExecSpace, MpiSpace>& h, View& v, int root) -> Req<MpiSpace> {
-    return KokkosComm::mpi::ibroadcast(h.space(), v, root, h.comm());
+  static auto execute(Communicator<MpiSpace, ExecSpace>& h, View& v, int root) -> Request<MpiSpace> {
+    return KokkosComm::mpi::ibroadcast(h.exec(), v, root, h.comm());
   }
 };
 

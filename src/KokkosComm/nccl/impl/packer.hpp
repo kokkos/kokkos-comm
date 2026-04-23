@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <string>
+
 #include <Kokkos_Core.hpp>
 #include <nccl.h>
 
@@ -10,7 +12,6 @@
 #include <KokkosComm/traits.hpp>
 
 #include <KokkosComm/impl/contiguous.hpp>
-#include "types.hpp"
 
 namespace KokkosComm::Experimental::nccl::Impl::Packer {
 
@@ -20,26 +21,48 @@ struct PackedNcclView {
   ncclDataType_t datatype_;
   int count_;
 
-  PackedNcclView(const View &view, const ncclDataType_t datatype, const int count)
+  PackedNcclView(const View& view, ncclDataType_t datatype, int count)
       : view_(view), datatype_(datatype), count_(count) {}
 };
 
-template <KokkosView View>
+template <KokkosView V>
 struct DeepCopy {
-  using PackedView = KokkosComm::Impl::contiguous_view_t<View>;
+  using PackedV = KokkosComm::Impl::contiguous_view_t<V>;
+  using T       = typename PackedV::non_const_value_type;
 
-  template <KokkosExecutionSpace ExecSpace>
-  static auto pack(const ExecSpace &space, const View &src) -> PackedNcclView<PackedView> {
-    PackedView packed_src = KokkosComm::Impl::allocate_contiguous_for(space, "DeepCopy::pack", src);
-    // Use `ncclUint8` because there is no equivalent to `MPI_PACKED`.
-    PackedNcclView<PackedView> packed(packed_src, ncclUint8, src.size() * sizeof(typename PackedView::value_type));
-    Kokkos::deep_copy(space, packed.view_, src);
+  /// @brief Allocates an uninitialized, contiguous view for packing `view`.
+  /// @tparam E A Kokkos `ExecutionSpace` type.
+  /// @param exec The execution space in which to perform the allocation operation.
+  /// @param label The label to give to the packed view.
+  /// @param view The view to allocate a packed view for.
+  /// @return An allocated, uninitialized, contiguous view fit for packing `view`.
+  template <KokkosExecutionSpace E>
+  static auto allocate_packed_for(const E& exec, const std::string& label, const V& view) -> PackedNcclView<PackedV> {
+    auto packed = KokkosComm::Impl::allocate_contiguous_for(exec, label, view);
+    return PackedNcclView<PackedV>(packed, datatype<NcclSpace, T>(), span(packed));
+  }
+
+  /// @brief Packs `view` into a contiguous view.
+  /// @tparam E A Kokkos `ExecutionSpace` type.
+  /// @param exec The execution space in which to perform the packing operation.
+  /// @param label The label to give to the packed view.
+  /// @param view The view to pack.
+  /// @return A packed view from `view`.
+  template <KokkosExecutionSpace E>
+  static auto pack(const E& exec, const std::string& label, const V& view) -> PackedNcclView<PackedV> {
+    auto packed = allocate_packed_for(exec, label, view);
+    Kokkos::deep_copy(exec, packed.view_, view);
     return packed;
   }
 
-  template <KokkosExecutionSpace ExecSpace>
-  static auto unpack_into(const ExecSpace &space, View &dst, const PackedView &src) -> void {
-    Kokkos::deep_copy(space, dst, src);
+  /// @brief Unpacks `src` view into `dst`.
+  /// @tparam E A Kokkos `ExecutionSpace` type.
+  /// @param exec The execution space in which to perform the packing operation.
+  /// @param dst The view to unpack into.
+  /// @param src The packed view to unpack from.
+  template <KokkosExecutionSpace E>
+  static auto unpack_into(const E& exec, const V& dst, const PackedV& src) -> void {
+    Kokkos::deep_copy(exec, dst, src);
   }
 };
 

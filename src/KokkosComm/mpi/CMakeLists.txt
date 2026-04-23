@@ -7,8 +7,8 @@ target_sources(
       FILES
         # Objects
         mpi_space.hpp
-        handle.hpp
-        req.hpp
+        communicator.hpp
+        request.hpp
         comm_mode.hpp
         # Point-to-point
         send.hpp

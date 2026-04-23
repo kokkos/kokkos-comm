@@ -2,7 +2,7 @@
 Implementing a ``CommunicationSpace``
 *************************************
 
-`PR #109 <https://github.com/kokkos/kokkos-comm/pulls/109>`_ introduced the concept of multiple communication spaces. A ``CommunicationSpace`` defines what KokkosComm actually does when you call, e.g., ``KokkosComm::send``.
+`PR #109 <https://github.com/kokkos/kokkos-comm/pull/109>`_ introduced the concept of multiple communication spaces. A ``CommunicationSpace`` defines what KokkosComm actually does when you call, e.g., ``KokkosComm::send``.
 
 Your implementation is a struct or class that represents your communication space. Then, you need partial specializations for some associated types (handles, requests, etc.), for each core API functions.
 
@@ -33,8 +33,8 @@ For example, for the MPI communication space, we define the following:
 To let core API functions know that your communication space is something KokkosComm can use to dispatch messages, you also need to declare the ``Impl::is_communication_space`` specialization using the ``CommunicationSpace`` concept.
 
 
-Partial specialization of ``Handle``
-=====================================
+Partial specialization of ``Communicator``
+==========================================
 
 .. attention:: Section in construction...
 
@@ -49,13 +49,13 @@ For example, for the MPI communication space handle, we define the following:
     namespace KokkosComm {
 
     template <KokkosExecutionSpace ExecSpace>
-    class Handle<ExecSpace, Mpi> { /* ... */ };
+    class Communicator<MpiSpace, ExecSpace> { /* ... */ };
 
     } // end KokkosComm
 
 
-Partial specialization of ``Req``
-===================================
+Partial specialization of ``Request``
+=====================================
 
 .. attention:: Section in construction...
 
@@ -69,7 +69,7 @@ For example, for the MPI communication space request, we define the following:
     namespace KokkosComm {
 
     template <>
-    class Req<MpiSpace> { /* ... */ };
+    class Request<MpiSpace> { /* ... */ };
 
     } // end KokkosComm
 
@@ -92,7 +92,7 @@ The core API functions are actually implemented by partial specializations of st
 
 
 In the above, ``CommSpace`` is a type that represents the communication space implementation.
-For example, for the MPI communication space, we create a partial specialization of that struct template (notice fewer template parameters and the use of the ``Mpi`` "tag" struct):
+For example, for the MPI communication space, we create a partial specialization of that struct template (notice fewer template parameters and the use of the ``MpiSpace`` "tag" struct):
 
 .. code-block:: cpp
 
@@ -126,7 +126,7 @@ An asynchronous/non-blocking message send:
 
     template <KokkosView SendView, KokkosExecutionSpace ExecSpace>
     struct Send<SendView, ExecSpace, MyCommSpace> {
-      static auto execute(Handle<ExecSpace, MyCommSpace> &h, const SendView &sv, int dest) -> Req<MyCommSpace> {
+      static auto execute(Communicator<MyCommSpace, ExecSpace> &h, const SendView &sv, int dest) -> Request<MyCommSpace> {
         // actual implementation of `send` with your communication backend
       }
     };
@@ -148,30 +148,8 @@ An asynchronous/non-blocking message receive.
 
     template <KokkosView RecvView, KokkosExecutionSpace ExecSpace>
     struct Recv<RecvView, ExecSpace, MyCommSpace> {
-      static auto execute(Handle<ExecSpace, MyCommSpace> &h, const RecvView &sv, int src) -> Req<MyCommSpace> {
+      static auto execute(Communicator<MyCommSpace, ExecSpace> &h, const RecvView &sv, int src) -> Request<MyCommSpace> {
         // actual implementation of `recv` with your communication backend
-      }
-    };
-
-    } // end KokkosComm::Impl
-
-
-``Barrier`` concept
-^^^^^^^^^^^^^^^^^^^
-
-A global barrier.
-
-.. code-block:: cpp
-
-    #include "KokkosComm/concepts.hpp"
-    #include "my_comm_space.hpp"
-
-    namespace KokkosComm::Impl {
-
-    template <KokkosExecutionSpace ExecSpace>
-    struct Recv<ExecSpace, MyCommSpace> {
-      static auto execute(Handle<ExecSpace, MyCommSpace> &&h) -> Req<MyCommSpace> {
-        // actual implementation of `barrier` with your communication backend
       }
     };
 

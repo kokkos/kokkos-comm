@@ -81,8 +81,8 @@ class Ctx {
 
   auto comm() -> ncclComm_t & { return comm_; }
   cudaStream_t stream() const { return stream_; }
-  auto n_ranks() -> int { return n_ranks_; }
-  auto my_rank() -> int { return my_rank_; }
+  auto size() -> int { return n_ranks_; }
+  auto rank() -> int { return my_rank_; }
 
  private:
   explicit Ctx(ncclComm_t comm, cudaStream_t stream, int dev, int n_ranks, int my_rank)

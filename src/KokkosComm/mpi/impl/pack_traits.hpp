@@ -7,7 +7,7 @@
 #include <KokkosComm/traits.hpp>
 #include "packer.hpp"
 
-namespace KokkosComm {
+namespace KokkosComm::mpi::Impl {
 
 template <typename T>
 struct PackTraits {
@@ -17,7 +17,7 @@ struct PackTraits {
 /*! \brief This can be specialized to do custom behavior for a particular view*/
 template <KokkosView View>
 struct PackTraits<View> {
-  using packer_type = Impl::Packer::DeepCopy<View>;
+  using packer_type = Packer::DeepCopy<View>;
 };
 
-}  // namespace KokkosComm
+}  // namespace KokkosComm::mpi::Impl

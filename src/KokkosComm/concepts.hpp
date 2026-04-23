@@ -30,10 +30,11 @@ template <typename T>
 concept CommunicationSpace = requires {
   KokkosComm::Impl::is_communication_space<T>::value;
   typename T::communication_space;
-  typename T::handle_type;
+  typename T::communicator_type;
   typename T::request_type;
   typename T::datatype_type;
   typename T::reduction_op_type;
+  typename T::size_type;
   typename T::rank_type;
 };
 

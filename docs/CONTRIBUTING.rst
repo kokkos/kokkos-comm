@@ -18,7 +18,7 @@ For a more detailed overview of what is expected of a "good" PR, please refer to
 Pre-commit hooks
 ================
 
-KokkosComm provides a pre-commit configuration to allow contributors to easily check that their changes will pass CI with regards to code formatting, spell-checking, etc.
+Kokkos Comm provides a pre-commit configuration to allow contributors to easily check that their changes will pass CI with regards to code formatting, spell-checking, etc.
 
 To enable it on your machine, run the following commands (or check `the pre-commit docs <https://pre-commit.com/>`):
 
@@ -35,7 +35,7 @@ Then, you can either manually run the pre-commit hooks with:
 
 Or let Git run them automatically when committing.
 
-KokkosComm pre-commits perform the following checks:
+Kokkos Comm pre-commits perform the following checks:
 
 * Correct code formatting in C++ files (using ``clang-format``)
 
@@ -71,7 +71,7 @@ Alternatively, you can use Docker/Podman:
     $ shopt -s globstar
     $ podman run --rm -v ${PWD}:/src ghcr.io/cwpearson/clang-format-14 clang-format -i {src,unit_tests,perf_tests}/**/*.[ch]pp
 
-.. important:: The above command expects ``$PWD`` to be the KokkosComm tree.
+.. important:: The above command expects ``$PWD`` to be the Kokkos Comm tree.
 
 
 Site-Specific Documentation

@@ -5,12 +5,15 @@
 // Copyright (c) 2002-2024 the Network-Based Computing Laboratory
 // (NBCL), The Ohio State University.
 
+#include "KokkosComm/mpi/mpi_space.hpp"
 #include "test_utils.hpp"
 
 #include <KokkosComm/KokkosComm.hpp>
 
 template <typename Space, typename View>
-void osu_latency_Kokkos_Comm_sendrecv(benchmark::State &, MPI_Comm, KokkosComm::Handle<> &h, const View &v) {
+void osu_latency_Kokkos_Comm_sendrecv(
+    benchmark::State &, MPI_Comm, KokkosComm::Communicator<KokkosComm::MpiSpace, Space> &h, const View &v
+) {
   if (h.rank() == 0) {
     KokkosComm::wait(KokkosComm::send(h, v, 1));
   } else if (h.rank() == 1) {
@@ -19,7 +22,9 @@ void osu_latency_Kokkos_Comm_sendrecv(benchmark::State &, MPI_Comm, KokkosComm::
 }
 
 void benchmark_osu_latency_KokkosComm_sendrecv(benchmark::State &state) {
-  KokkosComm::Handle<> h;
+  auto h = KokkosComm::Communicator<KokkosComm::MpiSpace, Kokkos::DefaultExecutionSpace>::from_raw(
+      MPI_COMM_WORLD, Kokkos::DefaultExecutionSpace()
+  );
   if (h.size() != 2) {
     state.SkipWithError("benchmark_osu_latency_KokkosComm needs exactly 2 ranks");
   }
@@ -28,14 +33,15 @@ void benchmark_osu_latency_KokkosComm_sendrecv(benchmark::State &state) {
   view_type a("A", state.range(0));
 
   while (state.KeepRunning()) {
-    do_iteration(state, h.mpi_comm(), osu_latency_Kokkos_Comm_sendrecv<Kokkos::DefaultExecutionSpace, view_type>, h, a);
+    do_iteration(state, h.comm(), osu_latency_Kokkos_Comm_sendrecv<Kokkos::DefaultExecutionSpace, view_type>, h, a);
   }
   state.counters["bytes"] = a.size() * 2;
 }
 
 template <typename Space, typename View>
-void osu_latency_Kokkos_Comm_mpi_sendrecv(benchmark::State &, MPI_Comm comm, const Space &space, int rank,
-                                          const View &v) {
+void osu_latency_Kokkos_Comm_mpi_sendrecv(
+    benchmark::State &, MPI_Comm comm, const Space &space, int rank, const View &v
+) {
   if (rank == 0) {
     KokkosComm::mpi::send(space, v, 1, 0, comm);
   } else if (rank == 1) {
@@ -56,8 +62,10 @@ void benchmark_osu_latency_Kokkos_Comm_mpi_sendrecv(benchmark::State &state) {
   view_type a("A", state.range(0));
 
   while (state.KeepRunning()) {
-    do_iteration(state, MPI_COMM_WORLD, osu_latency_Kokkos_Comm_mpi_sendrecv<Kokkos::DefaultExecutionSpace, view_type>,
-                 space, rank, a);
+    do_iteration(
+        state, MPI_COMM_WORLD, osu_latency_Kokkos_Comm_mpi_sendrecv<Kokkos::DefaultExecutionSpace, view_type>, space,
+        rank, a
+    );
   }
   state.counters["bytes"] = a.size() * 2;
 }
@@ -66,12 +74,16 @@ template <typename View>
 void osu_latency_MPI_isendirecv(benchmark::State &, MPI_Comm comm, int rank, const View &v) {
   MPI_Request sendreq, recvreq;
   if (rank == 0) {
-    MPI_Irecv(v.data(), v.size(), KokkosComm::datatype<KokkosComm::MpiSpace, typename View::value_type>(), 1, 0, comm,
-              &recvreq);
+    MPI_Irecv(
+        v.data(), v.size(), KokkosComm::datatype<KokkosComm::MpiSpace, typename View::value_type>(), 1, 0, comm,
+        &recvreq
+    );
     MPI_Wait(&recvreq, MPI_STATUS_IGNORE);
   } else if (rank == 1) {
-    MPI_Isend(v.data(), v.size(), KokkosComm::datatype<KokkosComm::MpiSpace, typename View::value_type>(), 0, 0, comm,
-              &sendreq);
+    MPI_Isend(
+        v.data(), v.size(), KokkosComm::datatype<KokkosComm::MpiSpace, typename View::value_type>(), 0, 0, comm,
+        &sendreq
+    );
     MPI_Wait(&sendreq, MPI_STATUS_IGNORE);
   }
 }
@@ -96,8 +108,10 @@ void benchmark_osu_latency_MPI_isendirecv(benchmark::State &state) {
 template <typename View>
 void osu_latency_MPI_sendrecv(benchmark::State &, MPI_Comm comm, int rank, const View &v) {
   if (rank == 0) {
-    MPI_Recv(v.data(), v.size(), KokkosComm::datatype<KokkosComm::MpiSpace, typename View::value_type>(), 1, 0, comm,
-             MPI_STATUS_IGNORE);
+    MPI_Recv(
+        v.data(), v.size(), KokkosComm::datatype<KokkosComm::MpiSpace, typename View::value_type>(), 1, 0, comm,
+        MPI_STATUS_IGNORE
+    );
   } else if (rank == 1) {
     MPI_Send(v.data(), v.size(), KokkosComm::datatype<KokkosComm::MpiSpace, typename View::value_type>(), 0, 0, comm);
   }

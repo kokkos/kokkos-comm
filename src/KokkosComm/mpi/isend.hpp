@@ -9,8 +9,9 @@
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
 #include "mpi_space.hpp"
+#include "communicator.hpp"
+#include "request.hpp"
 #include "comm_mode.hpp"
-#include "handle.hpp"
 
 #include "impl/pack_traits.hpp"
 #include "impl/tags.hpp"
@@ -20,9 +21,9 @@ namespace KokkosComm {
 namespace Impl {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, mpi::CommunicationMode SendMode>
-Req<MpiSpace> isend_impl(Handle<ExecSpace, MpiSpace> &h, const SendView &sv, int dest, int tag, SendMode) {
-  auto mpi_isend_fn = [](void *mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
-                         MPI_Comm mpi_comm, MPI_Request *mpi_req) {
+Request<MpiSpace> isend_impl(Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag, SendMode) {
+  auto mpi_isend_fn = [](void* mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
+                         MPI_Comm mpi_comm, MPI_Request* mpi_req) {
     if constexpr (std::is_same_v<SendMode, mpi::CommModeStandard>) {
       MPI_Isend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
     } else if constexpr (std::is_same_v<SendMode, mpi::CommModeReady>) {
@@ -34,19 +35,20 @@ Req<MpiSpace> isend_impl(Handle<ExecSpace, MpiSpace> &h, const SendView &sv, int
     }
   };
 
-  Req<MpiSpace> req;
+  Request<MpiSpace> req;
   if (KokkosComm::is_contiguous(sv)) {
-    h.space().fence("fence before isend");
-    mpi_isend_fn(KokkosComm::data_handle(sv), KokkosComm::span(sv), datatype<MpiSpace, typename SendView::value_type>(),
-                 dest, tag, h.mpi_comm(), &req.mpi_request());
+    h.exec().fence("fence before isend");
+    mpi_isend_fn(
+        KokkosComm::data_handle(sv), KokkosComm::span(sv), datatype<MpiSpace, typename SendView::value_type>(), dest,
+        tag, h.comm(), req.request_ptr()
+    );
     req.extend_view_lifetime(sv);
   } else {
-    using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
-    using Args   = typename Packer::args_type;
+    using Packer = typename mpi::Impl::PackTraits<SendView>::packer_type;
 
-    Args args = Packer::pack(h.space(), sv);
-    h.space().fence("fence before isend");
-    mpi_isend_fn(args.view.data(), args.count, args.datatype, dest, tag, h.mpi_comm(), &req.mpi_request());
+    auto args = Packer::pack(h.exec(), "pkd_sv", sv);
+    h.exec().fence("fence before isend");
+    mpi_isend_fn(args.view.data(), args.count, args.datatype, dest, tag, h.comm(), req.request_ptr());
     req.extend_view_lifetime(args.view);
     req.extend_view_lifetime(sv);
   }
@@ -56,7 +58,7 @@ Req<MpiSpace> isend_impl(Handle<ExecSpace, MpiSpace> &h, const SendView &sv, int
 // Implementation of KokkosComm::Send
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
 struct Send<SendView, ExecSpace, MpiSpace> {
-  static Req<MpiSpace> execute(Handle<ExecSpace, MpiSpace> &h, const SendView &sv, int dest) {
+  static Request<MpiSpace> execute(Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest) {
     return isend_impl<ExecSpace, SendView>(h, sv, dest, POINTTOPOINT_TAG, mpi::DefaultCommMode{});
   }
 };
@@ -65,17 +67,17 @@ struct Send<SendView, ExecSpace, MpiSpace> {
 namespace mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode SendMode>
-Req<MpiSpace> isend(Handle<ExecSpace, MpiSpace> &h, const SendView &sv, int dest, int tag, SendMode) {
+Request<MpiSpace> isend(Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag, SendMode) {
   return KokkosComm::Impl::isend_impl<ExecSpace, SendView>(h, sv, dest, tag, SendMode{});
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
-Req<MpiSpace> isend(Handle<ExecSpace, MpiSpace> &h, const SendView &sv, int dest, int tag) {
+Request<MpiSpace> isend(Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag) {
   return isend<ExecSpace, SendView>(h, sv, dest, tag, DefaultCommMode{});
 }
 
 template <KokkosView SendView>
-void isend(const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Request &req) {
+void isend(const SendView& sv, int dest, int tag, MPI_Comm comm, MPI_Request& req) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
 
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(sv), "only contiguous views supported for low-level isend");

@@ -11,6 +11,9 @@
 
 namespace {
 
+using Ex = Kokkos::DefaultExecutionSpace;
+using Co = KokkosComm::DefaultCommunicationSpace;
+
 template <typename T>
 class AllGather : public testing::Test {
  public:
@@ -27,44 +30,46 @@ TYPED_TEST_SUITE(AllGather, ScalarTypes);
 template <typename Scalar>
 auto allgather_0d() -> void {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  using ExecSpace = Kokkos::Cuda;
-  auto nccl_ctx   = test_utils::nccl::Ctx::init();
-  KokkosComm::Handle<ExecSpace, KokkosComm::Nccl> h(ExecSpace(), nccl_ctx.comm());
+  auto nccl_ctx = test_utils::nccl::Ctx::init();
+  auto raw_comm = nccl_ctx.comm();
 #else
-  using ExecSpace = Kokkos::DefaultExecutionSpace;
-  KokkosComm::Handle<Kokkos::DefaultExecutionSpace, KokkosComm::Mpi> h{};
+  auto raw_comm = MPI_COMM_WORLD;
 #endif
-  int rank = h.rank();
-  int size = h.size();
+  auto exec      = Ex();
+  auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
+  const int size = comm.size();
+  const int rank = comm.rank();
 
   Kokkos::View<Scalar> sv("sv");
   Kokkos::View<Scalar *> rv("rv", size);
 
   // Prepare send view, 1 element per sender: their rank
   Kokkos::parallel_for(
-      Kokkos::RangePolicy(ExecSpace(), 0, sv.extent(0)), KOKKOS_LAMBDA(const int) { sv() = rank; });
-  // Using the same execution space for both operations lets us not need an explicit `fence`
-  auto req = KokkosComm::Experimental::allgather(h, sv, rv);
-  KokkosComm::wait(req);
+      Kokkos::RangePolicy(exec, 0, sv.extent(0)), KOKKOS_LAMBDA(const int) { sv() = rank; }
+  );
+  exec.fence();
+
+  KokkosComm::Experimental::allgather(comm, sv, rv).wait();
 
   int errs;
   Kokkos::parallel_reduce(
-      rv.extent(0), KOKKOS_LAMBDA(const int src, int &lsum) { lsum += rv(src) != src; }, errs);
+      rv.extent(0), KOKKOS_LAMBDA(const int src, int &lsum) { lsum += rv(src) != src; }, errs
+  );
   EXPECT_EQ(errs, 0);
 }
 
 template <typename Scalar>
 auto allgather_contig_1d() -> void {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  using ExecSpace = Kokkos::Cuda;
-  auto nccl_ctx   = test_utils::nccl::Ctx::init();
-  KokkosComm::Handle<ExecSpace, KokkosComm::Nccl> h(ExecSpace(), nccl_ctx.comm());
+  auto nccl_ctx = test_utils::nccl::Ctx::init();
+  auto raw_comm = nccl_ctx.comm();
 #else
-  using ExecSpace = Kokkos::DefaultExecutionSpace;
-  KokkosComm::Handle<Kokkos::DefaultExecutionSpace, KokkosComm::Mpi> h{};
+  auto raw_comm = MPI_COMM_WORLD;
 #endif
-  int rank = h.rank();
-  int size = h.size();
+  auto exec      = Ex();
+  auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
+  const int size = comm.size();
+  const int rank = comm.rank();
 
   const int n_contrib = 100;
   Kokkos::View<Scalar *> sv("sv", n_contrib);
@@ -72,10 +77,11 @@ auto allgather_contig_1d() -> void {
 
   // Prepare send view
   Kokkos::parallel_for(
-      Kokkos::RangePolicy(ExecSpace(), 0, sv.extent(0)), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; });
-  // Using the same execution space for both operations lets us not need an explicit `fence`
-  auto req = KokkosComm::Experimental::allgather(h, sv, rv);
-  KokkosComm::wait(req);
+      Kokkos::RangePolicy(exec, 0, sv.extent(0)), KOKKOS_LAMBDA(const int i) { sv(i) = rank + i; }
+  );
+  exec.fence();
+
+  KokkosComm::Experimental::allgather(comm, sv, rv).wait();
 
   int errs;
   Kokkos::parallel_reduce(
@@ -85,7 +91,8 @@ auto allgather_contig_1d() -> void {
         const int j   = i % n_contrib;
         lsum += rv(i) != src + j;
       },
-      errs);
+      errs
+  );
   EXPECT_EQ(errs, 0);
 }
 

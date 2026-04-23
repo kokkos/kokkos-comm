@@ -45,8 +45,10 @@ MPI_Datatype view_mpi_type(const View &view) {
   // the last dimension specially under certain circumstances?
   for (size_t d = 0; d < KokkosComm::rank<View>(); ++d) {
     MPI_Datatype newtype;
-    MPI_Type_create_hvector(KokkosComm::extent(view, d) /*count*/, 1 /*block length*/,
-                            KokkosComm::stride(view, d) * sizeof(value_type), type, &newtype);
+    MPI_Type_create_hvector(
+        KokkosComm::extent(view, d) /*count*/, 1 /*block length*/, KokkosComm::stride(view, d) * sizeof(value_type),
+        type, &newtype
+    );
     type = newtype;
   }
   MPI_Type_commit(&type);

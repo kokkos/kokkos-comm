@@ -7,8 +7,8 @@ target_sources(
       FILES
         # Objects
         nccl_space.hpp
-        handle.hpp
-        req.hpp
+        communicator.hpp
+        request.hpp
         # Point-to-point
         send.hpp
         recv.hpp
@@ -19,7 +19,9 @@ target_sources(
         allreduce.hpp
         reduce.hpp
     # Implementation detail NCCL headers
-    FILE_SET HEADERS BASE_DIRS ${PROJECT_SOURCE_DIR}/src FILES impl/pack_traits.hpp impl/packer.hpp impl/types.hpp
+    FILE_SET HEADERS
+      BASE_DIRS ${PROJECT_SOURCE_DIR}/src
+      FILES impl/pack_traits.hpp impl/packer.hpp impl/error_handling.hpp
 )
 
 target_link_libraries(KokkosComm INTERFACE NCCL::NCCL)

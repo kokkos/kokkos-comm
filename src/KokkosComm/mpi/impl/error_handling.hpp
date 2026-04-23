@@ -3,18 +3,23 @@
 
 #pragma once
 
-#include <iostream>
+#include <cstdio>
+#include <string_view>
+
 #include <mpi.h>
+#include <Kokkos_Core.hpp>
 
 namespace KokkosComm::mpi {
 
-inline void fail_if(bool condition, const char* error_msg) {
+inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = MPI_COMM_WORLD) -> void {
   if (condition) {
 #ifdef KOKKOSCOMM_ABORT_ON_ERROR
-    std::cerr << error_msg << std::endl;
-    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    std::fprintf(
+        stderr, "error: Kokkos Comm(MPI) failed with `%.*s`\n", static_cast<int>(error_msg.size()), error_msg.data()
+    );
+    MPI_Abort(comm, EXIT_FAILURE);
 #else
-    Kokkos::abort(error_msg);
+    Kokkos::abort(error_msg.data());
 #endif
   }
 }

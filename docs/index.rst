@@ -1,16 +1,16 @@
-*******************************************************************
-KokkosComm: Communication layer for distributed Kokkos applications
-*******************************************************************
+***********
+Kokkos Comm
+***********
 
-KokkosComm provides experimental MPI interfaces (and more!) for the Kokkos C++ Performance Portability Programming ecosystem.
+Kokkos Comm provides experimental explicit communication interfaces for distributed applications using the Kokkos C++ Performance Portability Programming ecosystem.
 
-.. warning:: This is a work in progress and is not yet ready for general use.
+.. warning:: This is a work in progress and is not yet ready for production use.
 
 
 Questions?
 ==========
 
-Find us on `Slack <https://kokkosteam.slack.com>`_ (``mpi-interop`` channel) or open an issue on `GitHub <https://github.com/kokkos/kokkos-comm/issues>`_.
+Reach us on the `Kokkos Slack <https://kokkosteam.slack.com>`_ (``mpi-interop`` channel), open a discussion or file an issue on the `GitHub repository <https://github.com/kokkos/kokkos-comm/issues>`_.
 
 
 Documentation Content
@@ -35,9 +35,10 @@ Documentation Content
    :maxdepth: 1
    :caption: API Reference
 
-   api/core
+   api/concepts
    api/traits
    api/packing
+   api/core
    api/mpi
 
 .. toctree::
@@ -51,9 +52,7 @@ Documentation Content
    dev/docs
 
 
-Indices and tables
-==================
+Index
+=====
 
 * :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

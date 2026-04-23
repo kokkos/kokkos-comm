@@ -11,6 +11,9 @@
 
 namespace {
 
+using Ex = Kokkos::DefaultExecutionSpace;
+using Co = KokkosComm::DefaultCommunicationSpace;
+
 template <typename T>
 class AllToAll : public testing::Test {
  public:
@@ -27,17 +30,15 @@ TYPED_TEST_SUITE(AllToAll, ScalarTypes);
 template <typename Scalar>
 auto alltoall_contig_1d() -> void {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  using ExecSpace = Kokkos::Cuda;
-  auto nccl_ctx   = test_utils::nccl::Ctx::init();
-  auto space      = ExecSpace();
-  KokkosComm::Handle<ExecSpace, KokkosComm::Experimental::NcclSpace> h(space, nccl_ctx.comm());
+  auto nccl_ctx = test_utils::nccl::Ctx::init();
+  auto raw_comm = nccl_ctx.comm();
 #else
-  using ExecSpace = Kokkos::DefaultExecutionSpace;
-  auto space      = ExecSpace();
-  KokkosComm::Handle<ExecSpace, KokkosComm::MpiSpace> h(space, MPI_COMM_WORLD);
+  auto raw_comm = MPI_COMM_WORLD;
 #endif
-  int rank = h.rank();
-  int size = h.size();
+  auto exec      = Ex();
+  auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
+  const int size = comm.size();
+  const int rank = comm.rank();
 
   int n_contrib = 100;
   Kokkos::View<Scalar *> sv("sv", size * n_contrib);
@@ -45,12 +46,12 @@ auto alltoall_contig_1d() -> void {
 
   // Prepare send view
   Kokkos::parallel_for(
-      Kokkos::RangePolicy(space, 0, sv.extent(0)), KOKKOS_LAMBDA(int i) { sv(i) = rank + i; });
-  space.fence();
+      Kokkos::RangePolicy(exec, 0, sv.extent(0)), KOKKOS_LAMBDA(int i) { sv(i) = rank + i; }
+  );
+  exec.fence();
 
   // Perform all-to-all operation
-  auto req = KokkosComm::Experimental::alltoall(h, sv, rv, n_contrib);
-  KokkosComm::wait(req);
+  KokkosComm::Experimental::alltoall(comm, sv, rv, n_contrib).wait();
 
   int errs;
   Kokkos::parallel_reduce(
@@ -60,7 +61,8 @@ auto alltoall_contig_1d() -> void {
         const int j   = rank * n_contrib + (i % n_contrib);  // what index i was at the source
         lsum += rv(i) != src + j;
       },
-      errs);
+      errs
+  );
   EXPECT_EQ(errs, 0);
 }
 

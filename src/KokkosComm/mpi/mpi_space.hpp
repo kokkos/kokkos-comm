@@ -14,10 +14,11 @@ namespace KokkosComm {
 /// The MPI communication space.
 struct MpiSpace {
   using communication_space = MpiSpace;
-  using handle_type         = MPI_Comm;
+  using communicator_type   = MPI_Comm;
   using request_type        = MPI_Request;
   using datatype_type       = MPI_Datatype;
   using reduction_op_type   = MPI_Op;
+  using size_type           = int;
   using rank_type           = int;
 };
 

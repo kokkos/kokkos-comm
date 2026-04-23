@@ -138,23 +138,43 @@ constexpr auto nccl_datatype() -> ncclDataType_t {
 
 }  // namespace Impl
 
-template <CommunicationSpace CS, typename T>
-[[nodiscard]] constexpr auto datatype() -> typename CS::datatype_type {
-  if constexpr (std::is_same_v<CS, MpiSpace>) {
+/// @brief Converts a C++-native data type to its communication space equivalent representation.
+///
+/// When `C` is:
+/// - `MpiSpace`, returns the corresponding `MPI_Datatype` type.
+/// - `NcclSpace`, returns the corresponding `ncclDataType_t` type.
+///
+/// Non-system data types (i.e. the data types not natively supported by `C`) are not convertible. This notably
+/// includes user-defined types.
+///
+/// @tparam C The target communication space backend to use for data type conversion.
+/// @tparam T The C++-native data type to convert.
+/// @returns The communication space representation of the C++-native data type.
+template <CommunicationSpace C, typename T>
+[[nodiscard]] constexpr auto datatype() -> typename C::datatype_type {
+  if constexpr (std::is_same_v<C, MpiSpace>) {
     return Impl::mpi_datatype<std::remove_cv_t<T>>();
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  } else if constexpr (std::is_same_v<CS, Experimental::NcclSpace>) {
+  } else if constexpr (std::is_same_v<C, Experimental::NcclSpace>) {
     return Impl::nccl_datatype<std::remove_cv_t<T>>();
 #endif
   } else {
-    static_assert(std::is_void_v<CS>, "KokkosComm::datatype: conversion not implemented for this communication space");
+    static_assert(std::is_void_v<C>, "KokkosComm::datatype: conversion not implemented for this communication space");
     return Impl::mpi_datatype<std::remove_cv_t<T>>();  // unreachable
   }
 }
 
-template <CommunicationSpace CS, typename T>
-[[nodiscard]] constexpr auto datatype_for(T&&) -> typename CS::datatype_type {
-  return datatype<CS, std::remove_cvref_t<T>>();
+/// @returns The communication space representation of the Kokkos View value type.
+template <CommunicationSpace C, KokkosView V>
+[[nodiscard]] constexpr auto datatype_for([[maybe_unused]] const V& view) -> typename C::datatype_type {
+  return datatype<C, std::remove_cvref_t<typename V::value_type>>();
+}
+
+/// @returns The communication space representation of the Kokkos View value type.
+template <CommunicationSpace C, KokkosView V>
+[[nodiscard]] constexpr auto datatype_for([[maybe_unused]] C&& comm, [[maybe_unused]] const V& view) ->
+    typename C::datatype_type {
+  return datatype<C, std::remove_cvref_t<typename V::value_type>>();
 }
 
 }  // namespace KokkosComm
