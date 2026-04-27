@@ -3,12 +3,15 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include "mpi_space.hpp"
 
 namespace KokkosComm::mpi {
 
@@ -16,11 +19,10 @@ template <KokkosView SendView, KokkosView RecvView>
 void inclusive_scan(SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::inclusive_scan");
 
-  using SendScalar = typename SendView::value_type;
-  using RecvScalar = typename RecvView::value_type;
+  using SendScalar = typename SendView::non_const_value_type;
+  using RecvScalar = typename RecvView::non_const_value_type;
   static_assert(
-      std::is_same_v<std::remove_cv_t<SendScalar>, std::remove_cv_t<RecvScalar> >,
-      "Send and receive views have different value types"
+      std::is_same_v<SendScalar, RecvScalar>, "KokkosComm::mpi::inclusive_scan: View value types must be identical"
   );
 
   static_assert(KokkosComm::rank<SendView>() <= 1, "inclusive_scan for SendView::rank > 1 not supported");
@@ -45,12 +47,28 @@ template <KokkosView SendView, KokkosView RecvView>
 void exclusive_scan(SendView const &sv, RecvView const &rv, MPI_Op op, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::exclusive_scan");
 
-  using SendScalar = typename SendView::value_type;
-  using RecvScalar = typename RecvView::value_type;
+  using SendScalar = typename SendView::non_const_value_type;
+  using RecvScalar = typename RecvView::non_const_value_type;
   static_assert(
-      std::is_same_v<std::remove_cv_t<SendScalar>, std::remove_cv_t<RecvScalar> >,
-      "Send and receive views have different value types"
+      std::is_same_v<SendScalar, RecvScalar>, "KokkosComm::mpi::inclusive_scan: View value types must be identical"
   );
+  // FIXME_EXTERNAL #204, #226
+#if defined(KOKKOSCOMM_IMPL_MPI_IS_MPICH) && (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP))
+  // Unsupported if running MPICH and Views are in CUDA or HIP execution spaces
+  // And that their value type is one of: `double`, `complex<float>`, `complex<double>`
+  if constexpr (std::is_same_v<SendScalar, double> or std::is_same_v<SendScalar, Kokkos::complex<float>> or std::is_same_v<SendScalar, Kokkos::complex<double>>) {
+    static_assert(
+#if defined(KOKKOS_ENABLE_CUDA)
+        not std::is_same_v<typename SendView::execution_space, Kokkos::Cuda> and
+            not std::is_same_v<typename RecvView::execution_space, Kokkos::Cuda>,
+#elif defined(KOKKOS_ENABLE_HIP)
+        not std::is_same_v<typename SendView::execution_space, Kokkos::HIP> and
+            not std::is_same_v<typename RecvView::execution_space, Kokkos::HIP>,
+#endif
+        "KokkosComm::mpi::exclusive_scan: Unsupported with MPICH + Kokkos CUDA/HIP backend"
+    );
+  }
+#endif
 
   static_assert(KokkosComm::rank<SendView>() <= 1, "exclusive_scan for SendView::rank > 1 not supported");
   static_assert(KokkosComm::rank<RecvView>() <= 1, "exclusive_scan for RecvView::rank > 1 not supported");
