@@ -102,6 +102,8 @@ class Request<Experimental::NcclSpace> {
 
     // FIXME: Do something smarter with `err` for better error reporting
     nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait: request completion failed");
+    // unreachable
+    return false;
   }
 
  private:
