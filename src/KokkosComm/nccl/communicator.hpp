@@ -59,7 +59,6 @@ class Communicator<Experimental::NcclSpace, Kokkos::Cuda> {
   [[nodiscard]] static auto duplicate_from_raw(
       const communicator_type comm, const execution_space& exec = execution_space{}
   ) noexcept -> std::optional<Communicator<communication_space, execution_space>> {
-    communicator_type new_comm;
     int rank;
     ncclCommUserRank(comm, &rank);
     return Communicator::split_from_raw(comm, 0, rank, exec);
