@@ -33,12 +33,12 @@ auto recv(const ExecSpace& space, RecvView& rv, int peer, ncclComm_t comm) -> Re
     KC_NCCL_CHECK(
         ncclRecv(data_handle(pckd_rv.view_), pckd_rv.count_, pckd_rv.datatype_, peer, comm, space.cuda_stream())
     );
-    req.capture_stream_state(space.cuda_stream());
     req.add_callback([space, rv, pckd_rv]() {
       Packer::unpack_into(space, rv, pckd_rv.view_);
       space.fence("fence `pckd_rv` unpacking after NCCL call");
     });
   }
+  req.capture_stream_state(space.cuda_stream());
   req.extend_view_lifetime(rv);
 
   Kokkos::Tools::popRegion();
