@@ -194,6 +194,6 @@ inline auto wait_any(std::span<Request<Experimental::NcclSpace>> requests)
 
 /// @brief Queries the request for completion of the associated operation.
 /// @param request A reference on the request to query its completion.
-inline auto test(Request<Experimental::NcclSpace>& request) -> bool { request.test(); }
+inline auto test(Request<Experimental::NcclSpace>& request) -> bool { return request.test(); }
 
 }  // namespace KokkosComm
