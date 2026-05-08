@@ -127,7 +127,7 @@ template <typename Scalar>
 void run_test() {
   int offset = 128;
   for (size_t _ : {0, 1, 2}) {  // run a few times
-    for (size_t n : {113, 16, 8, 4, 2, 1}) {
+    for (size_t n : {1000, 113, 16, 8, 4, 2, 1}) {
       MPI_Barrier(MPI_COMM_WORLD);
       run_test<Scalar>(n, offset);
       MPI_Barrier(MPI_COMM_WORLD);
