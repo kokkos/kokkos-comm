@@ -18,7 +18,7 @@ target_sources(
     FILE_SET HEADERS BASE_DIRS ${PROJECT_SOURCE_DIR}/src FILES impl/contiguous.hpp
     # Configuration header
     FILE_SET HEADERS BASE_DIRS ${CMAKE_BINARY_DIR}/src FILES ${CMAKE_BINARY_DIR}/src/KokkosComm/config.hpp
-)
+  )
 
 # Kokkos Comm is built on the ISO C++20 standard
 target_compile_features(KokkosComm INTERFACE cxx_std_20)
@@ -31,4 +31,8 @@ if(KokkosComm_ENABLE_MPI)
 endif()
 if(KokkosComm_ENABLE_NCCL)
   add_subdirectory(nccl)
+endif()
+if(KokkosComm_ENABLE_STREAMCOMM)
+  #target_link_libraries(KokkosComm INTERFACE MPIAdvance::stream-triggering)
+  add_subdirectory(stream-triggering)
 endif()

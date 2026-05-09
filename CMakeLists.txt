@@ -46,6 +46,15 @@ if(KokkosComm_ENABLE_NCCL)
   list(APPEND KOKKOSCOMM_ENABLED_BACKENDS "NCCL")
 endif()
 
+# Find and enable stream triggering
+option(KokkosComm_ENABLE_MPI_ADVANCE "Support MPI Advance backends." OFF)
+option(KokkosComm_ENABLE_STREAMCOMM "Support Stream-Triggered Communication." OFF)
+# find MPI ADVANCE Stream Triggering
+if(KokkosComm_ENABLE_MPI_ADVANCE)
+  find_package(stream-triggering REQUIRED)
+endif()
+set(KokkosComm_ENABLE_STREAMCOMM KokkosComm_ENABLE_STREAMCOMM_FOUND)
+
 if(NOT KOKKOSCOMM_ENABLED_BACKENDS)
   message(FATAL_ERROR "No Kokkos Comm backends enabled! Enable at least one of: MPI, NCCL")
 else()
@@ -55,6 +64,7 @@ endif()
 
 # --- LIBRARY --- #
 add_library(KokkosComm INTERFACE)
+
 add_subdirectory(src/KokkosComm)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
 
