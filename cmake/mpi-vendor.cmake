@@ -4,7 +4,7 @@
 
 function(kokkoscomm_set_mpi_vendor_variables)
   # Initialize the variables to false
-  set(KOKKOSCOMM_IMPL_MPI_IS_MPICH FALSE CACHE BOOL "MPI is MPICH")
+  set(KOKKOSCOMM_IMPL_MPI_IS_MPICH TRUE CACHE BOOL "MPI is MPICH")
   set(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI FALSE CACHE BOOL "MPI is Open MPI")
 
   if(KokkosComm_ENABLE_MPI)

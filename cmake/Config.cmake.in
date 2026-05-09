@@ -28,4 +28,7 @@ if(KOKKOSCOMM_ENABLE_NCCL AND NOT TARGET NCCL::NCCL)
   find_dependency(NCCL REQUIRED)
 endif()
 
+// TODO  adding if(KOKKOSCOMM_ENABLE_STREAM)
+find_dependency(stream-triggering REQUIRED)
+
 include("${CMAKE_CURRENT_LIST_DIR}/KokkosCommTargets.cmake")

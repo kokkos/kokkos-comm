@@ -27,6 +27,7 @@ set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(benchmark)
 
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
 include(kc-test)
 
@@ -36,3 +37,13 @@ if(KokkosComm_ENABLE_MPI)
   kc_add_perf_test(bench.mpi.2d_halo MPI NUM_PES 2 FILES bench_main.cpp mpi/test_2d_halo.cpp LIBRARIES KokkosComm::KokkosComm)
   kc_add_perf_test(bench.mpi.osu_latency MPI NUM_PES 2 FILES bench_main.cpp mpi/test_osu_latency.cpp LIBRARIES KokkosComm::KokkosComm)
 endif()
+
+# Find and enable stream triggering
+option(KokkosComm_ENABLE_MPI_ADVANCE "Support MPI Advance backends." ON)
+option(KokkosComm_ENABLE_STREAMCOMM "Support Stream-Triggered Communication." ON)
+# find MPI ADVANCE Stream Triggering
+if(KokkosComm_ENABLE_MPI_ADVANCE)
+  find_package(stream-triggering REQUIRED)
+endif()
+set(KokkosComm_ENABLE_STREAMCOMM KokkosComm_ENABLE_STREAMCOMM_FOUND)
+
