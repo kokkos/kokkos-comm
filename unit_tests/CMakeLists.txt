@@ -79,17 +79,7 @@ if(KokkosComm_ENABLE_MPI)
   if(Kokkos_ENABLE_HIP)
     find_package(hip REQUIRED)
     kc_add_unit_test(smoke.mpi.hip-p2p MPI NUM_PES 2 FILES mpi/test_mpi_hip_sendrecv.cpp OPTIONS -xhip LIBRARIES hip::host)
-  endif()
-
-  # Find and enable stream triggering
-  option(KokkosComm_ENABLE_MPI_ADVANCE "Support MPI Advance backends." ON)
-  option(KokkosComm_ENABLE_STREAMCOMM "Support Stream-Triggered Communication." ON)
-  # find MPI ADVANCE Stream Triggering
-  if(KokkosComm_ENABLE_MPI_ADVANCE)
-    find_package(stream-triggering REQUIRED)
-  endif()
-  set(KokkosComm_ENABLE_STREAMCOMM KokkosComm_ENABLE_STREAMCOMM_FOUND)
-
+  endif()  
 
   # Make sure GTest is working
   kc_add_unit_test(
@@ -226,5 +216,17 @@ if(KokkosComm_ENABLE_NCCL)
     NUM_PES 2
     FILES test_main.cpp nccl/test_reduce.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
+  )
+endif()
+
+# --- MPI Advance stream triggering backend unit tests --- #
+if(KokkosComm_ENABLE_MPI_ADVANCE)
+  #  find_package(stream-triggering) # REQUIRED)
+  kc_add_unit_test(
+      test.stream.send-recv
+      stream-triggering
+      NUM_PES 2
+      FILES test_main.cpp stream-triggering/test_sendrecv.cpp
+      LIBRARIES KokkosComm::KokkosComm MPIAdvance::stream-triggering
   )
 endif()

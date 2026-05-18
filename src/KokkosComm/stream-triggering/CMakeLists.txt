@@ -32,4 +32,4 @@ target_sources(
 )
 
 #target_link_libraries(KokkosComm INTERFACE MPI::MPI_CXX)
-#target_link_libraries(KokkosComm INTERFACE MPIAdvance::stream-triggering)
+target_link_libraries(KokkosComm INTERFACE MPIAdvance::stream-triggering)

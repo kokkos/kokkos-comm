@@ -29,7 +29,7 @@ message(STATUS "Kokkos Comm version: ${CMAKE_PROJECT_VERSION}")
 set(KOKKOSCOMM_ENABLED_BACKENDS "")
 
 # --- DEPENDENCIES --- #
-find_package(Kokkos 4.7.0 REQUIRED)
+find_package(Kokkos 4.6.0 REQUIRED)
 
 if(KokkosComm_ENABLE_MPI)
   find_package(MPI 3.0.0 REQUIRED)
@@ -47,13 +47,21 @@ if(KokkosComm_ENABLE_NCCL)
 endif()
 
 # Find and enable stream triggering
-option(KokkosComm_ENABLE_MPI_ADVANCE "Support MPI Advance backends." OFF)
-option(KokkosComm_ENABLE_STREAMCOMM "Support Stream-Triggered Communication." OFF)
+#option(KokkosComm_ENABLE_MPI_ADVANCE "Support MPI Advance backends." OFF)
+#option(KokkosComm_ENABLE_STREAMCOMM "Support Stream-Triggered Communication." OFF)
 # find MPI ADVANCE Stream Triggering
+#if(KokkosComm_ENABLE_MPI_ADVANCE)
+#  find_package(stream-triggering REQUIRED)
+#endif()
+#set(KokkosComm_ENABLE_STREAMCOMM KokkosComm_ENABLE_STREAMCOMM_FOUND)
 if(KokkosComm_ENABLE_MPI_ADVANCE)
-  find_package(stream-triggering REQUIRED)
-endif()
-set(KokkosComm_ENABLE_STREAMCOMM KokkosComm_ENABLE_STREAMCOMM_FOUND)
+  find_package(stream-triggering)
+  if (stream-triggering_FOUND)
+    add_definitions(-DACG_HAVE_STREAM_TRIGGERING)
+    #target_link_libraries(${PROJECT_NAME} MPIAdvance::stream-triggering)
+  endif (stream-triggering_FOUND)
+  list(APPEND KOKKOSCOMM_ENABLED_BACKENDS "MPIAdvance")
+endif(KokkosComm_ENABLE_MPI_ADVANCE)
 
 if(NOT KOKKOSCOMM_ENABLED_BACKENDS)
   message(FATAL_ERROR "No Kokkos Comm backends enabled! Enable at least one of: MPI, NCCL")
