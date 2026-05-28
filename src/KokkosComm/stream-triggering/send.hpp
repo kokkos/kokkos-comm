@@ -15,11 +15,12 @@
 #include "impl/pack_traits.hpp"
 #include "impl/error_handling.hpp"
 
-namespace KokkosComm::mpi {
+namespace KokkosComm::Experimental {
+namespace stream {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode SendMode>
 void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm, SendMode) {
-  Kokkos::Tools::pushRegion("KokkosComm::mpi::send");
+  Kokkos::Tools::pushRegion("KokkosComm::stream::send");
   using T      = typename SendView::non_const_value_type;
   using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
 
@@ -57,5 +58,6 @@ template <KokkosView SendView>
 void send(const SendView &sv, int dest, int tag, MPI_Comm comm) {
   send(Kokkos::DefaultExecutionSpace(), sv, dest, tag, comm, DefaultCommMode{});
 }
-
-}  // namespace KokkosComm::mpi
+  
+} // namespace stream
+}  // namespace KokkosComm

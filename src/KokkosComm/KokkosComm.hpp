@@ -47,3 +47,11 @@
 #include "nccl/allreduce.hpp"
 #include "nccl/reduce.hpp"
 #endif
+
+#if defined(KOKKOSCOMM_ENABLE_MPI_ADVANCE)
+#include "stream-triggering/stream_space.hpp"
+#include "stream-triggering/comm_mode.hpp"
+
+#include "stream-triggering/recv.hpp"
+#include "stream-triggering/send.hpp"
+#endif

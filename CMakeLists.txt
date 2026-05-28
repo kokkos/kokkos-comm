@@ -23,6 +23,7 @@ option(KokkosComm_ABORT_ON_ERROR "Runtime error checks trigger a global abort" O
 # Resolve options that must be PP-defined
 set(KOKKOSCOMM_ENABLE_MPI ${KokkosComm_ENABLE_MPI})
 set(KOKKOSCOMM_ENABLE_NCCL ${KokkosComm_ENABLE_NCCL})
+set(KOKKOSCOMM_ENABLE_MPI_ADVANCE ${KokkosComm_ENABLE_MPI_ADVANCE})
 set(KOKKOSCOMM_ABORT_ON_ERROR ${KokkosComm_ABORT_ON_ERROR})
 
 message(STATUS "Kokkos Comm version: ${CMAKE_PROJECT_VERSION}")

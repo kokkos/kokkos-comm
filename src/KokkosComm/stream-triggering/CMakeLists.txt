@@ -7,10 +7,10 @@ target_sources(
       BASE_DIRS ${PROJECT_SOURCE_DIR}/src
       FILES
         # Objects
-        #mpi_space.hpp
+        stream_space.hpp
         #communicator.hpp
         #request.hpp
-        #comm_mode.hpp
+        comm_mode.hpp
         # Point-to-point
         send.hpp
         #isend.hpp

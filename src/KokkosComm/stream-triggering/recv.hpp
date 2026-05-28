@@ -14,11 +14,12 @@
 #include "impl/pack_traits.hpp"
 #include "impl/error_handling.hpp"
 
-namespace KokkosComm::mpi {
+namespace KokkosComm::Experimental {
+namespace stream {
 
 template <KokkosView RecvView>
 void recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *status) {
-  Kokkos::Tools::pushRegion("KokkosComm::mpi::recv");
+  Kokkos::Tools::pushRegion("KokkosComm::stream-recv");
 
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "only contiguous views supported for low-level recv");
 
@@ -30,7 +31,7 @@ void recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *statu
 
 template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
 void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
-  Kokkos::Tools::pushRegion("KokkosComm::mpi::recv");
+  Kokkos::Tools::pushRegion("KokkosComm::stream::recv");
 
   using KCPT   = KokkosComm::PackTraits<RecvView>;
   using Packer = typename KCPT::packer_type;
@@ -50,5 +51,6 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
 
   Kokkos::Tools::popRegion();
 }
-
-}  // namespace KokkosComm::mpi
+  
+}  // namespace stream
+}  // namespace KokkosComm
