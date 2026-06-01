@@ -5,12 +5,15 @@
 
 #include <sstream>
 
+#include <mpi.h>
 #include <gtest/gtest.h>
-
 #include <KokkosComm/config.hpp>
 #include <Kokkos_Core.hpp>
 
-#include <mpi.h>
+#include "logging.hpp"
+#ifdef KOKKOSCOMM_ENABLE_NCCL
+#include "nccl/utils.hpp"
+#endif
 
 class MpiEnvironment : public ::testing::Environment {
  public:
@@ -35,7 +38,7 @@ class MpiListener : public testing::EmptyTestEventListener {
 #endif
 
   // called after a failed assertion or SUCCESS()
-  void OnTestPartResult(const testing::TestPartResult &result) override {
+  void OnTestPartResult(const testing::TestPartResult& result) override {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -64,36 +67,39 @@ class MpiListener : public testing::EmptyTestEventListener {
 #endif
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   int provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-  if (provided != MPI_THREAD_MULTIPLE) {
-    throw std::runtime_error("MPI_THREAD_MULTIPLE is needed");
-  }
+  KC_CHECK(provided == MPI_THREAD_MULTIPLE, "MPI_THREAD_MULTIPLE is required");
+#ifdef KOKKOSCOMM_ENABLE_NCCL
+  // Initialize the NCCL environment once for all tests (false = no verbose logs)
+  test_utils::NcclCtx::init(false);
+#endif
+  Kokkos::initialize();
+  ::testing::InitGoogleTest(&argc, argv);
+
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   if (0 == rank) {
-    std::cerr << argv[0] << " (Kokkos Comm " << KOKKOSCOMM_VERSION_MAJOR << "." << KOKKOSCOMM_VERSION_MINOR << "."
-              << KOKKOSCOMM_VERSION_PATCH << "-" << KOKKOSCOMM_COMMIT_HASH << ")\n";
+    KC_INFO(
+        "{} - Kokkos Comm v{}.{}.{}-{} unit tests", argv[0], KOKKOSCOMM_VERSION_MAJOR, KOKKOSCOMM_VERSION_MINOR,
+        KOKKOSCOMM_VERSION_PATCH, KOKKOSCOMM_COMMIT_HASH
+    );
   }
 
-  Kokkos::initialize();
-
-  // Initialize google test
-  ::testing::InitGoogleTest(&argc, argv);
-
   ::testing::AddGlobalTestEnvironment(new MpiEnvironment());
-  auto &test_listeners = ::testing::UnitTest::GetInstance()->listeners();
+  auto& test_listeners = ::testing::UnitTest::GetInstance()->listeners();
   if (0 != rank) delete test_listeners.Release(test_listeners.default_result_printer());
   test_listeners.Append(new MpiListener);
 
   // run tests
   auto exit_code = RUN_ALL_TESTS();
 
-  // Finalize MPI before exiting
   Kokkos::finalize();
-
+#ifdef KOKKOSCOMM_ENABLE_NCCL
+  test_utils::NcclCtx::fini();
+#endif
   MPI_Finalize();
 
   return exit_code;
