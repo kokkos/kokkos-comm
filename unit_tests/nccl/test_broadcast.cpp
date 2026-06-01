@@ -20,7 +20,7 @@ TYPED_TEST_SUITE(Broadcast, ScalarTypes);
 
 template <typename Scalar>
 auto broadcast_0d() -> void {
-  auto nccl_ctx   = test_utils::nccl::Ctx::init();
+  auto& nccl_ctx  = test_utils::NcclCtx::get();
   const auto exec = Kokkos::Cuda(nccl_ctx.stream());
   const auto comm = nccl_ctx.comm();
   const int size  = nccl_ctx.size();
@@ -47,7 +47,7 @@ auto broadcast_0d() -> void {
 
 template <typename Scalar>
 auto broadcast_contig_1d() -> void {
-  auto nccl_ctx   = test_utils::nccl::Ctx::init();
+  auto& nccl_ctx  = test_utils::NcclCtx::get();
   const auto exec = Kokkos::Cuda(nccl_ctx.stream());
   const auto comm = nccl_ctx.comm();
   const int size  = nccl_ctx.size();

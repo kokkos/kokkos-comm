@@ -23,7 +23,7 @@ TYPED_TEST_SUITE(Reduce, ScalarTypes);
 /// operation is sum, so recvbuf[i] should be sum(0..size) + i * size
 template <typename Scalar>
 auto reduce_contig_1d() -> void {
-  auto nccl_ctx   = test_utils::nccl::Ctx::init();
+  auto& nccl_ctx  = test_utils::NcclCtx::get();
   const auto exec = Kokkos::Cuda(nccl_ctx.stream());
   const auto comm = nccl_ctx.comm();
   const int size  = nccl_ctx.size();

@@ -14,8 +14,8 @@ namespace {
 template <KokkosComm::KokkosView View>
 void test_core_send_recv(const View& v) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif

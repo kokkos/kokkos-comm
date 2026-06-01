@@ -7,7 +7,9 @@
 #include <cstdlib>
 #include <string_view>
 
+#if defined(KOKKOS_ENABLE_CUDA)
 #include <cuda.h>
+#endif
 #include <mpi.h>
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
 #include <nccl.h>
@@ -47,12 +49,14 @@ constexpr std::array level_txt{"FATAL"sv, "ERROR"sv, "WARNING"sv, "INFO"sv, "TRA
 
 #define KC_CHECK(expr, ...) ((expr) ? void(0) : KC_FATAL(__VA_ARGS__))
 
+#if defined(KOKKOS_ENABLE_CUDA)
 #define KC_CUDA_CHECK(expr)                                                                                      \
   ([&]() {                                                                                                       \
     cudaError_t kc_res_ = (expr);                                                                                \
     return kc_res_ == cudaSuccess ? void(0)                                                                      \
                                   : KC_FATAL("CUDA check failed: `" #expr "`: {}", cudaGetErrorString(kc_res_)); \
   }())
+#endif
 
 #define KC_MPI_CHECK(expr)                                                                            \
   ([&]() {                                                                                            \

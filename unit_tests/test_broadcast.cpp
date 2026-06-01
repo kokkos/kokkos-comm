@@ -30,8 +30,8 @@ TYPED_TEST_SUITE(Broadcast, ScalarTypes);
 template <typename Scalar>
 auto broadcast_0d() -> void {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -63,8 +63,8 @@ auto broadcast_0d() -> void {
 template <typename Scalar>
 auto broadcast_contig_1d() -> void {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif

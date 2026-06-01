@@ -21,7 +21,7 @@ TYPED_TEST_SUITE(AllGather, ScalarTypes);
 
 template <typename Scalar>
 auto allgather_0d() -> void {
-  auto nccl_ctx   = test_utils::nccl::Ctx::init();
+  auto& nccl_ctx  = test_utils::NcclCtx::get();
   const auto exec = Kokkos::Cuda(nccl_ctx.stream());
   const auto comm = nccl_ctx.comm();
   const int size  = nccl_ctx.size();
@@ -48,7 +48,7 @@ auto allgather_0d() -> void {
 
 template <typename Scalar>
 auto allgather_contig_1d() -> void {
-  auto nccl_ctx   = test_utils::nccl::Ctx::init();
+  auto& nccl_ctx  = test_utils::NcclCtx::get();
   const auto exec = Kokkos::Cuda(nccl_ctx.stream());
   const auto comm = nccl_ctx.comm();
   const int size  = nccl_ctx.size();
