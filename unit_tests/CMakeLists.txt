@@ -179,42 +179,42 @@ if(KokkosComm_ENABLE_NCCL)
     test.nccl.p2p
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_point_to_point.cpp
+    FILES test_main.cpp nccl/test_point_to_point.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.broadcast
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_broadcast.cpp
+    FILES test_main.cpp nccl/test_broadcast.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.all-gather
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_allgather.cpp
+    FILES test_main.cpp nccl/test_allgather.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.all-to-all
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_alltoall.cpp
+    FILES test_main.cpp nccl/test_alltoall.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.all-reduce
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_allreduce.cpp
+    FILES test_main.cpp nccl/test_allreduce.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.reduce
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_reduce.cpp
+    FILES test_main.cpp nccl/test_reduce.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
 endif()

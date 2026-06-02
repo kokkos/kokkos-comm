@@ -21,7 +21,6 @@ function(kc_add_unit_test name)
   elseif(UT_MPI)
     target_link_libraries(${name} PRIVATE MPI::MPI_CXX)
   elseif(UT_NCCL)
-    target_sources(${name} PRIVATE nccl/utils.cpp)
     target_link_libraries(${name} PRIVATE NCCL::NCCL)
   endif()
 
