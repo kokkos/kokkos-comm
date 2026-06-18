@@ -27,6 +27,9 @@ template <typename T>
 concept KokkosExecutionSpace = Kokkos::is_execution_space_v<T>;
 
 template <typename T>
+concept KokkosMemorySpace = Kokkos::is_memory_space_v<T>;
+
+template <typename T>
 concept CommunicationSpace = requires {
   KokkosComm::Impl::is_communication_space<T>::value;
   typename T::communication_space;

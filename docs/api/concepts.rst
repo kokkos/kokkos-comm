@@ -134,3 +134,8 @@ Kokkos interoperability concepts
 .. cpp:concept:: template <typename T> KokkosExecutionSpace
 
     Specifies that a type ``T`` is a ``Kokkos::ExecutionSpace``.
+
+
+.. cpp:concept:: template <typename T> KokkosMemorySpace
+
+    Specifies that a type ``T`` is a ``Kokkos::MemorySpace``.
