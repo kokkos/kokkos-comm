@@ -40,6 +40,7 @@ Documentation Content
    api/packing
    api/core
    api/mpi
+   api/nccl
 
 .. toctree::
    :maxdepth: 1
