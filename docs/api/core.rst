@@ -456,6 +456,108 @@ Collectives
 
     The reduction operator must be **associative**, but ordering of partial combinations is **not guaranteed**, and the operation is not required to be commutative.
 
+Broadcast
+^^^^^^^^^
+
+.. cpp:function:: template <KokkosView View, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto KokkosComm::Experimental::broadcast(Communicator<CommSpace, ExecSpace>& h, View v, int root) -> Request<CommSpace>
+
+    Broadcasts the ``v`` view from the ``root`` rank to all ranks' ``v`` view.
+
+    :tparam View: The type of the Kokkos view to broadcast.
+    :tparam ExecSpace: The execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
+    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
+
+    :param h: A handle to the execution space and transport mechanism.
+    :param v: The Kokkos view to broadcast. Must be valid on all ranks; its data on ``root`` is broadcast to all ranks.
+    :param root: The rank that holds the source data.
+
+    :returns: A request object of type ``Request<CommSpace>`` representing the non-blocking broadcast operation.
+
+Allgather
+^^^^^^^^^
+
+.. cpp:function:: template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto KokkosComm::Experimental::allgather(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvView rv) -> Request<CommSpace>
+
+    Gathers the ``sv`` view from each rank into the ``rv`` view on all ranks.
+
+    Data received from rank ``i`` is placed at offset ``i * KokkosComm::span(sv)`` in ``rv``.
+    The ``rv`` view must be large enough to hold ``h.size() * KokkosComm::span(sv)`` elements.
+
+    :tparam SendView: The type of the Kokkos view to send from each rank.
+    :tparam RecvView: The type of the Kokkos view to receive the gathered data into.
+    :tparam ExecSpace: The execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
+    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
+
+    :param h: A handle to the execution space and transport mechanism.
+    :param sv: The Kokkos view to send from this rank.
+    :param rv: The Kokkos view where the gathered data from all ranks is stored.
+
+    :returns: A request object of type ``Request<CommSpace>`` representing the non-blocking all-gather operation.
+
+Alltoall
+^^^^^^^^
+
+.. cpp:function:: template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto KokkosComm::Experimental::alltoall(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvView rv, int count) -> Request<CommSpace>
+
+    Sends ``count`` elements to every other rank and receives ``count`` elements from every other rank.
+
+    Data to send to destination rank ``i`` is taken from ``sv`` at offset ``i * count``.
+    Data received from source rank ``j`` is placed into ``rv`` at offset ``j * count``.
+    Both ``sv`` and ``rv`` must span at least ``h.size() * count`` elements.
+
+    :tparam SendView: The type of the Kokkos view holding the data to send.
+    :tparam RecvView: The type of the Kokkos view where the received data will be stored.
+    :tparam ExecSpace: The execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
+    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
+
+    :param h: A handle to the execution space and transport mechanism.
+    :param sv: The Kokkos view containing the data to send to all ranks.
+    :param rv: The Kokkos view where the received data from all ranks will be stored.
+    :param count: The number of elements sent to, and received from, each rank.
+
+    :returns: A request object of type ``Request<CommSpace>`` representing the non-blocking all-to-all operation.
+
+Allreduce
+^^^^^^^^^
+
+.. cpp:function:: template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto KokkosComm::Experimental::allreduce(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvView rv, RedOp) -> Request<CommSpace>
+
+    Reduces the ``sv`` view using ``RedOp`` and stores the result in all ranks' ``rv`` view.
+
+    :tparam SendView: The type of the Kokkos view to reduce.
+    :tparam RecvView: The type of the Kokkos view to store the reduced result into.
+    :tparam RedOp: A type satisfying the :cpp:concept:`ReductionOperator` concept.
+    :tparam ExecSpace: The execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
+    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
+
+    :param h: A handle to the execution space and transport mechanism.
+    :param sv: The Kokkos view containing the input data to reduce.
+    :param rv: The Kokkos view where the result of the reduction is stored on all ranks.
+
+    :returns: A request object of type ``Request<CommSpace>`` representing the non-blocking all-reduce operation.
+
+Reduce
+^^^^^^
+
+.. cpp:function:: template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto KokkosComm::Experimental::reduce(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvView rv, int root, RedOp) -> Request<CommSpace>
+
+    Reduces the ``sv`` view using ``RedOp`` and stores the result in the ``root`` rank's ``rv`` view.
+
+    The ``rv`` view is only used on the ``root`` rank and is ignored on all other ranks.
+
+    :tparam SendView: The type of the Kokkos view to reduce.
+    :tparam RecvView: The type of the Kokkos view to store the reduced result into on ``root``.
+    :tparam RedOp: A type satisfying the :cpp:concept:`ReductionOperator` concept.
+    :tparam ExecSpace: The execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
+    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
+
+    :param h: A handle to the execution space and transport mechanism.
+    :param sv: The Kokkos view containing the input data to reduce.
+    :param rv: The Kokkos view where the result of the reduction is stored on ``root``.
+    :param root: The rank that receives the reduced result.
+
+    :returns: A request object of type ``Request<CommSpace>`` representing the non-blocking reduce operation.
+
 Utilities
 ---------
 
