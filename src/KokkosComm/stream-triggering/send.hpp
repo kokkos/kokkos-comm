@@ -27,10 +27,13 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
   auto mpi_send_fn = [dest, tag, comm](void *view, int cnt, MPI_Datatype dtype) {
     if constexpr (std::is_same_v<SendMode, CommModeStandard>) {
       MPI_Send(view, cnt, dtype, dest, tag, comm);
+      // MPIS_Send_init(a.data(), cnt, dtype, dest, tag, comm, mem_info, ctx->reqs);
     } else if constexpr (std::is_same_v<SendMode, CommModeReady>) {
       MPI_Rsend(view, cnt, dtype, dest, tag, comm);
+      // MPIS_RSend_init(a.data(), cnt, dtype, dest, tag, comm, mem_info, ctx->reqs);)
     } else if constexpr (std::is_same_v<SendMode, CommModeSynchronous>) {
       MPI_Ssend(view, cnt, dtype, dest, tag, comm);
+      // remove, MPI Advance doesnt have this
     } else {
       static_assert(std::is_void_v<SendMode>, "KokkosComm::mpi::send: unexpected communication mode");
     }
