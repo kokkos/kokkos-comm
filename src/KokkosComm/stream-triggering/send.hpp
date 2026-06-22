@@ -17,25 +17,25 @@
 
 namespace KokkosComm::Experimental {
 namespace stream {
-
+  
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode SendMode>
-void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm, SendMode) {
-  Kokkos::Tools::pushRegion("KokkosComm::stream::send");
+void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Info mem_info, MPIS_Request* reqs, SendMode) {
+  Kokkos::Tools::pushRegion("KokkosComm::Experimental::stream::send");
   using T      = typename SendView::non_const_value_type;
   using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
 
-  auto mpi_send_fn = [dest, tag, comm](void *view, int cnt, MPI_Datatype dtype) {
+  auto mpi_send_fn = [dest, tag, comm, mem_info, reqs](void *view, int cnt, MPI_Datatype dtype) {
     if constexpr (std::is_same_v<SendMode, CommModeStandard>) {
-      MPI_Send(view, cnt, dtype, dest, tag, comm);
-      // MPIS_Send_init(a.data(), cnt, dtype, dest, tag, comm, mem_info, ctx->reqs);
+      //MPI_Send(view, cnt, dtype, dest, tag, comm);
+      MPIS_Send_init(view, cnt, dtype, dest, tag, comm, mem_info, reqs);
     } else if constexpr (std::is_same_v<SendMode, CommModeReady>) {
-      MPI_Rsend(view, cnt, dtype, dest, tag, comm);
-      // MPIS_RSend_init(a.data(), cnt, dtype, dest, tag, comm, mem_info, ctx->reqs);)
+      //MPI_Rsend(view, cnt, dtype, dest, tag, comm);
+      // MPIS_RSend_init(a.data(), a.size(), dtype, dest, tag, comm, mem_info, ctx->reqs);)
+static_assert(std::is_void_v<SendMode>, "KokkosComm::Experimental::stream::send: Ready Mode not enable");
     } else if constexpr (std::is_same_v<SendMode, CommModeSynchronous>) {
-      MPI_Ssend(view, cnt, dtype, dest, tag, comm);
-      // remove, MPI Advance doesnt have this
+static_assert(std::is_void_v<SendMode>, "KokkosComm::Experimental::stream::send: Synchronous Mode not enable");
     } else {
-      static_assert(std::is_void_v<SendMode>, "KokkosComm::mpi::send: unexpected communication mode");
+      static_assert(std::is_void_v<SendMode>, "KokkosComm::Experimental::stream::send: unexpected communication mode");
     }
   };
 
@@ -52,14 +52,14 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
-void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
-  send(space, sv, dest, tag, comm, DefaultCommMode{});
+void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Info mem_info, MPIS_Request* reqs) {
+  send(space, sv, dest, tag, comm, mem_info, reqs, DefaultCommMode{});
 }
 
 /// NOTE: This overload has the side effect of fencing on the default execution space.
 template <KokkosView SendView>
-void send(const SendView &sv, int dest, int tag, MPI_Comm comm) {
-  send(Kokkos::DefaultExecutionSpace(), sv, dest, tag, comm, DefaultCommMode{});
+void send(const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Info mem_info, MPIS_Request* reqs) {
+  send(Kokkos::DefaultExecutionSpace(), sv, dest, tag, comm, mem_info, reqs, DefaultCommMode{});
 }
   
 } // namespace stream
