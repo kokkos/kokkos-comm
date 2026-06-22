@@ -39,8 +39,8 @@ void send_comm_mode_1d_contig() {
   }
   
   using ViewType = typename Kokkos::View<Scalar *>;
-  ViewType a("a", 100); // send
-  ViewType b("b", 100); // recv
+  ViewType a("a", 1000); // send
+  ViewType b("b", 1000); // recv
 
   // can be removed once both are placed in experimental space
   size_t underlying_size;
@@ -60,11 +60,11 @@ void send_comm_mode_1d_contig() {
 
   if constexpr ( std::is_same_v<Kokkos::DefaultExecutionSpace, Kokkos::HIP>)
 		 {
-		 std::cerr << "hip stream" << std::endl;
+		 //std::cerr << "hip stream" << std::endl;
 		 _my_stream = Kokkos::HIP().hip_stream();
 }
   else{
-    std::cerr << "not hip stream" << std::endl;
+    //std::cerr << "not hip stream" << std::endl;
     _my_stream = nullptr;
   }
   MPIS_Queue_init(&_my_queue, CXI, &_my_stream);     
@@ -78,15 +78,13 @@ void send_comm_mode_1d_contig() {
     Kokkos::parallel_for(
     a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; }
 			 );
-    KokkosComm::Experimental::stream::send(b, 1, 0, MPI_COMM_WORLD, _mem_info, &my_request);
+    KokkosComm::Experimental::stream::send(a, 1, 0, MPI_COMM_WORLD, _mem_info, &my_request);
   }
   else if (1 == rank){
-    MPIS_Recv_init(b.data(), underlying_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD, _mem_info, &my_request);
-    // KokkosComm::Experimental::stream(b, 0, 0, MPI_COMM_WORLD, _mem_info, &my_request);
+    //MPIS_Recv_init(b.data(), underlying_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD, _mem_info, &my_request);
+    KokkosComm::Experimental::stream::recv(b, 0, 0, MPI_COMM_WORLD, _mem_info, &my_request);
     }
   MPIS_Match(&my_request, MPI_STATUS_IGNORE);
-  if(rank == 1){
-    sleep(5);}
   hipStreamSynchronize((hipStream_t) _my_stream);  
   MPI_Barrier(MPI_COMM_WORLD);
   
@@ -99,7 +97,7 @@ void send_comm_mode_1d_contig() {
     int src = 0; int errs;
     Kokkos::parallel_reduce(
 			    b.extent(0), KOKKOS_LAMBDA(const int &i, int &lsum) { lsum += b(i) != i; }, errs);     
-    //ASSERT_EQ(errs, 0);
+    ASSERT_EQ(errs, 0);
     std::cerr << "errs: " << errs << std::endl;
   }
 
