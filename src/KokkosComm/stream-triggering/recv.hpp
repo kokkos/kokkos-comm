@@ -25,7 +25,6 @@ void recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Info mem_info
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "only contiguous views supported for low-level recv");
 
   using ScalarType = typename RecvView::non_const_value_type;
-  //MPI_Recv(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, ScalarType>(), src, tag, comm, status);
   MPIS_Recv_init(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, ScalarType>(), src, tag, comm, mem_info, reqs);
 
   Kokkos::Tools::popRegion();
@@ -41,16 +40,12 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm,
 
   if (!KokkosComm::is_contiguous(rv)) {
     Args args = Packer::allocate_packed_for(space, "packed", rv);
-    space.fence("Fence after allocation before MPI_Recv");
-    //MPI_Recv(KokkosComm::data_handle(args.view), args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
+    std::cerr << "Recv: Not contigous!" << std::endl;
     MPIS_Recv_init(KokkosComm::data_handle(rv), KokkosComm::span(rv), args.datatype, src, tag, comm, mem_info, reqs);
     
     Packer::unpack_into(space, rv, args.view);
   } else {
     using RecvScalar = typename RecvView::value_type;
-    space.fence("Fence before MPI_Recv");  // prevent work in `space` from writing to recv buffer
-    //MPI_Recv(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, RecvScalar>(), src, tag, comm,
-    //       MPI_STATUS_IGNORE);
     MPIS_Recv_init(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, RecvScalar>(), src, tag, comm, mem_info, reqs);
   }
 

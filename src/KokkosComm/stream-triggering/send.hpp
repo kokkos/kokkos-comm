@@ -26,7 +26,6 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
 
   auto mpi_send_fn = [dest, tag, comm, mem_info, reqs](void *view, int cnt, MPI_Datatype dtype) {
     if constexpr (std::is_same_v<SendMode, CommModeStandard>) {
-      //MPI_Send(view, cnt, dtype, dest, tag, comm);
       MPIS_Send_init(view, cnt, dtype, dest, tag, comm, mem_info, reqs);
     } else if constexpr (std::is_same_v<SendMode, CommModeReady>) {
       //MPI_Rsend(view, cnt, dtype, dest, tag, comm);
@@ -40,11 +39,9 @@ static_assert(std::is_void_v<SendMode>, "KokkosComm::Experimental::stream::send:
   };
 
   if (is_contiguous(sv)) {
-    space.fence("fence before send");
     mpi_send_fn(data_handle(sv), span(sv), datatype<MpiSpace, T>());
   } else {
     auto args = Packer::pack(space, sv);
-    space.fence("fence before send");
     mpi_send_fn(data_handle(args.view), args.count, args.datatype);
   }
 

@@ -42,15 +42,6 @@ void send_comm_mode_1d_contig() {
   ViewType a("a", 1000); // send
   ViewType b("b", 1000); // recv
 
-  // can be removed once both are placed in experimental space
-  size_t underlying_size;
-  if constexpr(std::is_same_v<Scalar, Kokkos::complex<float>> == true || std::is_same_v<Scalar, Kokkos::complex<double>> == true){
-      underlying_size = 2*sizeof(b.data())*a.size();
-    }
-  else {
-    underlying_size = sizeof(b.data())*a.size();
-  }
-
   MPI_Info _mem_info;
   MPI_Info_create( &_mem_info );
   MPI_Info_set(_mem_info, "mpi_memory_alloc_kinds", "rocm:device:coarse");
@@ -58,21 +49,18 @@ void send_comm_mode_1d_contig() {
   void* _my_stream;
   MPIS_Queue _my_queue;
 
-  if constexpr ( std::is_same_v<Kokkos::DefaultExecutionSpace, Kokkos::HIP>)
-		 {
-		 //std::cerr << "hip stream" << std::endl;
+  if constexpr ( std::is_same_v<Kokkos::DefaultExecutionSpace, Kokkos::HIP>){
 		 _my_stream = Kokkos::HIP().hip_stream();
-}
+  }
   else{
-    //std::cerr << "not hip stream" << std::endl;
     _my_stream = nullptr;
   }
   MPIS_Queue_init(&_my_queue, CXI, &_my_stream);     
 
   // set up send and recv
   MPIS_Request my_request; 
-  std::cerr << "before send/recv init: " << typeid(a.data()).name() << ", " << sizeof(a.data())*a.size() << std::endl;
-  std::cerr << "sizes: " << &a[a.size()-1] - &a[0] << std::endl;
+  //std::cerr << "before send/recv init: " << typeid(a.data()).name() << ", " << sizeof(a.data())*a.size() << std::endl;
+  //std::cerr << "sizes: " << &a[a.size()-1] - &a[0] << std::endl;
   if (0 == rank) {
     int dst = 1;
     Kokkos::parallel_for(
@@ -81,15 +69,13 @@ void send_comm_mode_1d_contig() {
     KokkosComm::Experimental::stream::send(a, 1, 0, MPI_COMM_WORLD, _mem_info, &my_request);
   }
   else if (1 == rank){
-    //MPIS_Recv_init(b.data(), underlying_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD, _mem_info, &my_request);
     KokkosComm::Experimental::stream::recv(b, 0, 0, MPI_COMM_WORLD, _mem_info, &my_request);
-    }
+  }
   MPIS_Match(&my_request, MPI_STATUS_IGNORE);
-  hipStreamSynchronize((hipStream_t) _my_stream);  
-  MPI_Barrier(MPI_COMM_WORLD);
+  //hipStreamSynchronize((hipStream_t) _my_stream);  
   
   MPIS_Enqueue_startall( _my_queue, 1, &my_request );
-  hipStreamSynchronize((hipStream_t) _my_stream);
+  //hipStreamSynchronize((hipStream_t) _my_stream);
   MPIS_Enqueue_waitall( _my_queue );
   std::cerr << " after start all" << std::endl;
 
@@ -101,20 +87,18 @@ void send_comm_mode_1d_contig() {
     std::cerr << "errs: " << errs << std::endl;
   }
 
-  hipStreamSynchronize((hipStream_t) _my_stream);
+  //hipStreamSynchronize((hipStream_t) _my_stream);
   MPIS_Request_free(&my_request);
   MPIS_Queue_free( &_my_queue );
   MPI_Info_free( &_mem_info );
 }
-
+  
 TYPED_TEST(MpiSendRecv, 1D_contig_standard) {
   send_comm_mode_1d_contig<CommModeStandard, typename TestFixture::Scalar>();
-  //send_comm_mode_1d_contig<typename TestFixture::Scalar>();
 }
 
 TYPED_TEST(MpiSendRecv, 1D_contig_ready) {
   send_comm_mode_1d_contig<CommModeReady, typename TestFixture::Scalar>();
-  //send_comm_mode_1d_contig<typename TestFixture::Scalar>();
 }
 
 }  // namespace
