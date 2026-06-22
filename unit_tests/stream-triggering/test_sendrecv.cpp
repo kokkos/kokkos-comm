@@ -13,9 +13,8 @@
 //#include "utils.hpp"
 
 namespace {
-
-  using namespace KokkosComm::Experimental::stream;
-  using namespace KokkosComm::mpi;
+  
+using namespace KokkosComm::Experimental::stream;
 
 template <typename T>
 class MpiSendRecv : public testing::Test {
@@ -26,18 +25,19 @@ class MpiSendRecv : public testing::Test {
   using ScalarTypes = ::testing::Types<int, int64_t, float, double, Kokkos::complex<float>, Kokkos::complex<double>>;
 TYPED_TEST_SUITE(MpiSendRecv, ScalarTypes);
 
-  //template <CommunicationMode SendMode, typename Scalar>
-  template <typename Scalar>
+template <CommunicationMode SendMode, typename Scalar>
 void send_comm_mode_1d_contig() {
-  //if constexpr (std::is_same_v<SendMode, CommModeReady>) {
-  //  GTEST_SKIP() << "Skipping test for ready-mode send";
-  //}
-      int rank, size;
+  if constexpr (std::is_same_v<SendMode, CommModeReady>) {
+    GTEST_SKIP() << "Skipping test for ready-mode send";
+  }
+  
+  int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   if (size < 2) {
     GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
   }
+  
   using ViewType = typename Kokkos::View<Scalar *>;
   ViewType a("a", 100); // send
   ViewType b("b", 100); // recv
@@ -58,7 +58,6 @@ void send_comm_mode_1d_contig() {
   void* _my_stream;
   MPIS_Queue _my_queue;
 
-  //auto stream_ctx = test_utils::mpi_advance::Ctx(Kokkos::DefaultExecutionSpace());
   if constexpr ( std::is_same_v<Kokkos::DefaultExecutionSpace, Kokkos::HIP>)
 		 {
 		 std::cerr << "hip stream" << std::endl;
@@ -75,12 +74,6 @@ void send_comm_mode_1d_contig() {
   std::cerr << "before send/recv init: " << typeid(a.data()).name() << ", " << sizeof(a.data())*a.size() << std::endl;
   std::cerr << "sizes: " << &a[a.size()-1] - &a[0] << std::endl;
   if (0 == rank) {
-    // send
-    // send -> send(exec, a, dst, tag, comm, sendmode, ctx)
-    // set up requests and others within ctx, if send then 1 request. Set tag in ctx
-    // check if contig
-    //MPIS_Send_init(a.data(), underlying_size, MPI_BYTE, 1, 0, MPI_COMM_WORLD, _mem_info,
-    //                 &my_request);
     int dst = 1;
     Kokkos::parallel_for(
     a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; }
@@ -94,7 +87,7 @@ void send_comm_mode_1d_contig() {
   MPIS_Match(&my_request, MPI_STATUS_IGNORE);
   if(rank == 1){
     sleep(5);}
-   hipStreamSynchronize((hipStream_t) _my_stream);  
+  hipStreamSynchronize((hipStream_t) _my_stream);  
   MPI_Barrier(MPI_COMM_WORLD);
   
   MPIS_Enqueue_startall( _my_queue, 1, &my_request );
@@ -117,12 +110,13 @@ void send_comm_mode_1d_contig() {
 }
 
 TYPED_TEST(MpiSendRecv, 1D_contig_standard) {
-  //send_comm_mode_1d_contig<CommModeStandard, typename TestFixture::Scalar>();
-  send_comm_mode_1d_contig<typename TestFixture::Scalar>();
+  send_comm_mode_1d_contig<CommModeStandard, typename TestFixture::Scalar>();
+  //send_comm_mode_1d_contig<typename TestFixture::Scalar>();
 }
 
-  TYPED_TEST(MpiSendRecv, 1D_contig_ready) { //send_comm_mode_1d_contig<CommModeReady, typename TestFixture::Scalar>();
-  send_comm_mode_1d_contig<typename TestFixture::Scalar>();
-  }
+TYPED_TEST(MpiSendRecv, 1D_contig_ready) {
+  send_comm_mode_1d_contig<CommModeReady, typename TestFixture::Scalar>();
+  //send_comm_mode_1d_contig<typename TestFixture::Scalar>();
+}
 
 }  // namespace

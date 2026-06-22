@@ -10,6 +10,7 @@
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include "comm_mode.hpp"
 
 #include "impl/pack_traits.hpp"
 #include "impl/error_handling.hpp"
