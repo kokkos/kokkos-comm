@@ -598,3 +598,27 @@ Utilities
     :param comm: A communication space object, immediately consumed.
     :param view: The Kokkos View to convert the value type from.
     :returns: The communication space representation of the Kokkos View value type.
+
+.. cpp:function:: template <CommunicationSpace CS, ReductionOperator RO>\
+                  [[nodiscard]] constexpr auto reduction_op() -> CS::reduction_op_type
+
+    Converts a Kokkos Comm :cpp:concept:`ReductionOperator` type to its communication-space-native equivalent.
+
+    When ``CS`` is:
+
+    * ``MpiSpace``, returns the corresponding ``MPI_Op``.
+    * ``Experimental::NcclSpace``, returns the corresponding ``ncclRedOp_t``.
+
+    :tparam CS: The target communication space backend.
+    :tparam RO: A type satisfying the :cpp:concept:`ReductionOperator` concept.
+    :returns: The communication space representation of the reduction operator.
+
+.. cpp:function:: template <CommunicationSpace CS, ReductionOperator RO>\
+                  [[nodiscard]] constexpr auto reduction_op_for(RO&& op) -> CS::reduction_op_type
+
+    Instance-based counterpart of :cpp:func:`reduction_op`.
+
+    :tparam CS: The target communication space backend.
+    :tparam RO: A type satisfying the :cpp:concept:`ReductionOperator` concept.
+    :param op: An instance of a reduction operator tag.
+    :returns: The communication space representation of the reduction operator.
