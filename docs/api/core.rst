@@ -21,8 +21,8 @@ Communicators
     They are move-only objects: copy construction and copy assignment are explicitly deleted. Use the ``duplicate`` member functions to create equivalent "copies" of communicators.
     There is always exactly one owner of a ``Communicator``.
 
-    :tparam Co: The communication space (transport backend) to use. Defaults to ``DefaultCommunicationSpace``.
-    :tparam Ex: The Kokkos execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
+    :tparam Comm: The communication space (transport backend) to use. Defaults to ``DefaultCommunicationSpace``.
+    :tparam Exec: The Kokkos execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
 
     .. cpp:type:: execution_space = Exec
     .. cpp:type:: communication_space = Comm
