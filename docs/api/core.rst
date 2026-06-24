@@ -159,7 +159,7 @@ NCCL specialization
 
     .. cpp:function:: [[nodiscard]] static auto split_from_raw(const ncclComm_t comm, int color, int key, const Kokkos::Cuda& exec = Kokkos::Cuda{}) noexcept -> std::optional<Communicator<Experimental::NcclSpace, Kokkos::Cuda>>
 
-        Splits from a raw NCCL communicator and associates it to a Kokkos CUDA, tion space instanc and ``MPI_COMM_NULL``. Defaults ``exec`` to ``Kokkos::Cuda``.
+        Splits from a raw NCCL communicator and associates it to a Kokkos CUDA execution space instance. Defaults ``exec`` to ``Kokkos::Cuda``.
 
         Creates as many new communicators as distinct values of ``color`` are given, and orders processes according to the value of ``key``. All processes with the same value of ``color`` join the same communicator.
         A process that passes ``NCCL_SPLIT_NOCOLOR`` as ``color`` will not join a new communicator.
@@ -210,7 +210,7 @@ Requests
 Common interfaces
 ^^^^^^^^^^^^^^^^^
 
-Both specializations share the, llowing interface and ``MPI_COMM_NULL``:
+Both specializations share the following interface:
 
 .. cpp:function:: Request(const Request&) = delete
 
