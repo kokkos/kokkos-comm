@@ -388,19 +388,6 @@ Send
     :return: A request object of type ``Request<CommSpace>`` representing the non-blocking send operation.
 
 
-.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto send(SendView &sv, int dest) -> Request<CommSpace>
-
-    Initiates a non-blocking send operation using a default handle.
-
-    :tparam SendView: The type of the Kokkos view to send.
-    :tparam ExecSpace: The execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
-    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
-
-    :param sv: The Kokkos view to send.
-    :param dest: The destination rank.
-
-    :return: A request object of type ``Request<CommSpace>`` representing the non-blocking send operation.
-
 **Example usage:**
 
 .. literalinclude:: core_send.cpp
@@ -427,19 +414,6 @@ Receive
 
     This function initiates a non-blocking receive operation using the specified execution space and transport mechanism. The data will be received into the provided view from the specified source rank and message tag. The function returns a request object that can be used to check the status of the receive operation or to wait for its completion.
 
-
-.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto recv(RecvView &sv, int dest) -> Request<CommSpace>
-
-    Initiates a non-blocking receive operation using a default handle.
-
-    :tparam RecvView: The type of the Kokkos view for receiving data.
-    :tparam ExecSpace: The execution space where the operation will be performed. Defaults to `Kokkos::DefaultExecutionSpace`.
-    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
-
-    :param rv: The Kokkos view where the received data will be stored.
-    :param src: The source rank from which to receive data.
-
-    :return: A request object of type ``Request<CommSpace>`` representing the non-blocking receive operation.
 
 **Example usage:**
 
