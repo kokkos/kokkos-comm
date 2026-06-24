@@ -191,7 +191,7 @@ NCCL specialization
 Requests
 --------
 
-.. cpp:class:: template <CommunicationSpace C = DefaultCommSpace> Request
+.. cpp:class:: template <CommunicationSpace C = DefaultCommunicationSpace> Request
 
     Template class for request wrappers of different communication space types.
 
