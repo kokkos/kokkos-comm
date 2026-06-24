@@ -74,7 +74,7 @@ General traits
 
 
 .. cpp:function:: template <KokkosView V, std::integral I> \
-                  [[nodiscard]] constexpr auto stride(const V& view, I i) noexcept -> size_t
+                  [[nodiscard]] constexpr auto stride(const V& view, I i) noexcept -> V::size_type
 
     :tparam V: A Kokkos view type.
     :tparam I: An integral type.
