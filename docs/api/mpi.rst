@@ -36,8 +36,38 @@ Low-level MPI interfaces
     * - ``MPI_Allgather`` (in-place)
       - ``allgather``
       - ✓
+    * - ``MPI_Iallgather``
+      - ``iallgather``
+      - ✓
     * - ``MPI_Reduce``
       - ``reduce``
+      - ✓
+    * - ``MPI_Ireduce``
+      - ``ireduce``
+      - ✓
+    * - ``MPI_Bcast``
+      - ``broadcast``
+      - ✓
+    * - ``MPI_Ibcast``
+      - ``ibroadcast``
+      - ✓
+    * - ``MPI_Alltoall``
+      - ``alltoall``
+      - ✓
+    * - ``MPI_Ialltoall``
+      - ``ialltoall``
+      - ✓
+    * - ``MPI_Allreduce``
+      - ``allreduce``
+      - ✓
+    * - ``MPI_Iallreduce``
+      - ``iallreduce``
+      - ✓
+    * - ``MPI_Scan``
+      - ``inclusive_scan``
+      - ✓
+    * - ``MPI_Exscan``
+      - ``exclusive_scan``
       - ✓
     * - ``MPI_Barrier``
       - ``barrier``
@@ -140,6 +170,20 @@ Point-to-point
     :throws std::runtime_error: If the view is not contiguous.
 
 
+.. cpp:function:: template <KokkosView SendView> \
+                  auto isend(const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Request &req) -> void
+
+    ``MPI_Isend`` with a ``Kokkos::View``.
+
+    :tparam SendView: The type of the view to be sent.
+
+    :param sv: The view to be sent (must be contiguous).
+    :param dest: The destination rank.
+    :param tag: The message tag.
+    :param comm: The MPI communicator.
+    :param req: The MPI request.
+
+
 Collectives
 ===========
 
@@ -184,6 +228,23 @@ Collectives
     :param comm: The MPI communicator.
 
 
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView> \
+                  auto iallgather(const ExecSpace &space, const SView sv, RView rv, MPI_Comm comm) -> Request<MpiSpace>
+
+    ``MPI_Iallgather`` with ``Kokkos::View`` arguments.
+
+    :tparam ExecSpace: The execution space.
+    :tparam SView: The type of the view to be sent.
+    :tparam RView: The type of the view to be received.
+
+    :param space: The execution space.
+    :param sv: The view to be sent (must be contiguous).
+    :param rv: The view to be received (must be contiguous).
+    :param comm: The MPI communicator.
+
+    :return: A request object for the non-blocking all-gather.
+
+
 .. cpp:function:: template <KokkosView SendView, KokkosView RecvView> \
                   auto reduce(const SendView &sv, const RecvView &rv, MPI_Op op, int root, MPI_Comm comm) -> void
 
@@ -213,6 +274,250 @@ Collectives
     :param rv: The view to be received.
     :param op: The MPI operation to be applied.
     :param root: The rank of the root process.
+    :param comm: The MPI communicator.
+
+
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView> \
+                  auto ireduce(const ExecSpace &space, const SView &sv, RView &rv, MPI_Op op, int root, MPI_Comm comm) -> Request<MpiSpace>
+
+    ``MPI_Ireduce`` with ``Kokkos::View`` arguments.
+
+    :tparam ExecSpace: The execution space.
+    :tparam SView: The type of the view to be sent.
+    :tparam RView: The type of the view to be received.
+
+    :param space: The execution space.
+    :param sv: The view to be sent.
+    :param rv: The view to be received (valid only on ``root``).
+    :param op: The MPI operation to be applied.
+    :param root: The rank of the root process.
+    :param comm: The MPI communicator.
+
+    :return: A request object for the non-blocking reduction.
+
+
+.. cpp:function:: template <KokkosView View> \
+                  auto broadcast(const View &v, int root, MPI_Comm comm) -> void
+
+    ``MPI_Bcast`` with a ``Kokkos::View``.
+
+    :tparam View: The type of the view to be broadcast.
+
+    :param v: The view to be broadcast (must be contiguous).
+    :param root: The rank of the root process.
+    :param comm: The MPI communicator.
+
+
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView View> \
+                  auto broadcast(const ExecSpace &space, const View &v, int root, MPI_Comm comm) -> void
+
+    ``MPI_Bcast`` with a ``Kokkos::View`` and execution space.
+
+    :tparam ExecSpace: The execution space.
+    :tparam View: The type of the view to be broadcast.
+
+    :param space: The execution space.
+    :param v: The view to be broadcast (must be contiguous).
+    :param root: The rank of the root process.
+    :param comm: The MPI communicator.
+
+
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView View> \
+                  auto ibroadcast(const ExecSpace &space, View &v, int root, MPI_Comm comm) -> Request<MpiSpace>
+
+    ``MPI_Ibcast`` with a ``Kokkos::View``.
+
+    :tparam ExecSpace: The execution space.
+    :tparam View: The type of the view to be broadcast.
+
+    :param space: The execution space.
+    :param v: The view to be broadcast (must be contiguous).
+    :param root: The rank of the root process.
+    :param comm: The MPI communicator.
+
+    :return: A request object for the non-blocking broadcast.
+
+
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView> \
+                  auto alltoall(const ExecSpace &space, const SendView &sv, const size_t sendCount, const RecvView &rv, const size_t recvCount, MPI_Comm comm) -> void
+
+    ``MPI_Alltoall`` with ``Kokkos::View`` arguments.
+
+    :tparam ExecSpace: The execution space.
+    :tparam SendView: The type of the view to be sent.
+    :tparam RecvView: The type of the view to be received.
+
+    :param space: The execution space.
+    :param sv: The view to be sent (must be contiguous).
+    :param sendCount: The number of elements to send to each process.
+    :param rv: The view to be received (must be contiguous).
+    :param recvCount: The number of elements to receive from each process.
+    :param comm: The MPI communicator.
+
+
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView RecvView> \
+                  auto alltoall(const ExecSpace &space, const RecvView &rv, const size_t recvCount, MPI_Comm comm) -> void
+
+    ``MPI_Alltoall`` (in-place) with a ``Kokkos::View``.
+
+    :tparam ExecSpace: The execution space.
+    :tparam RecvView: The type of the view to be received.
+
+    :param space: The execution space.
+    :param rv: The view to be received (must be contiguous).
+    :param recvCount: The number of elements to receive from each process.
+    :param comm: The MPI communicator.
+
+
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView> \
+                  auto ialltoall(const ExecSpace &space, const SView sv, RView rv, int count, MPI_Comm comm) -> Request<MpiSpace>
+
+    ``MPI_Ialltoall`` with ``Kokkos::View`` arguments.
+
+    :tparam ExecSpace: The execution space.
+    :tparam SView: The type of the view to be sent.
+    :tparam RView: The type of the view to be received.
+
+    :param space: The execution space.
+    :param sv: The view to be sent (must be contiguous).
+    :param rv: The view to be received (must be contiguous).
+    :param count: The number of elements sent to (and received from) each process.
+    :param comm: The MPI communicator.
+
+    :return: A request object for the non-blocking all-to-all.
+
+
+.. cpp:function:: template <KokkosView SendView, KokkosView RecvView> \
+                  auto allreduce(const SendView &sv, const RecvView &rv, MPI_Op op, MPI_Comm comm) -> void
+
+    ``MPI_Allreduce`` with ``Kokkos::View`` arguments.
+
+    :tparam SendView: The type of the view to be sent.
+    :tparam RecvView: The type of the view to be received.
+
+    :param sv: The view to be sent (must be contiguous).
+    :param rv: The view to be received (must be contiguous, same size as ``sv``).
+    :param op: The MPI operation to be applied.
+    :param comm: The MPI communicator.
+
+
+.. cpp:function:: template <KokkosView View> \
+                  auto allreduce(const View &v, MPI_Op op, MPI_Comm comm) -> void
+
+    ``MPI_Allreduce`` (in-place) with a ``Kokkos::View``.
+
+    :tparam View: The type of the view to be reduced.
+
+    :param v: The view to be reduced (must be contiguous).
+    :param op: The MPI operation to be applied.
+    :param comm: The MPI communicator.
+
+
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView> \
+                  auto allreduce(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Op op, MPI_Comm comm) -> void
+
+    ``MPI_Allreduce`` with ``Kokkos::View`` arguments and an execution space.
+
+    :tparam ExecSpace: The execution space.
+    :tparam SendView: The type of the view to be sent.
+    :tparam RecvView: The type of the view to be received.
+
+    :param space: The execution space.
+    :param sv: The view to be sent (must be contiguous).
+    :param rv: The view to be received (must be contiguous, same size as ``sv``).
+    :param op: The MPI operation to be applied.
+    :param comm: The MPI communicator.
+
+
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView View> \
+                  auto allreduce(const ExecSpace &space, const View &v, MPI_Op op, MPI_Comm comm) -> void
+
+    ``MPI_Allreduce`` (in-place) with a ``Kokkos::View`` and an execution space.
+
+    :tparam ExecSpace: The execution space.
+    :tparam View: The type of the view to be reduced.
+
+    :param space: The execution space.
+    :param v: The view to be reduced (must be contiguous).
+    :param op: The MPI operation to be applied.
+    :param comm: The MPI communicator.
+
+
+.. cpp:function:: template <KokkosView SView, KokkosView RView, KokkosExecutionSpace ExecSpace> \
+                  auto iallreduce(const ExecSpace &space, const SView sv, RView rv, MPI_Op op, MPI_Comm comm) -> Request<MpiSpace>
+
+    ``MPI_Iallreduce`` with ``Kokkos::View`` arguments.
+
+    :tparam SView: The type of the view to be sent.
+    :tparam RView: The type of the view to be received.
+    :tparam ExecSpace: The execution space.
+
+    :param space: The execution space.
+    :param sv: The view to be sent (must be contiguous).
+    :param rv: The view to be received (must be contiguous, same size as ``sv``).
+    :param op: The MPI operation to be applied.
+    :param comm: The MPI communicator.
+
+    :return: A request object for the non-blocking all-reduce.
+
+
+.. cpp:function:: template <KokkosView SendView, KokkosView RecvView> \
+                  auto inclusive_scan(const SendView &sv, const RecvView &rv, MPI_Op op, MPI_Comm comm) -> void
+
+    ``MPI_Scan`` with ``Kokkos::View`` arguments.
+
+    :tparam SendView: The type of the view to be sent.
+    :tparam RecvView: The type of the view to be received.
+
+    :param sv: The view to be sent (must be contiguous, rank ≤ 1).
+    :param rv: The view to be received (must be contiguous, same size as ``sv``).
+    :param op: The MPI operation to be applied.
+    :param comm: The MPI communicator.
+
+
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView> \
+                  auto inclusive_scan(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Op op, MPI_Comm comm) -> void
+
+    ``MPI_Scan`` with ``Kokkos::View`` arguments and an execution space.
+
+    :tparam ExecSpace: The execution space.
+    :tparam SendView: The type of the view to be sent.
+    :tparam RecvView: The type of the view to be received.
+
+    :param space: The execution space.
+    :param sv: The view to be sent (must be contiguous).
+    :param rv: The view to be received (must be contiguous, same size as ``sv``).
+    :param op: The MPI operation to be applied.
+    :param comm: The MPI communicator.
+
+
+.. cpp:function:: template <KokkosView SendView, KokkosView RecvView> \
+                  auto exclusive_scan(const SendView &sv, const RecvView &rv, MPI_Op op, MPI_Comm comm) -> void
+
+    ``MPI_Exscan`` with ``Kokkos::View`` arguments.
+
+    :tparam SendView: The type of the view to be sent.
+    :tparam RecvView: The type of the view to be received.
+
+    :param sv: The view to be sent (must be contiguous, rank ≤ 1).
+    :param rv: The view to be received (must be contiguous, same size as ``sv``).
+    :param op: The MPI operation to be applied.
+    :param comm: The MPI communicator.
+
+
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView> \
+                  auto exclusive_scan(const ExecSpace &space, const SendView &sv, const RecvView &rv, MPI_Op op, MPI_Comm comm) -> void
+
+    ``MPI_Exscan`` with ``Kokkos::View`` arguments and an execution space.
+
+    :tparam ExecSpace: The execution space.
+    :tparam SendView: The type of the view to be sent.
+    :tparam RecvView: The type of the view to be received.
+
+    :param space: The execution space.
+    :param sv: The view to be sent (must be contiguous).
+    :param rv: The view to be received (must be contiguous, same size as ``sv``).
+    :param op: The MPI operation to be applied.
     :param comm: The MPI communicator.
 
 
