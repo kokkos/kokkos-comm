@@ -21,7 +21,7 @@ keywords:
   - Distributed Computing
   - MPI
   - NCCL
-license: Apache-2.0
+license: Apache-2.0 WITH LLVM-exception
 commit: c86baf2481fa64aee04cb2124b182751196e71c2
 version: 0.1.0
 date-released: '2026-05-06'
