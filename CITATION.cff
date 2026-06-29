@@ -1,0 +1,65 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Avans
+    given-names: C. Nicole
+    orcid: "https://orcid.org/0009-0005-0768-4243"
+  - family-names: Dos Santos
+    given-names: Gabriel
+    orcid: "https://orcid.org/0009-0007-8499-0783"
+  - family-names: Chevalier
+    given-names: Cédric
+    orcid: "https://orcid.org/0000-0002-7730-9239"
+  - family-names: Pearson
+    given-names: Carl
+    orcid: "https://orcid.org/0000-0001-64881-970X"
+title: "Kokkos Comm"
+version: 0.1.0
+url: "https://github.com/kokkos/kokkos-comm"
+preferred-citation:
+  title: >-
+    Kokkos Comm: Performance Portable Communication for Distributed Kokkos Applications
+  type: conference-paper
+  collection-title: Proceedings of the Platform for Advanced Scientific Computing Conference
+  editors-series: PASC ’26
+  pages: 1–12
+  publisher: ACM
+  url: http://dx.doi.org/10.1145/3815572.3815748
+  authors: 
+    - family-names: Avans
+      given-names: C. Nicole
+      orcid: "https://orcid.org/0009-0005-0768-4243"
+    - family-names: Dos Santos
+      given-names: Gabriel
+      orcid: "https://orcid.org/0009-0007-8499-0783"
+    - family-names: Chevalier
+      given-names: Cédric
+      orcid: "https://orcid.org/0000-0002-7730-9239"
+    - family-names: Taboada
+      given-names: Hugo
+      orcid: "https://orcid.org/0000-0003-3902-9313"
+    - family-names: Pérache
+      given-names: Marc
+      orcid: "https://orcid.org/0000-0003-1615-2749"
+    - family-names: Dosanjh
+      given-names: Matthew G. F.
+      orcid: "https://orcid.org/0000-0001-5141-9176"
+    - family-names: Olivier
+      given-names: Stephen L.
+      orcid: "https://orcid.org/0000-0001-6247-8980"
+    - family-names: Pearson
+      given-names: Carl
+      orcid: "https://orcid.org/0000-0001-64881-970X"
+    - family-names: Suggs
+      given-names: Evan D.
+      orcid: "https://orcid.org/0000-0002-8210-8992"
+    - family-names: Kale
+      given-names: Vivek
+      orcid: "https://orcid.org/0000-0003-4687-1226"
+    - family-names: Skjellum
+      given-names: Anthony
+      orcid: "https://orcid.org/0000-0001-5252-6600"
+  date-published: 2026-06
+  identifiers: 
+    - type: doi
+      value: 10.1145/3815572.3815748
