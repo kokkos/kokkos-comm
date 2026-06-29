@@ -31,10 +31,10 @@ preferred-citation:
     Applications
   type: conference-paper
   collection-title: Proceedings of the Platform for Advanced Scientific Computing Conference
-  editors-series: 
+  editors-series:
    - name: PASC ’26
   pages: 1–12
-  publisher: 
+  publisher:
     name: ACM
   url: 'http://dx.doi.org/10.1145/3815572.3815748'
   authors:
