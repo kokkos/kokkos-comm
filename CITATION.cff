@@ -25,7 +25,7 @@ preferred-citation:
   pages: 1–12
   publisher: ACM
   url: http://dx.doi.org/10.1145/3815572.3815748
-  authors: 
+  authors:
     - family-names: Avans
       given-names: C. Nicole
       orcid: "https://orcid.org/0009-0005-0768-4243"
@@ -60,6 +60,6 @@ preferred-citation:
       given-names: Anthony
       orcid: "https://orcid.org/0000-0001-5252-6600"
   date-published: 2026-06
-  identifiers: 
+  identifiers:
     - type: doi
       value: 10.1145/3815572.3815748
