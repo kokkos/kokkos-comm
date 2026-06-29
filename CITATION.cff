@@ -1,21 +1,17 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
+type: software
 authors:
-  - family-names: Avans
-    given-names: C. Nicole
-    orcid: "https://orcid.org/0009-0005-0768-4243"
-  - family-names: Dos Santos
-    given-names: Gabriel
-    orcid: "https://orcid.org/0009-0007-8499-0783"
-  - family-names: Chevalier
-    given-names: Cédric
-    orcid: "https://orcid.org/0000-0002-7730-9239"
-  - family-names: Pearson
-    given-names: Carl
-    orcid: "https://orcid.org/0000-0001-64881-970X"
+  - name: The Kokkos authors
+    website: https://kokkos.org/community/team/
+identifiers:
+  - type: url
+    website: https://kokkos.org/kokkos-core-wiki/citation.html
+repository-code: 'https://github.com/kokkos/kokkos-comm'
+url: 'https://kokkos.org/kokkos-comm/'
+license: Apache-2.0
 title: "Kokkos Comm"
 version: 0.1.0
-url: "https://github.com/kokkos/kokkos-comm"
 preferred-citation:
   title: >-
     Kokkos Comm: Performance Portable Communication for Distributed Kokkos Applications
