@@ -116,13 +116,13 @@ Packing Traits
 
 Strategies for handling non-contiguous views.
 
-.. cpp:namespace:: KokkosComm
+.. cpp:namespace:: KokkosComm::mpi::Impl
 
 .. cpp:struct:: template<typename T> PackTraits<T>
 
     A common packing-related struct that can be specialized to implement custom behavior for a particular Kokkos view.
 
-    .. cpp:type:: packer_type = Impl::Packer::DeepCopy<View>
+    .. cpp:type:: packer_type = Packer::DeepCopy<View>
 
     The packer to use for this ``View`` type.
 

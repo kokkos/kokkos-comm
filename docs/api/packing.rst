@@ -5,7 +5,7 @@ Handling non-contiguous views
 MPI
 ===
 
-.. cpp:namespace-push:: KokkosComm::Impl::Packing
+.. cpp:namespace-push:: KokkosComm::mpi::Impl::Packer
 
 .. cpp:struct:: template <KokkosView View> MpiArgs
 
