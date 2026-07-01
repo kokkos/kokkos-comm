@@ -10,22 +10,22 @@ Low-level MPI interfaces
       - ``KokkosComm::mpi::`` namespace
       - ``Kokkos::View`` support
     * - ``MPI_Send``
-      - ``send`` or ``send<CommMode::Standard>``
+      - ``send`` or ``send(... , CommModeStandard{})``
       - ✓
     * - ``MPI_Rsend``
-      - ``send<CommMode::Ready>``
+      - ``send(... , CommModeReady{})``
       - ✓
     * - ``MPI_Ssend``
-      - ``send<CommMode::Synchronous>``
+      - ``send(... , CommModeSynchronous{})``
       - ✓
     * - ``MPI_Isend``
-      - ``isend`` or ``isend<CommMode::Standard>``
+      - ``isend`` or ``isend(... , CommModeStandard{})``
       - ✓
     * - ``MPI_Irsend``
-      - ``isend<CommMode::Ready>``
+      - ``isend(... , CommModeReady{})``
       - ✓
     * - ``MPI_Issend``
-      - ``isend<CommMode::Synchronous>``
+      - ``isend(... , CommModeSynchronous{})``
       - ✓
     * - ``MPI_Recv``
       - ``recv``
@@ -92,12 +92,12 @@ Point-to-point
     :param comm: The MPI communicator.
 
 
-.. cpp:function:: template <CommMode SendMode = CommMode::Default, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SendView> \
                   auto send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) -> void
 
-    Initiates a blocking send operation with a specified execution space and communication mode.
+    Initiates a blocking send operation with a specified execution space.
+    Uses ``DefaultCommMode``.
 
-    :tparam SendMode: The communication mode (default is CommMode::Default).
     :tparam ExecSpace: The execution space.
     :tparam SendView: The type of the view to be sent.
 
@@ -108,19 +108,39 @@ Point-to-point
     :param comm: The MPI communicator.
 
 
-.. cpp:function:: template <CommMode SendMode, KokkosExecutionSpace ExecSpace, KokkosView SendView> \
-                  auto isend(Communicator<MpiSpace, ExecSpace> &h, const SendView &sv, int dest, int tag) -> Request<MpiSpace>
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode SendMode> \
+                  auto send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm, SendMode) -> void
 
-    Initiates a non-blocking send operation.
+    Initiates a blocking send operation with a specified execution space and communication mode.
+    The communication mode is selected by passing an instance of ``CommModeStandard``, ``CommModeReady``, or ``CommModeSynchronous`` as the last argument.
 
-    :tparam SendMode: The communication mode.
     :tparam ExecSpace: The execution space.
     :tparam SendView: The type of the view to be sent.
+    :tparam SendMode: The communication mode type (e.g. ``CommModeStandard``, ``CommModeReady``, ``CommModeSynchronous``).
+
+    :param space: The execution space.
+    :param sv: The view to be sent.
+    :param dest: The destination rank.
+    :param tag: The message tag.
+    :param comm: The MPI communicator.
+    :param mode: A tag instance selecting the communication mode.
+
+
+.. cpp:function:: template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode SendMode> \
+                  auto isend(Communicator<MpiSpace, ExecSpace> &h, const SendView &sv, int dest, int tag, SendMode) -> Request<MpiSpace>
+
+    Initiates a non-blocking send operation.
+    The communication mode is selected by passing an instance of ``CommModeStandard``, ``CommModeReady``, or ``CommModeSynchronous`` as the last argument.
+
+    :tparam ExecSpace: The execution space.
+    :tparam SendView: The type of the view to be sent.
+    :tparam SendMode: The communication mode type (e.g. ``CommModeStandard``, ``CommModeReady``, ``CommModeSynchronous``).
 
     :param h: The handle for the execution space and MPI.
     :param sv: The view to be sent.
     :param dest: The destination rank.
     :param tag: The message tag.
+    :param mode: A tag instance selecting the communication mode.
 
     :return: A request object for the non-blocking send operation.
 
@@ -533,24 +553,33 @@ Related Types
 
 .. cpp:namespace:: KokkosComm::mpi
 
-.. _CommMode:
+.. _CommModeStandard:
 
-.. cpp:enum-class:: CommMode
+.. cpp:struct:: CommModeStandard
 
-    A scoped enum to specify the mode of an operation. Buffered mode is not supported.
+    Tag type for MPI standard mode. The MPI implementation decides whether outgoing messages will be buffered. Send operations can be started whether or not a matching receive has been started. They may complete before a matching receive is started. Standard mode is non-local: successful completion of the send operation may depend on the occurrence of a matching receive.
 
-    .. cpp:enumerator:: Standard
+.. _CommModeReady:
 
-      The MPI implementation decides whether outgoing messages will be buffered. Send operations can be started whether or not a matching receive has been started. They may complete before a matching receive is started. Standard mode is non-local: successful completion of the send operation may depend on the occurrence of a matching receive.
+.. cpp:struct:: CommModeReady
 
-    .. cpp:enumerator:: Ready
+    Tag type for MPI ready mode. Send operations may be started only if the matching receive is already started.
 
-      Send operations may be started only if the matching receive is already started.
+.. _CommModeSynchronous:
 
-    .. cpp:enumerator:: Synchronous
+.. cpp:struct:: CommModeSynchronous
 
-      Synchronous mode: Send operations complete successfully only if a matching receive is started, and the receive operation has started to receive the message sent.
+    Tag type for MPI synchronous mode. Send operations complete successfully only if a matching receive is started, and the receive operation has started to receive the message sent.
 
-    .. cpp:enumerator:: Default
+.. _DefaultCommMode:
 
-      Default mode is an alias for ``Standard`` mode, but lets users override the behavior of operations at compile-time using the ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` pre-processor define. This forces ``Synchronous`` mode for all "default-mode" operations, which can be useful for debugging purposes, e.g. for asserting that the communication scheme is correct.
+.. cpp:type:: DefaultCommMode = CommModeStandard
+
+    A type alias for the default communication mode. Defaults to ``CommModeStandard``, but when ``KOKKOSCOMM_FORCE_SYNCHRONOUS_MODE`` is defined, it aliases ``CommModeSynchronous`` instead. This allows users to force all default-mode operations into synchronous mode at compile time, which can be useful for debugging and asserting that the communication scheme is correct.
+
+.. _CommunicationMode:
+
+.. cpp:concept:: template <typename T> \
+               CommunicationMode
+
+    A concept satisfied by the communication mode tag types: ``CommModeStandard``, ``CommModeReady``, and ``CommModeSynchronous``.
