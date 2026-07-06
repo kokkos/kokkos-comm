@@ -41,6 +41,7 @@ static_assert(std::is_void_v<SendMode>, "KokkosComm::Experimental::stream::send:
   if (is_contiguous(sv)) {
     mpi_send_fn(data_handle(sv), span(sv), datatype<MpiSpace, T>());
   } else {
+    //std::cerr << "Send: not contig!" << std::endl;
     auto args = Packer::pack(space, sv);
     mpi_send_fn(data_handle(args.view), args.count, args.datatype);
   }

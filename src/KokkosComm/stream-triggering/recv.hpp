@@ -40,10 +40,20 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm,
 
   if (!KokkosComm::is_contiguous(rv)) {
     Args args = Packer::allocate_packed_for(space, "packed", rv);
-    std::cerr << "Recv: Not contigous!" << std::endl;
-    MPIS_Recv_init(KokkosComm::data_handle(rv), KokkosComm::span(rv), args.datatype, src, tag, comm, mem_info, reqs);
-    
+    //std::cerr << "Recv: Not contigous!" << std::endl;
+    //for(int i = 0; i<rv.extent(0); i++){
+    //  std::cout << i << "th index: " << rv(i) << std::endl;
+    //}
+    MPIS_Recv_init(KokkosComm::data_handle(args.view), KokkosComm::span(args.view), args.datatype, src, tag, comm, mem_info, reqs);
+    space.fence("ensure prints are correct!");
+    // packer should not be here! or should wait until over
+    // something, either the lifetime of args.view or packer getting info before request is over
     Packer::unpack_into(space, rv, args.view);
+    space.fence("ensure prints are correct!");
+    //for(int i = 0; i<rv.extent(0); i++){
+    //  std::cout << i << "th index: " << rv(i) << std::endl;
+    //}
+    
   } else {
     using RecvScalar = typename RecvView::value_type;
     MPIS_Recv_init(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, RecvScalar>(), src, tag, comm, mem_info, reqs);

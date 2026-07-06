@@ -223,10 +223,10 @@ endif()
 if(KokkosComm_ENABLE_MPI_ADVANCE)
   #  find_package(stream-triggering) # REQUIRED)
   kc_add_unit_test(
-      test.stream.send-recv
-      stream-triggering
-      NUM_PES 2
-      FILES test_main.cpp stream-triggering/test_sendrecv.cpp
-      LIBRARIES KokkosComm::KokkosComm MPIAdvance::stream-triggering
+    test.stream.send-recv
+    stream-triggering
+    NUM_PES 2
+    FILES test_main.cpp stream-triggering/test_sendrecv.cpp
+    LIBRARIES KokkosComm::KokkosComm MPIAdvance::stream-triggering
   )
 endif()

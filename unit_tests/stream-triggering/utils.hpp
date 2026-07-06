@@ -39,26 +39,21 @@ namespace test_utils::mpi_advance {
   {
     using execution_space = ExecutionSpace;
   public:
-  void* findStream( const ExecutionSpace& a )
+  void findStream( const ExecutionSpace& a )
     {
       if constexpr ( std::is_same_v<ExecutionSpace, Kokkos::HIP> )
         {
-            // std::cout << "HIP STREAM!" << std::endl; // debug?
-            return a.hip_stream();
+            _my_stream = Kokkos::HIP.hip_stream()
+            MPIS_Queue_init(&my_queue, GPU_MEM_OPS, &_my_stream);
         }
         else
         {
-            // std::cout << "Base" << std::endl;
-            return nullptr;
+	    MPIS_Queue_init(&my_queue, THREAD, &my_stream);
         }
     }
-  //static auto init() -> Ctx {0
   Ctx(const ExecutionSpace& exec_space) {
-    //hipStreamCreateWithFlags(&_my_stream, hipStreamNonBlocking)
-    _my_stream = findStream(exec_space);
-    MPIS_Queue_init( &_my_queue, CXI, &_my_stream );
+    findStream(exec_space);
     MPI_Info_create( &_mem_info );
-    //return Ctx(); ; //Ctx(nccl_comm, stream, local_rank, n_ranks, my_rank);
   }
 
   // Forbid copies and moves

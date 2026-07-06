@@ -36,7 +36,7 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm)
   if (!KokkosComm::is_contiguous(rv)) {
     auto args = Packer::allocate_packed_for(space, "packed", rv);
     space.fence("Fence after allocation before MPI_Recv");
-    MPI_Recv(KokkosComm::data_handle(args.view), args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
+    MPI_Recv(KokkosComm::data_handle(args.view), KokkosComm::span(args.view), args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
     Packer::unpack_into(space, rv, args.view);
   } else {
     using RecvScalar = typename RecvView::value_type;
