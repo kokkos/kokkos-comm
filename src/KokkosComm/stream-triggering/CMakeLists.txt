@@ -25,6 +25,7 @@ target_sources(
         #reduce.hpp
         #scan.hpp
         #barrier.hpp
+	context.hpp
     # Implementation detail MPI headers
     FILE_SET HEADERS
       BASE_DIRS ${PROJECT_SOURCE_DIR}/src

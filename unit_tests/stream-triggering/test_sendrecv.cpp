@@ -41,7 +41,7 @@ void send_comm_mode_1d_contig() {
   using ViewType = typename Kokkos::View<Scalar *>;
   ViewType a("a", 1000); // send
   ViewType b("b", 1000); // recv
-
+  /*
   MPI_Info _mem_info;
   MPI_Info_create( &_mem_info );
   MPI_Info_set(_mem_info, "mpi_memory_alloc_kinds", "rocm:device:coarse");
@@ -56,7 +56,8 @@ void send_comm_mode_1d_contig() {
     _my_stream = nullptr;
   }
   MPIS_Queue_init(&_my_queue, CXI, &_my_stream);     
-
+  */
+  StreamContext ctx;
   // set up send and recv
   MPIS_Request my_request; 
   //std::cerr << "before send/recv init: " << typeid(a.data()).name() << ", " << sizeof(a.data())*a.size() << std::endl;
@@ -66,17 +67,17 @@ void send_comm_mode_1d_contig() {
     Kokkos::parallel_for(
     a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; }
 			 );
-    KokkosComm::Experimental::stream::send(a, 1, 0, MPI_COMM_WORLD, _mem_info, &my_request);
+    KokkosComm::Experimental::stream::send(a, 1, 0, MPI_COMM_WORLD, ctx._mem_info, &my_request);
   }
   else if (1 == rank){
-    KokkosComm::Experimental::stream::recv(b, 0, 0, MPI_COMM_WORLD, _mem_info, &my_request);
+    KokkosComm::Experimental::stream::recv(b, 0, 0, MPI_COMM_WORLD, ctx._mem_info, &my_request);
   }
   MPIS_Match(&my_request, MPI_STATUS_IGNORE);
   //hipStreamSynchronize((hipStream_t) _my_stream);  
   
-  MPIS_Enqueue_startall( _my_queue, 1, &my_request );
+  MPIS_Enqueue_startall( ctx._my_queue, 1, &my_request );
   //hipStreamSynchronize((hipStream_t) _my_stream);
-  MPIS_Enqueue_waitall( _my_queue );
+  MPIS_Enqueue_waitall( ctx._my_queue );
   std::cerr << " after start all" << std::endl;
 
   if( 1 == rank) {
@@ -89,8 +90,8 @@ void send_comm_mode_1d_contig() {
 
   //hipStreamSynchronize((hipStream_t) _my_stream);
   MPIS_Request_free(&my_request);
-  MPIS_Queue_free( &_my_queue );
-  MPI_Info_free( &_mem_info );
+/*  MPIS_Queue_free( &_my_queue );
+    MPI_Info_free( &_mem_info );*/
 }
 
 template <CommunicationMode SendMode, typename Scalar>

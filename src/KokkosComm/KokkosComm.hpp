@@ -54,4 +54,5 @@
 
 #include "stream-triggering/recv.hpp"
 #include "stream-triggering/send.hpp"
+#include "stream-triggering/context.hpp"
 #endif
