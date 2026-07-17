@@ -31,7 +31,12 @@ namespace stream {
     void block(){
       MPIS_Enqueue_startall( _my_queue, requests.size(), &requests[0]);
       MPIS_Enqueue_waitall( _my_queue);
-      // unpack
+    }
+
+    void block(int num_of_reqs, MPIS_Request reqs[]){
+      MPIS_Matchall(num_of_reqs, &reqs[0], MPI_STATUS_IGNORE);
+      MPIS_Enqueue_startall( _my_queue, num_of_reqs, &reqs[0]);
+      MPIS_Enqueue_waitall( _my_queue);
     }
     
     StreamContext()//const ExecutionSpace& exec_space)
@@ -59,7 +64,16 @@ namespace stream {
 	  _fine_grain = 0;
 	}
       MPI_Info_create( &_mem_info );
-      MPI_Info_set(_mem_info, "mpi_memory_alloc_kinds", "rocm:device:coarse");
+      if ( _fine_grain )
+        {
+	  MPI_Info_set( _mem_info, "mpi_memory_alloc_kinds",
+			"rocm:device:fine" );
+        }
+      else
+        {
+	  MPI_Info_set( _mem_info, "mpi_memory_alloc_kinds",
+			"rocm:device:coarse" );
+        }
 
       if constexpr ( std::is_same_v<Kokkos::DefaultExecutionSpace, Kokkos::HIP>){
 		 _my_stream = Kokkos::HIP().hip_stream();
