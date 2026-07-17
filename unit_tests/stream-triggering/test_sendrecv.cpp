@@ -49,15 +49,15 @@ void send_comm_mode_1d_contig() {
     Kokkos::parallel_for(
     a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; }
 			 );
-    KokkosComm::Experimental::stream::send(a, 1, 0, MPI_COMM_WORLD, ctx._mem_info, &my_request);
+    KokkosComm::Experimental::stream::send(a, 1, 0, MPI_COMM_WORLD, ctx.get_mem_info(), &my_request);
   }
   else if (1 == rank){
-    KokkosComm::Experimental::stream::recv(b, 0, 0, MPI_COMM_WORLD, ctx._mem_info, &my_request);
+    KokkosComm::Experimental::stream::recv(b, 0, 0, MPI_COMM_WORLD, ctx.get_mem_info(), &my_request);
   }
   MPIS_Match(&my_request, MPI_STATUS_IGNORE);
   
-  MPIS_Enqueue_startall( ctx._my_queue, 1, &my_request );
-  MPIS_Enqueue_waitall( ctx._my_queue );
+  MPIS_Enqueue_startall( ctx.get_queue(), 1, &my_request );
+  MPIS_Enqueue_waitall( ctx.get_queue() );
 
   if( 1 == rank) {
     int src = 0; int errs;
@@ -105,8 +105,8 @@ void send_comm_mode_1d_noncontig() {
   }
   //MPIS_Match(&my_request, MPI_STATUS_IGNORE);
   
-  //MPIS_Enqueue_startall( ctx._my_queue, 1, &my_request );
-  //MPIS_Enqueue_waitall( ctx._my_queue );
+  //MPIS_Enqueue_startall( ctx.get_queue(), 1, &my_request );
+  //MPIS_Enqueue_waitall( ctx.get_queue() );
 
   if( 1 == rank) {
     int src = 0; int errs;

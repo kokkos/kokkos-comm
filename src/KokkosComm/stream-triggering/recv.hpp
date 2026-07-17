@@ -65,7 +65,7 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm,
 
   if (!KokkosComm::is_contiguous(rv)) {
     Args args = Packer::allocate_packed_for(space, "packed", rv);
-    MPIS_Recv_init(KokkosComm::data_handle(args.view), KokkosComm::span(args.view), args.datatype, src, tag, comm, context._mem_info, reqs);
+    MPIS_Recv_init(KokkosComm::data_handle(args.view), KokkosComm::span(args.view), args.datatype, src, tag, comm, context.get_mem_info(), reqs);
     space.fence("ensure prints are correct!");
     // packer should not be here! or should wait until over
     // something, either the lifetime of args.view or packer getting info before request is over
@@ -74,7 +74,7 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm,
     Packer::unpack_into(space, rv, args.view);
   } else {
     using RecvScalar = typename RecvView::value_type;
-    MPIS_Recv_init(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, RecvScalar>(), src, tag, comm, context._mem_info, reqs);
+    MPIS_Recv_init(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, RecvScalar>(), src, tag, comm, context.get_mem_info(), reqs);
   }
 
   Kokkos::Tools::popRegion();

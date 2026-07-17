@@ -23,6 +23,15 @@ namespace stream {
   {
     //using execution_space = ExecutionSpace;
   public:
+
+    MPI_Info get_mem_info() const{
+      return this->_mem_info;
+    }
+
+    MPIS_Queue get_queue() const{
+      return this->_my_queue;
+    }
+    
     void add_request(const MPIS_Request req)
     {
       requests.push_back(req);
@@ -94,7 +103,7 @@ namespace stream {
       MPI_Info_free( &_mem_info );
     }
     
-    //private:
+  private:
     void* _my_stream;
     MPI_Info _mem_info;
     MPIS_Queue _my_queue;

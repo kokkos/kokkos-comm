@@ -68,7 +68,7 @@ void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Com
 
   auto mpi_send_fn = [dest, tag, comm, context, reqs](void *view, int cnt, MPI_Datatype dtype) {
     if constexpr (std::is_same_v<SendMode, CommModeStandard>) {
-      MPIS_Send_init(view, cnt, dtype, dest, tag, comm, context._mem_info, reqs);
+      MPIS_Send_init(view, cnt, dtype, dest, tag, comm, context.get_mem_info(), reqs);
     } else if constexpr (std::is_same_v<SendMode, CommModeReady>) {
       //MPI_Rsend(view, cnt, dtype, dest, tag, comm);
       // MPIS_RSend_init(a.data(), a.size(), dtype, dest, tag, comm, mem_info, ctx->reqs);)
