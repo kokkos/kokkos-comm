@@ -61,12 +61,12 @@ void send(const SendView &sv, int dest, int tag, MPI_Comm comm, MPI_Info mem_inf
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode SendMode>
-void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm, StreamContext context, MPIS_Request* reqs, SendMode) {
+void send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm, StreamContext& context, MPIS_Request* reqs, SendMode) {
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::stream::send");
   using T      = typename SendView::non_const_value_type;
   using Packer = typename KokkosComm::PackTraits<SendView>::packer_type;
 
-  auto mpi_send_fn = [dest, tag, comm, context, reqs](void *view, int cnt, MPI_Datatype dtype) {
+  auto mpi_send_fn = [dest, tag, comm, reqs](void *view, int cnt, MPI_Datatype dtype, StreamContext& context) {
     if constexpr (std::is_same_v<SendMode, CommModeStandard>) {
       MPIS_Send_init(view, cnt, dtype, dest, tag, comm, context.get_mem_info(), reqs);
     } else if constexpr (std::is_same_v<SendMode, CommModeReady>) {
@@ -81,10 +81,10 @@ static_assert(std::is_void_v<SendMode>, "KokkosComm::Experimental::stream::send:
   };
 
   if (is_contiguous(sv)) {
-    mpi_send_fn(data_handle(sv), span(sv), datatype<MpiSpace, T>());
+    mpi_send_fn(data_handle(sv), span(sv), datatype<MpiSpace, T>(), context);
   } else {
     auto args = Packer::pack(space, sv);
-    mpi_send_fn(data_handle(args.view), args.count, args.datatype);
+    mpi_send_fn(data_handle(args.view), args.count, args.datatype, context);
     context.block(1, reqs);
   }
 

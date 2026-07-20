@@ -99,8 +99,56 @@ namespace stream {
       for(int i = 0; i < requests.size(); i++){
 	MPIS_Request_free(&requests[i]);
       }
-      MPIS_Queue_free( &_my_queue );
+
+      if(_my_queue != MPIS_QUEUE_NULL){
+	MPIS_Queue_free( &_my_queue );
+      }
+      if(_mem_info != MPI_INFO_NULL){
       MPI_Info_free( &_mem_info );
+      }
+    }
+
+    // No copying
+    StreamContext (const StreamContext& other)           = delete;
+    StreamContext& operator=(const StreamContext& other) = delete;
+
+    // only moving
+    StreamContext(StreamContext&& other) noexcept
+      : _my_stream(other._my_stream),
+	_mem_info(other._mem_info),
+	_my_queue(other._my_queue),
+	requests(other.requests),
+	_double_buffer(other._double_buffer),
+	_fine_grain(other._fine_grain)
+    {
+      // clear other
+      other._my_stream = nullptr;
+      other._mem_info = MPI_INFO_NULL;
+      other._my_queue = MPIS_QUEUE_NULL;
+      other.requests.clear();
+      other._double_buffer = 0;
+      other._fine_grain = 0;
+    }
+
+    StreamContext& operator=(StreamContext&& other) noexcept
+    {
+      if (this !=&other){
+	_my_stream = other._my_stream;
+	_mem_info = other._mem_info;
+	_my_queue = other._my_queue;
+	requests = other.requests;
+	_double_buffer = other._double_buffer;
+	_fine_grain = other._fine_grain;
+	//clear other
+      other._my_stream = nullptr;
+      other._mem_info = MPI_INFO_NULL;
+      other._my_queue = MPIS_QUEUE_NULL;
+      other.requests.clear();
+      other._double_buffer = 0;
+      other._fine_grain = 0;
+      }
+      return *this;
+      
     }
     
   private:

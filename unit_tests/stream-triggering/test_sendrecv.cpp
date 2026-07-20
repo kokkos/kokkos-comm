@@ -128,8 +128,8 @@ TYPED_TEST(MpiSendRecv, 1D_contig_ready) {
   send_comm_mode_1d_contig<CommModeReady, typename TestFixture::Scalar>();
 }
 
-  //  TYPED_TEST(MpiSendRecv, 1D_noncontig_standard) {
-  //send_comm_mode_1d_noncontig<CommModeStandard, typename TestFixture::Scalar>();
-  //}
+    TYPED_TEST(MpiSendRecv, 1D_noncontig_standard) {
+  send_comm_mode_1d_noncontig<CommModeStandard, typename TestFixture::Scalar>();
+  }
 
 }  // namespace

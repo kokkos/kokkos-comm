@@ -56,7 +56,7 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm,
 }
 
   template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
-void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm, StreamContext context, MPIS_Request* reqs) {
+void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm, StreamContext& context, MPIS_Request* reqs) {
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::stream::recv");
 
   using KCPT   = KokkosComm::PackTraits<RecvView>;
@@ -70,7 +70,8 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm,
     // packer should not be here! or should wait until over
     // something, either the lifetime of args.view or packer getting info before request is over
     context.block(1, reqs);
-    //space.fence("ensure prints are correct!");
+    std::cerr << "blocked!" << std::endl;
+    space.fence("ensure prints are correct!");
     Packer::unpack_into(space, rv, args.view);
   } else {
     using RecvScalar = typename RecvView::value_type;
