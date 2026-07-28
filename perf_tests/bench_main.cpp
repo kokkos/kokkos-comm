@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#include <string>
 #include <cstdlib>
+#include <string>
+
 #include <mpi.h>
 #include <benchmark/benchmark.h>
 #include <Kokkos_Core.hpp>
+
+#include "../unit_tests/logging.hpp"
+#ifdef KOKKOSCOMM_ENABLE_NCCL
+#include "../unit_tests/nccl/utils.hpp"
+#endif
 
 // This reporter does nothing.
 // We can use it to disable output from all but the root process
@@ -34,20 +40,19 @@ bool has_output_envvar() { return std::getenv("BENCHMARK_OUT") != nullptr; }
 int main(int argc, char **argv) {
   int provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-  if (provided != MPI_THREAD_MULTIPLE) {
-    throw std::runtime_error("MPI_THREAD_MULTIPLE is needed");
-  }
+  KC_CHECK(provided == MPI_THREAD_MULTIPLE, "MPI_THREAD_MULTIPLE is required");
+#ifdef KOKKOSCOMM_ENABLE_NCCL
+  // Initialize the NCCL environment once for all tests (false = no verbose logs)
+  test_utils::NcclCtx::init(false);
+#endif
+  Kokkos::initialize();
+  ::benchmark::Initialize(&argc, argv);
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  Kokkos::initialize();
-
-  ::benchmark::Initialize(&argc, argv);
-
   if (rank == 0)
-    // root process will use a reporter from the usual set provided by
-    // ::benchmark
+    // root process will use a reporter from the usual set provided by ::benchmark
     ::benchmark::RunSpecifiedBenchmarks();
   else {
     // reporting from other processes is disabled by passing a custom reporter
@@ -61,6 +66,10 @@ int main(int argc, char **argv) {
   }
 
   Kokkos::finalize();
+#ifdef KOKKOSCOMM_ENABLE_NCCL
+  test_utils::NcclCtx::fini();
+#endif
   MPI_Finalize();
+
   return 0;
 }
