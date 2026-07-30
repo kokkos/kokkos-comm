@@ -6,14 +6,16 @@
 #include <Kokkos_Core.hpp>
 
 #include <KokkosComm/concepts.hpp>
+#include <KokkosComm/fwd.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
 #include "request.hpp"
+#include "mpi_space.hpp"
 
 namespace KokkosComm {
 
-template <typename CommSpace = DefaultCommunicationSpace>
-class Channel {
+template <>
+class Channel<MpiSpace> {
  public:
   explicit Channel(int dest_rank, int src_rank, int tag, MPI_Comm comm)
       : dest_rank_(dest_rank), src_rank_(src_rank), tag_(tag), comm_(comm) {}
