@@ -10,37 +10,64 @@ Channel
 
     Only the ``Channel<MpiSpace>`` specialization is currently provided.
 
-    ``Channel`` binds a fixed source rank, destination rank, and message tag. After
-    registering send and receive buffers with :cpp:func:`sendinit` and
-    :cpp:func:`recvinit`, the user calls :cpp:func:`start` to launch all queued
-    operations and :cpp:func:`wait` to block until they complete.
+    ``Channel`` binds a fixed source rank, destination rank, and message tag.
+    After registering send and receive buffers with :cpp:func:`sendinit` and :cpp:func:`recvinit`, the user calls :cpp:func:`start` to launch all registered operations and :cpp:func:`wait` to block until they complete.
 
-    The communication pattern is established once at construction time. Subsequent
-    ``start`` / ``wait`` cycles reuse the same endpoints and message descriptors,
-    which lets the communication backend optimize repeated exchanges. This is
-    particularly useful for iterative algorithms where the same point-to-point
-    pattern is repeated every iteration.
+    Each registered operation is represented by a persistent MPI request.
+    Register the communication pattern once, then repeat ``start`` / ``wait`` cycles to execute the same operations.
+    The persistent requests are released when the channel is destroyed.
 
-    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
+    A persistent request retains the buffer address, element count, and datatype supplied during registration.
+    ``Channel`` does not retain the View object or its allocation.
+    The application must therefore keep every registered buffer allocation valid and at the same address until the channel is destroyed.
+    Between a completed :cpp:func:`wait` and the next :cpp:func:`start`, send buffers may be modified and receive buffers may be read or modified.
+    While an operation is active, the usual MPI buffer-access restrictions apply.
 
-    .. cpp:function:: explicit Channel(int dest_rank, int src_rank, int tag, typename CommSpace::communicator_type comm)
+    The communicator is borrowed rather than duplicated.
+    It must remain valid until the channel is destroyed, and the channel must be destroyed before ``MPI_Finalize``.
+    Every call to :cpp:func:`start` must be matched by a successful :cpp:func:`wait` before destruction.
+
+    :tparam CommSpace: The communication backend. Only ``MpiSpace`` is supported.
+
+    .. cpp:function:: explicit Channel(int dest_rank, int src_rank, int tag, MPI_Comm comm)
 
         Constructs a ``Channel`` with fixed endpoints.
 
         :param dest_rank: The destination rank for send operations.
         :param src_rank: The source rank for receive operations.
         :param tag: The message tag.
-        :param comm: A communicator handle for the target communication backend.
+        :param comm: The borrowed MPI communicator used by every registered operation.
+
+    .. cpp:function:: ~Channel()
+
+        Releases all registered persistent requests with ``MPI_Request_free``.
+        The channel must have no active operations; the destructor does not wait for them.
+
+    .. cpp:function:: Channel(const Channel&) = delete
+                      auto operator=(const Channel&) -> Channel& = delete
+
+        Copy construction and copy assignment are deleted because a channel exclusively owns its persistent requests.
+
+    .. cpp:function:: Channel(Channel&& other) noexcept
+
+        Transfers ownership of all persistent requests and the borrowed communicator from ``other``.
+        The moved-from channel is empty and may be safely destroyed.
+
+    .. cpp:function:: auto operator=(Channel&& other) noexcept -> Channel&
+
+        Releases the destination's existing persistent requests, then transfers ownership from ``other``.
+        The moved-from channel is empty and may be safely destroyed.
+
+        The destination must have no active operations before assignment.
 
     .. cpp:function:: template <class SendView> void sendinit(SendView view)
 
         Registers a send buffer with the channel.
 
-        The view's data type determines the element type communicated. The view must
-        remain valid until the corresponding :cpp:func:`start` has been matched by a
-        :cpp:func:`wait`.
+        The View's data type determines the element type communicated.
+        Its underlying allocation must remain valid until the channel is destroyed.
 
-        Multiple calls accumulate into the send queue.
+        Each call registers an additional persistent send operation.
 
         :tparam SendView: A Kokkos View type.
         :param view: The view to register as a send buffer.
@@ -49,27 +76,23 @@ Channel
 
         Registers a receive buffer with the channel.
 
-        The view's data type determines the element type communicated. The view must
-        remain valid until the corresponding :cpp:func:`start` has been matched by a
-        :cpp:func:`wait`.
+        The View's data type determines the element type communicated.
+        Its underlying allocation must remain valid until the channel is destroyed.
 
-        Multiple calls accumulate into the receive queue.
+        Each call registers an additional persistent receive operation.
 
         :tparam RecvView: A Kokkos View type.
         :param view: The view to register as a receive buffer.
 
     .. cpp:function:: void start()
 
-        Launches all queued send and receive operations.
+        Activates all registered persistent requests.
 
-        All pending Kokkos kernel work is fenced before the communication operations
-        are initiated, ensuring that send buffers are fully populated and receive
-        buffers are not in use.
+        All pending Kokkos kernel work is fenced before the communication operations are initiated, ensuring that send buffers are fully populated and receive buffers are not in use.
 
     .. cpp:function:: void wait()
 
-        Blocks until all previously started send and receive operations have completed.
+        Blocks until all active persistent requests have completed.
 
-        Upon return, the internal request queues are consumed. To perform another
-        exchange with the same or different buffers, register new buffers with
-        :cpp:func:`sendinit` / :cpp:func:`recvinit` and call :cpp:func:`start` again.
+        Upon return, the persistent MPI requests become inactive but remain registered.
+        Call :cpp:func:`start` again to repeat the same communication operations.
