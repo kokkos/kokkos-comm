@@ -4,9 +4,11 @@ Channel
 
 .. cpp:namespace:: KokkosComm
 
-.. cpp:class:: template <typename CommSpace = DefaultCommunicationSpace> Channel
+.. cpp:class:: template <CommunicationSpace CommSpace = MpiSpace> Channel
 
-    A persistent communication channel for repeated point-to-point exchanges.
+    An MPI persistent communication channel for repeated point-to-point exchanges.
+
+    Only the ``Channel<MpiSpace>`` specialization is currently provided.
 
     ``Channel`` binds a fixed source rank, destination rank, and message tag. After
     registering send and receive buffers with :cpp:func:`sendinit` and
