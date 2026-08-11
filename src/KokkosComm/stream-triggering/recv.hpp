@@ -67,8 +67,6 @@ void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm,
     Args args = Packer::allocate_packed_for(space, "packed", rv);
     MPIS_Recv_init(KokkosComm::data_handle(args.view), KokkosComm::span(args.view), args.datatype, src, tag, comm, context.get_mem_info(), reqs);
     space.fence("ensure prints are correct!");
-    // packer should not be here! or should wait until over
-    // something, either the lifetime of args.view or packer getting info before request is over
     context.block(1, reqs);
     std::cerr << "blocked!" << std::endl;
     space.fence("ensure prints are correct!");

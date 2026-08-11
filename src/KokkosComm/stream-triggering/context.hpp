@@ -140,12 +140,12 @@ namespace stream {
 	_double_buffer = other._double_buffer;
 	_fine_grain = other._fine_grain;
 	//clear other
-      other._my_stream = nullptr;
-      other._mem_info = MPI_INFO_NULL;
-      other._my_queue = MPIS_QUEUE_NULL;
-      other.requests.clear();
-      other._double_buffer = 0;
-      other._fine_grain = 0;
+	other._my_stream = nullptr;
+	other._mem_info = MPI_INFO_NULL;
+	other._my_queue = MPIS_QUEUE_NULL;
+	other.requests.clear();
+	other._double_buffer = 0;
+	other._fine_grain = 0;
       }
       return *this;
       
