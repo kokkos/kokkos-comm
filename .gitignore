@@ -8,3 +8,5 @@ docs/_build
 .venv
 .cache
 compile_commands.json
+build*/
+kc_install/

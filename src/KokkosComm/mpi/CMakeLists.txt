@@ -10,6 +10,7 @@ target_sources(
         communicator.hpp
         request.hpp
         comm_mode.hpp
+        window.hpp
         # Point-to-point
         send.hpp
         isend.hpp
