@@ -38,6 +38,12 @@ class Communicator;
 template <CommunicationSpace CommSpace = DefaultCommunicationSpace>
 class Request;
 
+#if defined(KOKKOSCOMM_ENABLE_MPI)
+/// @brief Template class for channel wrappers.
+template <CommunicationSpace CommSpace = MpiSpace>
+class Channel;
+#endif
+
 namespace Impl {
 
 template <

@@ -168,7 +168,7 @@ if(KokkosComm_ENABLE_MPI)
     test.mpi.channel-p2p
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_channel.cpp
+    FILES test_main.cpp mpi/test_channel_p2p.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
 endif()
