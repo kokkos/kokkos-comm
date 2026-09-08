@@ -9,6 +9,8 @@
 #include <mpi.h>
 #elif defined(KOKKOSCOMM_ENABLE_NCCL)
 #include <nccl.h>
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+#include <rccl/rccl.h>
 #endif
 
 namespace {
@@ -19,7 +21,7 @@ class ReductionOperatorConversion : public testing::Test {
   using RedOp = T;
 };
 
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
 using RedOpTypes =
     ::testing::Types<KokkosComm::Sum, KokkosComm::Prod, KokkosComm::Min, KokkosComm::Max, KokkosComm::Average>;
 #else
@@ -70,7 +72,7 @@ auto test_red_op_conversion() -> void {
   } else if constexpr (std::is_same_v<RO, KokkosComm::Prod>) {
     ASSERT_EQ(MPI_PROD, red_op);
   }
-#elif defined(KOKKOSCOMM_ENABLE_NCCL)
+#elif defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
   if constexpr (std::is_same_v<RO, KokkosComm::Sum>) {
     ASSERT_EQ(ncclSum, red_op);
   } else if constexpr (std::is_same_v<RO, KokkosComm::Prod>) {

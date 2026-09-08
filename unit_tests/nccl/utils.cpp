@@ -2,8 +2,6 @@
 #include <mutex>
 
 #include <mpi.h>
-#include <nccl.h>
-#include <cuda_runtime.h>
 
 #include "utils.hpp"
 #include "../logging.hpp"
@@ -25,22 +23,26 @@ namespace {
 
 namespace test_utils {
 
-std::unique_ptr<NcclCtx> NcclCtx::instance_{};
-std::once_flag NcclCtx::init_flag_{};
+std::unique_ptr<XcclCtx> XcclCtx::instance_{};
+std::once_flag XcclCtx::init_flag_{};
 
-NcclCtx::NcclCtx(ncclComm_t comm, cudaStream_t stream, int dev, int size, int rank)
+XcclCtx::XcclCtx(ncclComm_t comm, DeviceStream stream, int dev, int size, int rank)
     : comm_(comm), stream_(stream), dev_(dev), size_(size), rank_(rank) {}
 
-NcclCtx::~NcclCtx() {
+XcclCtx::~XcclCtx() {
   if (stream_ != nullptr) {
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
     cudaStreamDestroy(stream_);
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+    hipStreamDestroy(stream_);
+#endif
   }
   if (comm_ != nullptr) {
     ncclCommDestroy(comm_);
   }
 }
 
-auto NcclCtx::init(bool verbose) -> void {
+auto XcclCtx::init(bool verbose) -> void {
   std::call_once(init_flag_, [verbose]() {
     int flag = 0;
     KC_MPI_CHECK(MPI_Initialized(&flag));
@@ -56,52 +58,65 @@ auto NcclCtx::init(bool verbose) -> void {
     int local_rank = get_local_rank(mpi_comm, rank);
 
     int devs = 0;
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
     KC_CUDA_CHECK(cudaGetDeviceCount(&devs));
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+    KC_HIP_CHECK(hipGetDeviceCount(&devs));
+#endif
 
     if (verbose) {
-      KC_INFO("P{} found {} CUDA devices", rank, devs);
+      KC_INFO("P{} found {} GPU devices", rank, devs);
     }
 
     KC_CHECK(local_rank < devs, "P{} needs device #{} but only {} devices available", rank, local_rank, devs);
 
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
     KC_CUDA_CHECK(cudaSetDevice(local_rank));
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+    KC_HIP_CHECK(hipSetDevice(local_rank));
+#endif
 
     if (verbose) {
-      KC_INFO("P{} assigned to CUDA device #{}", rank, local_rank);
+      KC_INFO("P{} assigned to GPU device #{}", rank, local_rank);
     }
 
     ncclUniqueId nccl_id{};
     if (rank == 0) {
-      KC_NCCL_CHECK(ncclGetUniqueId(&nccl_id));
+      KC_XCCL_CHECK(ncclGetUniqueId(&nccl_id));
     }
 
     KC_MPI_CHECK(MPI_Bcast(&nccl_id, NCCL_UNIQUE_ID_BYTES, MPI_CHAR, 0, mpi_comm));
 
     ncclComm_t nccl_comm = nullptr;
-    KC_NCCL_CHECK(ncclCommInitRank(&nccl_comm, size, nccl_id, rank));
+    KC_XCCL_CHECK(ncclCommInitRank(&nccl_comm, size, nccl_id, rank));
 
-    cudaStream_t stream = nullptr;
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
+    DeviceStream stream = nullptr;
     KC_CUDA_CHECK(cudaStreamCreate(&stream));
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+    DeviceStream stream = nullptr;
+    KC_HIP_CHECK(hipStreamCreate(&stream));
+#endif
 
-    instance_ = std::unique_ptr<NcclCtx>(new NcclCtx(nccl_comm, stream, local_rank, size, rank));
+    instance_ = std::unique_ptr<XcclCtx>(new XcclCtx(nccl_comm, stream, local_rank, size, rank));
   });
 }
 
-auto NcclCtx::fini() -> void { instance_.reset(); }
+auto XcclCtx::fini() -> void { instance_.reset(); }
 
-auto NcclCtx::get() -> NcclCtx& {
-  KC_CHECK(instance_ != nullptr, "NCCL context not initialized");
+auto XcclCtx::get() -> XcclCtx& {
+  KC_CHECK(instance_ != nullptr, "xCCL context not initialized");
   return *instance_;
 }
 
-auto NcclCtx::comm() const -> ncclComm_t { return comm_; }
+auto XcclCtx::comm() const -> ncclComm_t { return comm_; }
 
-auto NcclCtx::stream() const -> cudaStream_t { return stream_; }
+auto XcclCtx::stream() const -> DeviceStream { return stream_; }
 
-auto NcclCtx::size() const -> int { return size_; }
+auto XcclCtx::size() const -> int { return size_; }
 
-auto NcclCtx::rank() const -> int { return rank_; }
+auto XcclCtx::rank() const -> int { return rank_; }
 
-auto NcclCtx::device() const -> int { return dev_; }
+auto XcclCtx::device() const -> int { return dev_; }
 
 }  // namespace test_utils
