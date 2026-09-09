@@ -14,6 +14,7 @@
 #include "request.hpp"
 
 #include "impl/pack_traits.hpp"
+#include "impl/error_handling.hpp"
 
 namespace KokkosComm::Experimental {
 namespace nccl {
@@ -31,7 +32,8 @@ auto broadcast(const Kokkos::Cuda& space, View& v, int root, ncclComm_t comm) ->
 
   Request<NcclSpace> req;
   if (KC::is_contiguous(v)) {
-    ncclBcast(KC::data_handle(v), KC::span(v), datatype<NcclSpace, T>(), root, comm, space.cuda_stream());
+    KC_NCCL_CHECK(ncclBcast(KC::data_handle(v), KC::span(v), datatype<NcclSpace, T>(), root, comm, space.cuda_stream())
+    );
     req.capture_stream_state(space.cuda_stream());
   } else {
     Kokkos::abort("KokkosComm::Experimental::nccl::broadcast: unimplemented for non-contiguous views");
