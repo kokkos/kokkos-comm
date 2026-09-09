@@ -10,6 +10,7 @@
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
 #include <KokkosComm/reduction_op.hpp>
+#include "KokkosComm/impl/metadata_checks.hpp"
 #include "nccl_space.hpp"
 #include "communicator.hpp"
 #include "request.hpp"
@@ -27,20 +28,22 @@ auto allreduce(const ExecSpace& space, const SendView& sv, const RecvView& rv, n
     -> Request<NcclSpace> {
   using ST = typename SendView::non_const_value_type;
   using RT = typename RecvView::non_const_value_type;
-  static_assert(
-      std::is_same_v<ST, RT>, "KokkosComm::Experimental::nccl::allreduce: View value types must be identical"
-  );
-  Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::allreduce");
+
+  constexpr const char* fn = "KokkosComm::Experimental::nccl::allreduce";
+  Kokkos::Tools::pushRegion(fn);
+
+  KokkosComm::Impl::checks::static_assert_dtype_match(sv, rv);
+  KokkosComm::Impl::checks::static_assert_rank_match(sv, rv);
+  KokkosComm::Impl::checks::fail_if_extents_mismatch(sv, rv, fn);
+  KokkosComm::Impl::checks::fail_if_noncontiguous(sv, fn);
+  KokkosComm::Impl::checks::fail_if_noncontiguous(rv, fn);
 
   Request<NcclSpace> req;
-  if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
-    KC_NCCL_CHECK(ncclAllReduce(
-        KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), op, comm, space.cuda_stream()
-    ));
-    req.capture_stream_state(space.cuda_stream());
-  } else {
-    Kokkos::abort("KokkosComm::Experimental::nccl::allreduce: unimplemented for non-contiguous Views");
-  }
+  KC_NCCL_CHECK(ncclAllReduce(
+      KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), op, comm, space.cuda_stream()
+  ));
+  req.capture_stream_state(space.cuda_stream());
+
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 

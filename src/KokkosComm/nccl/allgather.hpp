@@ -12,7 +12,7 @@
 #include "nccl_space.hpp"
 #include "communicator.hpp"
 #include "request.hpp"
-
+#include "KokkosComm/impl/metadata_checks.hpp"
 #include "impl/pack_traits.hpp"
 #include "impl/error_handling.hpp"
 
@@ -25,20 +25,24 @@ template <KokkosExecutionSpace ExecSpace, KokkosView SendView, MutKokkosView Rec
 auto allgather(const ExecSpace& space, const SendView& sv, const RecvView& rv, ncclComm_t comm) -> Request<NcclSpace> {
   using ST = typename SendView::non_const_value_type;
   using RT = typename RecvView::non_const_value_type;
-  static_assert(
-      std::is_same_v<ST, RT>, "KokkosComm::Experimental::nccl::allgather: View value types must be identical"
-  );
-  Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::allgather");
+
+  constexpr const char* fn = "KokkosComm::Experimental::nccl::allgather";
+  Kokkos::Tools::pushRegion(fn);
+
+  KokkosComm::Impl::checks::static_assert_dtype_match(sv, rv);
+  KokkosComm::Impl::checks::static_assert_rank_match_allgather(sv, rv);
+  int comm_size;
+  if constexpr (metadata_checks) KC_NCCL_CHECK(ncclCommCount(comm, &comm_size));
+  KokkosComm::Impl::checks::fail_if_size_mismatch_allgather(sv, rv, fn, comm_size);
+  KokkosComm::Impl::checks::fail_if_noncontiguous(sv, fn);
+  KokkosComm::Impl::checks::fail_if_noncontiguous(rv, fn);
 
   Request<NcclSpace> req;
-  if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
-    KC_NCCL_CHECK(ncclAllGather(
-        KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), comm, space.cuda_stream()
-    ));
-    req.capture_stream_state(space.cuda_stream());
-  } else {
-    Kokkos::abort("KokkosComm::Experimental::nccl::allgather: unimplemented for non-contiguous views");
-  }
+  KC_NCCL_CHECK(ncclAllGather(
+      KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), comm, space.cuda_stream()
+  ));
+  req.capture_stream_state(space.cuda_stream());
+
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 

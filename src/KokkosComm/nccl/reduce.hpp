@@ -15,7 +15,7 @@
 #include "nccl_space.hpp"
 #include "communicator.hpp"
 #include "request.hpp"
-
+#include "KokkosComm/impl/metadata_checks.hpp"
 #include "impl/pack_traits.hpp"
 #include "impl/error_handling.hpp"
 
@@ -30,8 +30,12 @@ auto reduce(
   using RT         = typename RecvView::non_const_value_type;
   using SendPacker = typename Impl::PackTraits<SendView>::packer_type;
   using RecvPacker = typename Impl::PackTraits<RecvView>::packer_type;
-  static_assert(std::is_same_v<ST, RT>, "KokkosComm::Experimental::nccl::reduce: View value types must be identical");
+
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::reduce");
+
+  KokkosComm::Impl::checks::static_assert_dtype_match(sv, rv);
+  KokkosComm::Impl::checks::static_assert_rank_match(sv, rv);
+  // KokkosComm::Impl::checks::fail_if_extents_mismatch(sv, rv, fn); check depends on rank
 
   Request<NcclSpace> req;
   if (is_contiguous(sv)) {
