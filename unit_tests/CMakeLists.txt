@@ -219,4 +219,11 @@ if(KokkosComm_ENABLE_NCCL)
     FILES test_main.cpp nccl/test_reduce.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
+  kc_add_unit_test(
+    test.nccl.error_handling
+    NCCL
+    NUM_PES 2
+    FILES test_main.cpp nccl/test_error_handling.cpp nccl/utils.cpp
+    LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
+  )
 endif()
