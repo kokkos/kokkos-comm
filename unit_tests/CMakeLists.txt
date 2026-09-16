@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 project(
   KokkosCommUnitTests
-  VERSION 0.2.0
+  VERSION 0.1.0
   LANGUAGES CXX
   DESCRIPTION "Unit tests for the Kokkos Comm experimental explicit communication interfaces"
 )
@@ -66,13 +66,15 @@ if(KokkosComm_ENABLE_MPI)
 
   # KOKKOS_ENABLE_CUDA is not set?
   if(Kokkos_ENABLE_CUDA)
-    kc_add_unit_test(smoke.mpi.cuda-p2p MPI NUM_PES 2 FILES mpi/test_mpi_cuda_sendrecv.cpp)
+    enable_language(CUDA)
+    find_package(CUDAToolkit REQUIRED)
+
+    kc_add_unit_test(smoke.mpi.cuda-p2p MPI NUM_PES 2 FILES mpi/test_mpi_cuda_sendrecv.cu LIBRARIES CUDA::cudart)
+    target_compile_features(smoke.mpi.cuda-p2p PRIVATE cuda_std_17)
+
     # MPICH needs dynamic cudart (we think, pmodels/mpich#7304)
     if(KOKKOSCOMM_IMPL_MPI_IS_MPICH)
-      # Setting the CUDA_RUNTIME_LIBRARY property on this target to "Shared" doesn't work for
-      # reasons I don't understand.
-      target_compile_options(smoke.mpi.cuda-p2p PUBLIC --cudart shared)
-      target_link_options(smoke.mpi.cuda-p2p PUBLIC --cudart shared)
+      set_property(TARGET smoke.mpi.cuda-p2p PROPERTY CUDA_RUNTIME_LIBRARY Shared)
     endif()
   endif()
 
@@ -179,42 +181,42 @@ if(KokkosComm_ENABLE_NCCL)
     test.nccl.p2p
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_point_to_point.cpp
+    FILES test_main.cpp nccl/test_point_to_point.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.broadcast
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_broadcast.cpp
+    FILES test_main.cpp nccl/test_broadcast.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.all-gather
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_allgather.cpp
+    FILES test_main.cpp nccl/test_allgather.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.all-to-all
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_alltoall.cpp
+    FILES test_main.cpp nccl/test_alltoall.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.all-reduce
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_allreduce.cpp
+    FILES test_main.cpp nccl/test_allreduce.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.reduce
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_reduce.cpp
+    FILES test_main.cpp nccl/test_reduce.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
 endif()

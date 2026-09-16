@@ -21,7 +21,7 @@
 namespace KokkosComm::Experimental {
 namespace nccl {
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView, MutKokkosView RecvView>
 auto reduce(
     const ExecSpace& space, const SendView& sv, RecvView& rv, ncclRedOp_t op, int root, int rank, ncclComm_t comm
 ) -> Request<NcclSpace> {
@@ -83,7 +83,7 @@ auto reduce(
 }  // namespace nccl
 namespace Impl {
 
-template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp>
+template <KokkosView SendView, MutKokkosView RecvView, ReductionOperator RedOp>
 struct Reduce<SendView, RecvView, RedOp, Kokkos::Cuda, NcclSpace> {
   static auto execute(Communicator<NcclSpace, Kokkos::Cuda>& h, const SendView sv, RecvView rv, int root)
       -> Request<NcclSpace> {

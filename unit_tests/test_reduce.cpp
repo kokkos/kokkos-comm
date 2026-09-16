@@ -37,7 +37,7 @@ auto reduce_contig_1d() -> void {
 #else
 
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx  = test_utils::nccl::Ctx::init();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
   auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;

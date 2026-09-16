@@ -32,7 +32,7 @@ namespace KokkosComm::Experimental {
 
 /// Copy the `v` view from the `root` rank to all ranks' `v` view.
 template <
-    KokkosView View,
+    MutKokkosView View,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 auto broadcast(Communicator<CommSpace, ExecSpace>& h, View v, int root) -> Request<CommSpace> {
@@ -45,7 +45,7 @@ auto broadcast(Communicator<CommSpace, ExecSpace>& h, View v, int root) -> Reque
 /// Note: this assumes the span of the `rv` view to be `h.size() * KokkosComm::span(sv)`.
 template <
     KokkosView SendView,
-    KokkosView RecvView,
+    MutKokkosView RecvView,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 auto allgather(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvView rv) -> Request<CommSpace> {
@@ -60,7 +60,7 @@ auto allgather(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvVie
 /// Note: this assumes the span of both `sv` and `rv` views to be `h.size * count`.
 template <
     KokkosView SendView,
-    KokkosView RecvView,
+    MutKokkosView RecvView,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 auto alltoall(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvView rv, int count) -> Request<CommSpace> {
@@ -70,7 +70,7 @@ auto alltoall(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvView
 /// Reduce the `sv` view using the `RedOp` operation and copy the result to all ranks' `rv` view.
 template <
     KokkosView SendView,
-    KokkosView RecvView,
+    MutKokkosView RecvView,
     ReductionOperator RedOp,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
@@ -83,7 +83,7 @@ auto allreduce(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvVie
 /// The `rv` view is only used on the `root` rank and ignored for all other ranks.
 template <
     KokkosView SendView,
-    KokkosView RecvView,
+    MutKokkosView RecvView,
     ReductionOperator RedOp,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>

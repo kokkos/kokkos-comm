@@ -25,7 +25,6 @@ implementations from being used. Also, the CUDA libraries were statically linked
 
 #include <mpi.h>
 #include <cuda_runtime.h>
-#include <cuda.h>
 
 // Macro to check for CUDA errors
 #define CUDA(call)                                                                                                   \

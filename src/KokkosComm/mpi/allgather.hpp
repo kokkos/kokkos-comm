@@ -18,7 +18,7 @@
 namespace KokkosComm {
 namespace mpi {
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SView, MutKokkosView RView>
 auto iallgather(const ExecSpace& space, const SView sv, RView rv, MPI_Comm comm) -> Request<MpiSpace> {
   using ST = typename SView::non_const_value_type;
   using RT = typename RView::non_const_value_type;
@@ -45,7 +45,7 @@ auto iallgather(const ExecSpace& space, const SView sv, RView rv, MPI_Comm comm)
   return req;
 }
 
-template <KokkosView SendView, KokkosView RecvView>
+template <KokkosView SendView, MutKokkosView RecvView>
 void allgather(const SendView& sv, const RecvView& rv, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Mpi::allgather");
 
@@ -65,7 +65,7 @@ void allgather(const SendView& sv, const RecvView& rv, MPI_Comm comm) {
 }
 
 // in-place allgather
-template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, MutKokkosView RecvView>
 void allgather(const ExecSpace& space, const RecvView& rv, const size_t recvCount, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Mpi::allgather");
 
@@ -82,7 +82,7 @@ void allgather(const ExecSpace& space, const RecvView& rv, const size_t recvCoun
   Kokkos::Tools::popRegion();
 }
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView, MutKokkosView RecvView>
 void allgather(const ExecSpace& space, const SendView& sv, const RecvView& rv, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::Mpi::allgather");
 
@@ -100,7 +100,7 @@ void allgather(const ExecSpace& space, const SendView& sv, const RecvView& rv, M
 }  // namespace mpi
 namespace Experimental::Impl {
 
-template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace>
+template <KokkosView SendView, MutKokkosView RecvView, KokkosExecutionSpace ExecSpace>
 struct AllGather<SendView, RecvView, ExecSpace, MpiSpace> {
   static auto execute(Communicator<MpiSpace, ExecSpace>& h, const SendView sv, RecvView rv) -> Request<MpiSpace> {
     return mpi::iallgather(h.exec(), sv, rv, h.comm());

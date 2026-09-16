@@ -17,8 +17,8 @@ namespace {
 
 TEST(Communicator, from_raw_returns_same_communicator) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -30,8 +30,8 @@ TEST(Communicator, from_raw_returns_same_communicator) {
 TEST(Communicator, from_raw_preserves_size_and_rank) {
   int expected_size, expected_rank;
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
   ncclCommCount(raw_comm, &expected_size);
   ncclCommUserRank(raw_comm, &expected_rank);
 #else
@@ -47,8 +47,8 @@ TEST(Communicator, from_raw_preserves_size_and_rank) {
 
 TEST(Communicator, exec_returns_execution_space_of_correct_type) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -64,8 +64,8 @@ TEST(Communicator, exec_returns_execution_space_of_correct_type) {
 
 TEST(Communicator, duplicate_from_raw_returns_valid_communicator) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -77,8 +77,8 @@ TEST(Communicator, duplicate_from_raw_returns_valid_communicator) {
 TEST(Communicator, duplicate_from_raw_preserves_size_and_rank) {
   int expected_size, expected_rank;
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
   ncclCommCount(raw_comm, &expected_size);
   ncclCommUserRank(raw_comm, &expected_rank);
 #else
@@ -94,8 +94,8 @@ TEST(Communicator, duplicate_from_raw_preserves_size_and_rank) {
 
 TEST(Communicator, duplicate_preserves_size_and_rank) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -108,8 +108,8 @@ TEST(Communicator, duplicate_preserves_size_and_rank) {
 
 TEST(Communicator, duplicate_produces_independent_communicator) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -121,8 +121,8 @@ TEST(Communicator, duplicate_produces_independent_communicator) {
 
 TEST(Communicator, duplicate_chain_produces_independent_communicators) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -141,8 +141,8 @@ TEST(Communicator, duplicate_chain_produces_independent_communicators) {
 TEST(Communicator, split_from_raw_returns_valid_communicator) {
   int rank;
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
   ncclCommUserRank(raw_comm, &rank);
 #else
   auto raw_comm = MPI_COMM_WORLD;
@@ -155,9 +155,9 @@ TEST(Communicator, split_from_raw_returns_valid_communicator) {
 
 TEST(Communicator, split_undefined_color_returns_nullopt) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
-  int color     = NCCL_SPLIT_NOCOLOR;
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
+  int color      = NCCL_SPLIT_NOCOLOR;
 #else
   auto raw_comm = MPI_COMM_WORLD;
   int color     = MPI_UNDEFINED;
@@ -170,8 +170,8 @@ TEST(Communicator, split_undefined_color_returns_nullopt) {
 
 TEST(Communicator, split_same_color_groups_all_ranks) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -185,8 +185,8 @@ TEST(Communicator, split_same_color_groups_all_ranks) {
 
 TEST(Communicator, split_two_colors_produces_half_sized_communicators) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -203,8 +203,8 @@ TEST(Communicator, split_two_colors_produces_half_sized_communicators) {
 
 TEST(Communicator, split_key_controls_rank_ordering) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -223,8 +223,8 @@ TEST(Communicator, split_key_controls_rank_ordering) {
 
 TEST(Communicator, sequential_splits_produce_independent_communicators) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -247,8 +247,8 @@ TEST(Communicator, sequential_splits_produce_independent_communicators) {
 
 TEST(Communicator, move_constructed_communicator_is_valid) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -264,8 +264,8 @@ TEST(Communicator, move_constructed_communicator_is_valid) {
 
 TEST(Communicator, move_assigned_communicator_is_valid) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -282,8 +282,8 @@ TEST(Communicator, move_assigned_communicator_is_valid) {
 
 TEST(Communicator, self_move_assignment_is_safe) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif

@@ -14,11 +14,14 @@ Available benchmarks:
     * - File name
       - Description
 
-    * - ``test_2dhalo.cpp``
+    * - ``test_2d_halo.cpp``
       - A 2D halo exchange
 
     * - ``test_sendrecv.cpp``
       - A ping-pong between ranks 0 and 1
+
+    * - ``test_channel_sendrecv.cpp``
+      - A send/receive between neighboring ranks using ``KokkosComm::Channel``
 
     * - ``test_osu_latency.cpp``
       - An implementation of the OSU latency benchmark (comparison between Kokkos Comm and raw MPI)

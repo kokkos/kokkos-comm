@@ -20,7 +20,7 @@ namespace nccl {
 
 namespace KC = KokkosComm;
 
-template <KokkosView View>
+template <MutKokkosView View>
 auto broadcast(const Kokkos::Cuda& space, View& v, int root, ncclComm_t comm) -> Request<NcclSpace> {
   using T = typename View::non_const_value_type;
   static_assert(
@@ -45,7 +45,7 @@ auto broadcast(const Kokkos::Cuda& space, View& v, int root, ncclComm_t comm) ->
 }  // namespace nccl
 namespace Impl {
 
-template <KokkosView View>
+template <MutKokkosView View>
 struct Broadcast<View, Kokkos::Cuda, NcclSpace> {
   static auto execute(Communicator<NcclSpace, Kokkos::Cuda>& h, View v, int root) -> Request<NcclSpace> {
     return nccl::broadcast(h.exec(), v, root, h.comm());

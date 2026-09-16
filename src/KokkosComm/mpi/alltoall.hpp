@@ -18,7 +18,7 @@
 namespace KokkosComm {
 namespace mpi {
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SView, MutKokkosView RView>
 auto ialltoall(const ExecSpace& space, const SView sv, RView rv, int count, MPI_Comm comm) -> Request<MpiSpace> {
   using ST = typename SView::non_const_value_type;
   using RT = typename RView::non_const_value_type;
@@ -45,7 +45,7 @@ auto ialltoall(const ExecSpace& space, const SView sv, RView rv, int count, MPI_
   return req;
 }
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView, MutKokkosView RecvView>
 void alltoall(
     const ExecSpace& space,
     const SendView& sv,
@@ -92,7 +92,7 @@ void alltoall(
 }
 
 // in-place alltoall
-template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, MutKokkosView RecvView>
 void alltoall(const ExecSpace& space, const RecvView& rv, const size_t recvCount, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::alltoall");
 
@@ -124,7 +124,7 @@ void alltoall(const ExecSpace& space, const RecvView& rv, const size_t recvCount
 }  // namespace mpi
 namespace Experimental::Impl {
 
-template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace>
+template <KokkosView SendView, MutKokkosView RecvView, KokkosExecutionSpace ExecSpace>
 struct AllToAll<SendView, RecvView, ExecSpace, MpiSpace> {
   static auto execute(Communicator<MpiSpace, ExecSpace>& h, const SendView sv, RecvView rv, int count)
       -> Request<MpiSpace> {

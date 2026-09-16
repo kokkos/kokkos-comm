@@ -7,12 +7,12 @@
 #include <cstdlib>
 #include <string_view>
 
-#include <cuda.h>
+#include <KokkosComm/config.hpp>
 #include <mpi.h>
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
 #include <nccl.h>
+#include <cuda_runtime.h>
 #endif
-
 #include <fmt/core.h>
 
 namespace logging {
@@ -47,24 +47,24 @@ constexpr std::array level_txt{"FATAL"sv, "ERROR"sv, "WARNING"sv, "INFO"sv, "TRA
 
 #define KC_CHECK(expr, ...) ((expr) ? void(0) : KC_FATAL(__VA_ARGS__))
 
-#define KC_CUDA_CHECK(expr)                                                                                      \
-  ([&]() {                                                                                                       \
-    cudaError_t kc_res_ = (expr);                                                                                \
-    return kc_res_ == cudaSuccess ? void(0)                                                                      \
-                                  : KC_FATAL("CUDA check failed: `" #expr "`: {}", cudaGetErrorString(kc_res_)); \
-  }())
-
 #define KC_MPI_CHECK(expr)                                                                            \
   ([&]() {                                                                                            \
     int kc_res_ = (expr);                                                                             \
     return kc_res_ == MPI_SUCCESS ? void(0) : KC_FATAL("MPI check failed: `" #expr "`: {}", kc_res_); \
   }())
 
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
+#ifdef KOKKOSCOMM_ENABLE_NCCL
 #define KC_NCCL_CHECK(expr)                                                                                      \
   ([&]() {                                                                                                       \
     ncclResult_t kc_res_ = (expr);                                                                               \
     return kc_res_ == ncclSuccess ? void(0)                                                                      \
                                   : KC_FATAL("NCCL check failed: `" #expr "`: {}", ncclGetErrorString(kc_res_)); \
+  }())
+
+#define KC_CUDA_CHECK(expr)                                                                                      \
+  ([&]() {                                                                                                       \
+    cudaError_t kc_res_ = (expr);                                                                                \
+    return kc_res_ == cudaSuccess ? void(0)                                                                      \
+                                  : KC_FATAL("CUDA check failed: `" #expr "`: {}", cudaGetErrorString(kc_res_)); \
   }())
 #endif

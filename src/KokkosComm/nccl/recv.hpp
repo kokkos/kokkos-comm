@@ -19,7 +19,7 @@
 namespace KokkosComm {
 namespace Experimental::nccl {
 
-template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, MutKokkosView RecvView>
 auto recv(const ExecSpace& space, RecvView& rv, int peer, ncclComm_t comm) -> Request<NcclSpace> {
   using T = typename RecvView::non_const_value_type;
   Kokkos::Tools::pushRegion("KokkosComm::Impl::recv");
@@ -33,12 +33,12 @@ auto recv(const ExecSpace& space, RecvView& rv, int peer, ncclComm_t comm) -> Re
     KC_NCCL_CHECK(
         ncclRecv(data_handle(pckd_rv.view_), pckd_rv.count_, pckd_rv.datatype_, peer, comm, space.cuda_stream())
     );
-    req.capture_stream_state(space.cuda_stream());
     req.add_callback([space, rv, pckd_rv]() {
       Packer::unpack_into(space, rv, pckd_rv.view_);
       space.fence("fence `pckd_rv` unpacking after NCCL call");
     });
   }
+  req.capture_stream_state(space.cuda_stream());
   req.extend_view_lifetime(rv);
 
   Kokkos::Tools::popRegion();
@@ -48,7 +48,7 @@ auto recv(const ExecSpace& space, RecvView& rv, int peer, ncclComm_t comm) -> Re
 }  // namespace Experimental::nccl
 namespace Impl {
 
-template <KokkosView RecvView>
+template <MutKokkosView RecvView>
 struct Recv<RecvView, Kokkos::Cuda, Experimental::NcclSpace> {
   static auto execute(Communicator<Experimental::NcclSpace, Kokkos::Cuda>& h, RecvView sv, int peer)
       -> Request<Experimental::NcclSpace> {

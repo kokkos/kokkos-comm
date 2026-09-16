@@ -41,7 +41,7 @@ class Request;
 namespace Impl {
 
 template <
-    KokkosView RecvView,
+    MutKokkosView RecvView,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 struct Recv;
@@ -58,28 +58,28 @@ struct Send;
 namespace Experimental::Impl {
 
 template <
-    KokkosView View,
+    MutKokkosView View,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 struct Broadcast;
 
 template <
     KokkosView SendView,
-    KokkosView RecvView,
+    MutKokkosView RecvView,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 struct AllGather;
 
 template <
     KokkosView SendView,
-    KokkosView RecvView,
+    MutKokkosView RecvView,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 struct AllToAll;
 
 template <
     KokkosView SendView,
-    KokkosView RecvView,
+    MutKokkosView RecvView,
     ReductionOperator RedOp,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
@@ -87,7 +87,7 @@ struct AllReduce;
 
 template <
     KokkosView SendView,
-    KokkosView RecvView,
+    MutKokkosView RecvView,
     ReductionOperator RedOp,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>

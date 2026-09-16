@@ -10,7 +10,7 @@
 namespace {
 
 using Ex = Kokkos::DefaultExecutionSpace;
-using Co = KokkosComm::DefaultCommunicationSpace;
+using Co = KokkosComm::MpiSpace;
 
 using namespace KokkosComm::mpi;
 

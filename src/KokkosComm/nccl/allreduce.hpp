@@ -21,7 +21,7 @@ namespace nccl {
 
 namespace KC = KokkosComm;
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView, MutKokkosView RecvView>
 auto allreduce(const ExecSpace& space, const SendView& sv, const RecvView& rv, ncclRedOp_t op, ncclComm_t comm)
     -> Request<NcclSpace> {
   using ST = typename SendView::non_const_value_type;
@@ -50,7 +50,7 @@ auto allreduce(const ExecSpace& space, const SendView& sv, const RecvView& rv, n
 }  // namespace nccl
 namespace Impl {
 
-template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp>
+template <KokkosView SendView, MutKokkosView RecvView, ReductionOperator RedOp>
 struct AllReduce<SendView, RecvView, RedOp, Kokkos::Cuda, NcclSpace> {
   static auto execute(Communicator<NcclSpace, Kokkos::Cuda>& h, const SendView sv, RecvView rv) -> Request<NcclSpace> {
     return nccl::allreduce(h.exec(), sv, rv, reduction_op<NcclSpace, RedOp>(), h.comm());

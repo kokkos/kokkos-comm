@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.25)
 project(
   KokkosComm
   LANGUAGES CXX
-  VERSION 0.2.0
+  VERSION 0.1.0
   DESCRIPTION
     "Experimental explicit communication interfaces for the Kokkos C++ Performance Portability Programming ecosystem"
   HOMEPAGE_URL "https://kokkos.org/kokkos-comm/"
@@ -29,17 +29,22 @@ message(STATUS "Kokkos Comm version: ${CMAKE_PROJECT_VERSION}")
 set(KOKKOSCOMM_ENABLED_BACKENDS "")
 
 # --- DEPENDENCIES --- #
-# Require Kokkos 4.7+
 find_package(Kokkos 4.7.0 REQUIRED)
+
 if(KokkosComm_ENABLE_MPI)
-  find_package(MPI REQUIRED)
+  find_package(MPI 3.0.0 REQUIRED)
   include(mpi-vendor)
   kokkoscomm_set_mpi_vendor_variables()
   list(APPEND KOKKOSCOMM_ENABLED_BACKENDS "MPI")
 endif()
+
 if(KokkosComm_ENABLE_NCCL)
-  # Require NCCL 2+
-  find_package(NCCL 2.0 REQUIRED)
+  if(NOT Kokkos_ENABLE_CUDA)
+    message(FATAL_ERROR "KokkosComm_ENABLE_NCCL requires Kokkos_ENABLE_CUDA")
+  endif()
+  find_package(NCCL 2.20.0 REQUIRED)
+  # Kokkos Comm uses CUDA runtime headers directly
+  find_package(CUDAToolkit REQUIRED)
   list(APPEND KOKKOSCOMM_ENABLED_BACKENDS "NCCL")
 endif()
 
@@ -119,6 +124,7 @@ if(KokkosComm_INSTALL_CMAKE_PACKAGE)
     FILES
       ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake
       ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake
+      ${PROJECT_SOURCE_DIR}/cmake/FindNCCL.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
   )
   install(

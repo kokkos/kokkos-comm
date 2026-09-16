@@ -28,7 +28,10 @@ System requirements
       - Conforming to MPI-3+ standard
 
     * - NCCL
-      - 2+
+      - 2.20+
+
+    * - CUDA Toolkit (runtime)
+      - Required when enabling the NCCL backend
 
 
 Kokkos Comm will attempt to support the `same systems and toolchains as Kokkos <https://kokkos.org/kokkos-core-wiki/get-started/requirements.html>`_.

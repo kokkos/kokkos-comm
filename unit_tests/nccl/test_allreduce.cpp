@@ -21,7 +21,7 @@ TYPED_TEST_SUITE(AllReduce, ScalarTypes);
 
 template <typename Scalar>
 auto allreduce_0d() -> void {
-  auto nccl_ctx   = test_utils::nccl::Ctx::init();
+  auto& nccl_ctx  = test_utils::NcclCtx::get();
   const auto exec = Kokkos::Cuda(nccl_ctx.stream());
   const auto comm = nccl_ctx.comm();
   const int size  = nccl_ctx.size();
@@ -41,14 +41,14 @@ auto allreduce_0d() -> void {
 
   int errs;
   Kokkos::parallel_reduce(
-      rv.extent(0), KOKKOS_LAMBDA(const int, int &lsum) { lsum += (rv() != size * (size - 1) / 2); }, errs
+      rv.extent(0), KOKKOS_LAMBDA(const int, int& lsum) { lsum += (rv() != size * (size - 1) / 2); }, errs
   );
   EXPECT_EQ(errs, 0);
 }
 
 template <typename Scalar>
 auto allreduce_contig_1d() -> void {
-  auto nccl_ctx   = test_utils::nccl::Ctx::init();
+  auto& nccl_ctx  = test_utils::NcclCtx::get();
   const auto exec = Kokkos::Cuda(nccl_ctx.stream());
   const auto comm = nccl_ctx.comm();
   const int size  = nccl_ctx.size();
@@ -56,8 +56,8 @@ auto allreduce_contig_1d() -> void {
   const int root  = 0;
 
   const int n_contrib = 10;
-  Kokkos::View<Scalar *> sv("sv", n_contrib);
-  Kokkos::View<Scalar *> rv("rv", n_contrib);
+  Kokkos::View<Scalar*> sv("sv", n_contrib);
+  Kokkos::View<Scalar*> rv("rv", n_contrib);
 
   // Prepare send buffer
   Kokkos::parallel_for(
@@ -69,7 +69,7 @@ auto allreduce_contig_1d() -> void {
 
   int errs;
   Kokkos::parallel_reduce(
-      rv.extent(0), KOKKOS_LAMBDA(const int i, int &lsum) { lsum += (rv(i) != size * (size - 1) / 2 + size * i); }, errs
+      rv.extent(0), KOKKOS_LAMBDA(const int i, int& lsum) { lsum += (rv(i) != size * (size - 1) / 2 + size * i); }, errs
   );
   EXPECT_EQ(errs, 0);
 }

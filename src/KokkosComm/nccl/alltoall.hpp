@@ -20,7 +20,7 @@ namespace nccl {
 
 namespace KC = KokkosComm;
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView, MutKokkosView RecvView>
 auto alltoall(const ExecSpace& space, const SendView& sv, const RecvView& rv, int count, ncclComm_t comm)
     -> Request<NcclSpace> {
   using ST = typename SendView::non_const_value_type;
@@ -56,7 +56,7 @@ auto alltoall(const ExecSpace& space, const SendView& sv, const RecvView& rv, in
 }  // namespace nccl
 namespace Impl {
 
-template <KokkosView SendView, KokkosView RecvView>
+template <KokkosView SendView, MutKokkosView RecvView>
 struct AllToAll<SendView, RecvView, Kokkos::Cuda, NcclSpace> {
   static auto execute(Communicator<NcclSpace, Kokkos::Cuda>& h, const SendView sv, RecvView rv, int count)
       -> Request<NcclSpace> {

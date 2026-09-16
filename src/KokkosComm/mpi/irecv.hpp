@@ -18,7 +18,7 @@ namespace KokkosComm {
 namespace Impl {
 
 // Recv implementation for Mpi
-template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, MutKokkosView RecvView>
 struct Recv<RecvView, ExecSpace, MpiSpace> {
   static Request<MpiSpace> execute(Communicator<MpiSpace, ExecSpace>& h, const RecvView& rv, int src) {
     using Packer = typename mpi::Impl::PackTraits<RecvView>::packer_type;
@@ -50,7 +50,7 @@ struct Recv<RecvView, ExecSpace, MpiSpace> {
 }  // namespace Impl
 namespace mpi {
 
-template <KokkosView RecvView>
+template <MutKokkosView RecvView>
 void irecv(const RecvView& rv, int src, int tag, MPI_Comm comm, MPI_Request& req) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::irecv");
 

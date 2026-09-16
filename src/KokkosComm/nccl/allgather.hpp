@@ -20,7 +20,7 @@ namespace nccl {
 
 namespace KC = KokkosComm;
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView, MutKokkosView RecvView>
 auto allgather(const ExecSpace& space, const SendView& sv, const RecvView& rv, ncclComm_t comm) -> Request<NcclSpace> {
   using ST = typename SendView::non_const_value_type;
   using RT = typename RecvView::non_const_value_type;
@@ -48,7 +48,7 @@ auto allgather(const ExecSpace& space, const SendView& sv, const RecvView& rv, n
 }  // namespace nccl
 namespace Impl {
 
-template <KokkosView SendView, KokkosView RecvView>
+template <KokkosView SendView, MutKokkosView RecvView>
 struct AllGather<SendView, RecvView, Kokkos::Cuda, NcclSpace> {
   static auto execute(Communicator<NcclSpace, Kokkos::Cuda>& h, const SendView sv, RecvView rv) -> Request<NcclSpace> {
     return nccl::allgather(h.exec(), sv, rv, h.comm());

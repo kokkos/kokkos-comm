@@ -18,7 +18,7 @@
 namespace KokkosComm {
 namespace mpi {
 
-template <KokkosExecutionSpace ExecSpace, KokkosView View>
+template <KokkosExecutionSpace ExecSpace, MutKokkosView View>
 auto ibroadcast(const ExecSpace& space, View& v, int root, MPI_Comm comm) -> Request<MpiSpace> {
   using T = typename View::non_const_value_type;
   Kokkos::Tools::pushRegion("KokkosComm::mpi::ibroadcast");
@@ -35,7 +35,7 @@ auto ibroadcast(const ExecSpace& space, View& v, int root, MPI_Comm comm) -> Req
   return req;
 }
 
-template <KokkosView View>
+template <MutKokkosView View>
 void broadcast(View const& v, int root, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::broadcast");
 
@@ -48,7 +48,7 @@ void broadcast(View const& v, int root, MPI_Comm comm) {
   Kokkos::Tools::popRegion();
 }
 
-template <KokkosExecutionSpace ExecSpace, KokkosView View>
+template <KokkosExecutionSpace ExecSpace, MutKokkosView View>
 void broadcast(ExecSpace const& space, View const& v, int root, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::broadcast");
 
@@ -61,7 +61,7 @@ void broadcast(ExecSpace const& space, View const& v, int root, MPI_Comm comm) {
 }  // namespace mpi
 namespace Experimental::Impl {
 
-template <KokkosView View, KokkosExecutionSpace ExecSpace>
+template <MutKokkosView View, KokkosExecutionSpace ExecSpace>
 struct Broadcast<View, ExecSpace, MpiSpace> {
   static auto execute(Communicator<MpiSpace, ExecSpace>& h, View& v, int root) -> Request<MpiSpace> {
     return KokkosComm::mpi::ibroadcast(h.exec(), v, root, h.comm());

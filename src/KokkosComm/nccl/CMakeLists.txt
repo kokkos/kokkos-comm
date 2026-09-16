@@ -24,4 +24,4 @@ target_sources(
       FILES impl/pack_traits.hpp impl/packer.hpp impl/error_handling.hpp
 )
 
-target_link_libraries(KokkosComm INTERFACE NCCL::NCCL)
+target_link_libraries(KokkosComm INTERFACE NCCL::NCCL CUDA::cudart)

@@ -130,7 +130,25 @@ Kokkos interoperability concepts
 
     Specifies that a type ``T`` is a ``Kokkos::View`` object.
 
+    This concept accepts both mutable views, such as ``Kokkos::View<T*>``, and views with a constant value type, such as ``Kokkos::View<const T*>``.
+
+    Kokkos Comm uses this concept for view arguments that are not written by the communication operation, such as send buffers.
+    The view may still be mutable for other uses, such as Kokkos kernels.
+
+
+.. cpp:concept:: template <typename T> MutKokkosView
+
+    Specifies that a type ``T`` is a mutable ``Kokkos::View`` object, such as
+    ``Kokkos::View<T*>``.
+
+    Kokkos Comm uses this concept for view arguments that may be written by a communication operation, such as receive buffers and in-place collective buffers.
+
 
 .. cpp:concept:: template <typename T> KokkosExecutionSpace
 
     Specifies that a type ``T`` is a ``Kokkos::ExecutionSpace``.
+
+
+.. cpp:concept:: template <typename T> KokkosMemorySpace
+
+    Specifies that a type ``T`` is a ``Kokkos::MemorySpace``.

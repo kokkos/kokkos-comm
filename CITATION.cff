@@ -1,0 +1,77 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Kokkos Comm
+message: 'If you use this software, please cite it as below.'
+type: software
+authors:
+  - name: The Kokkos authors
+    website: 'https://kokkos.org/community/team/'
+identifiers:
+  - type: url
+    value: 'https://kokkos.org/kokkos-core-wiki/citation.html'
+repository-code: 'https://github.com/kokkos/kokkos-comm'
+url: 'https://kokkos.org/kokkos-comm/'
+abstract: >-
+  Kokkos Comm is an experimental performance portable
+  explicit communication interface for the Kokkos ecosystem.
+keywords:
+  - Kokkkos
+  - Distributed Computing
+  - MPI
+  - NCCL
+license: Apache-2.0 WITH LLVM-exception
+commit: c86baf2481fa64aee04cb2124b182751196e71c2
+version: 0.1.0
+date-released: '2026-05-06'
+preferred-citation:
+  title: >-
+    Kokkos Comm: Performance Portable Communication for Distributed Kokkos
+    Applications
+  type: conference-paper
+  collection-title: Proceedings of the Platform for Advanced Scientific Computing Conference
+  editors-series:
+   - name: PASC ’26
+  pages: 1–12
+  publisher:
+    name: ACM
+  url: 'http://dx.doi.org/10.1145/3815572.3815748'
+  authors:
+    - family-names: Avans
+      given-names: C. Nicole
+      orcid: 'https://orcid.org/0009-0005-0768-4243'
+    - family-names: Dos Santos
+      given-names: Gabriel
+      orcid: 'https://orcid.org/0009-0007-8499-0783'
+    - family-names: Chevalier
+      given-names: Cédric
+      orcid: 'https://orcid.org/0000-0002-7730-9239'
+    - family-names: Taboada
+      given-names: Hugo
+      orcid: 'https://orcid.org/0000-0003-3902-9313'
+    - family-names: Pérache
+      given-names: Marc
+      orcid: 'https://orcid.org/0000-0003-1615-2749'
+    - family-names: Dosanjh
+      given-names: Matthew G. F.
+      orcid: 'https://orcid.org/0000-0001-5141-9176'
+    - family-names: Olivier
+      given-names: Stephen L.
+      orcid: 'https://orcid.org/0000-0001-6247-8980'
+    - family-names: Pearson
+      given-names: Carl
+      orcid: 'https://orcid.org/0000-0001-6481-970X'
+    - family-names: Suggs
+      given-names: Evan D.
+      orcid: 'https://orcid.org/0000-0002-8210-8992'
+    - family-names: Kale
+      given-names: Vivek
+      orcid: 'https://orcid.org/0000-0003-4687-1226'
+    - family-names: Skjellum
+      given-names: Anthony
+      orcid: 'https://orcid.org/0000-0001-5252-6600'
+  date-published: "2026-06-01"
+  identifiers:
+    - type: doi
+      value: 10.1145/3815572.3815748

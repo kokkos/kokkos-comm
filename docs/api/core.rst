@@ -21,8 +21,8 @@ Communicators
     They are move-only objects: copy construction and copy assignment are explicitly deleted. Use the ``duplicate`` member functions to create equivalent "copies" of communicators.
     There is always exactly one owner of a ``Communicator``.
 
-    :tparam Co: The communication space (transport backend) to use. Defaults to ``DefaultCommunicationSpace``.
-    :tparam Ex: The Kokkos execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
+    :tparam Comm: The communication space (transport backend) to use. Defaults to ``DefaultCommunicationSpace``.
+    :tparam Exec: The Kokkos execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
 
     .. cpp:type:: execution_space = Exec
     .. cpp:type:: communication_space = Comm
@@ -159,7 +159,7 @@ NCCL specialization
 
     .. cpp:function:: [[nodiscard]] static auto split_from_raw(const ncclComm_t comm, int color, int key, const Kokkos::Cuda& exec = Kokkos::Cuda{}) noexcept -> std::optional<Communicator<Experimental::NcclSpace, Kokkos::Cuda>>
 
-        Splits from a raw NCCL communicator and associates it to a Kokkos CUDA, tion space instanc and ``MPI_COMM_NULL``. Defaults ``exec`` to ``Kokkos::Cuda``.
+        Splits from a raw NCCL communicator and associates it to a Kokkos CUDA execution space instance. Defaults ``exec`` to ``Kokkos::Cuda``.
 
         Creates as many new communicators as distinct values of ``color`` are given, and orders processes according to the value of ``key``. All processes with the same value of ``color`` join the same communicator.
         A process that passes ``NCCL_SPLIT_NOCOLOR`` as ``color`` will not join a new communicator.
@@ -191,7 +191,7 @@ NCCL specialization
 Requests
 --------
 
-.. cpp:class:: template <CommunicationSpace C = DefaultCommSpace> Request
+.. cpp:class:: template <CommunicationSpace C = DefaultCommunicationSpace> Request
 
     Template class for request wrappers of different communication space types.
 
@@ -210,7 +210,7 @@ Requests
 Common interfaces
 ^^^^^^^^^^^^^^^^^
 
-Both specializations share the, llowing interface and ``MPI_COMM_NULL``:
+Both specializations share the following interface:
 
 .. cpp:function:: Request(const Request&) = delete
 
@@ -388,19 +388,6 @@ Send
     :return: A request object of type ``Request<CommSpace>`` representing the non-blocking send operation.
 
 
-.. cpp:function:: template <KokkosView SendView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto send(SendView &sv, int dest) -> Request<CommSpace>
-
-    Initiates a non-blocking send operation using a default handle.
-
-    :tparam SendView: The type of the Kokkos view to send.
-    :tparam ExecSpace: The execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
-    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
-
-    :param sv: The Kokkos view to send.
-    :param dest: The destination rank.
-
-    :return: A request object of type ``Request<CommSpace>`` representing the non-blocking send operation.
-
 **Example usage:**
 
 .. literalinclude:: core_send.cpp
@@ -428,19 +415,6 @@ Receive
     This function initiates a non-blocking receive operation using the specified execution space and transport mechanism. The data will be received into the provided view from the specified source rank and message tag. The function returns a request object that can be used to check the status of the receive operation or to wait for its completion.
 
 
-.. cpp:function:: template <KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto recv(RecvView &sv, int dest) -> Request<CommSpace>
-
-    Initiates a non-blocking receive operation using a default handle.
-
-    :tparam RecvView: The type of the Kokkos view for receiving data.
-    :tparam ExecSpace: The execution space where the operation will be performed. Defaults to `Kokkos::DefaultExecutionSpace`.
-    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
-
-    :param rv: The Kokkos view where the received data will be stored.
-    :param src: The source rank from which to receive data.
-
-    :return: A request object of type ``Request<CommSpace>`` representing the non-blocking receive operation.
-
 **Example usage:**
 
 .. literalinclude:: core_recv.cpp
@@ -455,6 +429,108 @@ Collectives
     Collective operations act **element-wise** on the input Views. Multi-dimensional Views are treated as a **logically flattened** sequence of values, and the reduction is applied over that sequence. All participating Views must have **identical extents**; mismatched shapes result in undefined behavior.
 
     The reduction operator must be **associative**, but ordering of partial combinations is **not guaranteed**, and the operation is not required to be commutative.
+
+Broadcast
+^^^^^^^^^
+
+.. cpp:function:: template <KokkosView View, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto KokkosComm::Experimental::broadcast(Communicator<CommSpace, ExecSpace>& h, View v, int root) -> Request<CommSpace>
+
+    Broadcasts the ``v`` view from the ``root`` rank to all ranks' ``v`` view.
+
+    :tparam View: The type of the Kokkos view to broadcast.
+    :tparam ExecSpace: The execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
+    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
+
+    :param h: A handle to the execution space and transport mechanism.
+    :param v: The Kokkos view to broadcast. Must be valid on all ranks; its data on ``root`` is broadcast to all ranks.
+    :param root: The rank that holds the source data.
+
+    :returns: A request object of type ``Request<CommSpace>`` representing the non-blocking broadcast operation.
+
+Allgather
+^^^^^^^^^
+
+.. cpp:function:: template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto KokkosComm::Experimental::allgather(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvView rv) -> Request<CommSpace>
+
+    Gathers the ``sv`` view from each rank into the ``rv`` view on all ranks.
+
+    Data received from rank ``i`` is placed at offset ``i * KokkosComm::span(sv)`` in ``rv``.
+    The ``rv`` view must be large enough to hold ``h.size() * KokkosComm::span(sv)`` elements.
+
+    :tparam SendView: The type of the Kokkos view to send from each rank.
+    :tparam RecvView: The type of the Kokkos view to receive the gathered data into.
+    :tparam ExecSpace: The execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
+    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
+
+    :param h: A handle to the execution space and transport mechanism.
+    :param sv: The Kokkos view to send from this rank.
+    :param rv: The Kokkos view where the gathered data from all ranks is stored.
+
+    :returns: A request object of type ``Request<CommSpace>`` representing the non-blocking all-gather operation.
+
+Alltoall
+^^^^^^^^
+
+.. cpp:function:: template <KokkosView SendView, KokkosView RecvView, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto KokkosComm::Experimental::alltoall(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvView rv, int count) -> Request<CommSpace>
+
+    Sends ``count`` elements to every other rank and receives ``count`` elements from every other rank.
+
+    Data to send to destination rank ``i`` is taken from ``sv`` at offset ``i * count``.
+    Data received from source rank ``j`` is placed into ``rv`` at offset ``j * count``.
+    Both ``sv`` and ``rv`` must span at least ``h.size() * count`` elements.
+
+    :tparam SendView: The type of the Kokkos view holding the data to send.
+    :tparam RecvView: The type of the Kokkos view where the received data will be stored.
+    :tparam ExecSpace: The execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
+    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
+
+    :param h: A handle to the execution space and transport mechanism.
+    :param sv: The Kokkos view containing the data to send to all ranks.
+    :param rv: The Kokkos view where the received data from all ranks will be stored.
+    :param count: The number of elements sent to, and received from, each rank.
+
+    :returns: A request object of type ``Request<CommSpace>`` representing the non-blocking all-to-all operation.
+
+Allreduce
+^^^^^^^^^
+
+.. cpp:function:: template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto KokkosComm::Experimental::allreduce(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvView rv, RedOp) -> Request<CommSpace>
+
+    Reduces the ``sv`` view using ``RedOp`` and stores the result in all ranks' ``rv`` view.
+
+    :tparam SendView: The type of the Kokkos view to reduce.
+    :tparam RecvView: The type of the Kokkos view to store the reduced result into.
+    :tparam RedOp: A type satisfying the :cpp:concept:`ReductionOperator` concept.
+    :tparam ExecSpace: The execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
+    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
+
+    :param h: A handle to the execution space and transport mechanism.
+    :param sv: The Kokkos view containing the input data to reduce.
+    :param rv: The Kokkos view where the result of the reduction is stored on all ranks.
+
+    :returns: A request object of type ``Request<CommSpace>`` representing the non-blocking all-reduce operation.
+
+Reduce
+^^^^^^
+
+.. cpp:function:: template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp, KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace, CommunicationSpace CommSpace = DefaultCommunicationSpace> auto KokkosComm::Experimental::reduce(Communicator<CommSpace, ExecSpace>& h, const SendView sv, RecvView rv, int root, RedOp) -> Request<CommSpace>
+
+    Reduces the ``sv`` view using ``RedOp`` and stores the result in the ``root`` rank's ``rv`` view.
+
+    The ``rv`` view is only used on the ``root`` rank and is ignored on all other ranks.
+
+    :tparam SendView: The type of the Kokkos view to reduce.
+    :tparam RecvView: The type of the Kokkos view to store the reduced result into on ``root``.
+    :tparam RedOp: A type satisfying the :cpp:concept:`ReductionOperator` concept.
+    :tparam ExecSpace: The execution space to use. Defaults to ``Kokkos::DefaultExecutionSpace``.
+    :tparam CommSpace: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
+
+    :param h: A handle to the execution space and transport mechanism.
+    :param sv: The Kokkos view containing the input data to reduce.
+    :param rv: The Kokkos view where the result of the reduction is stored on ``root``.
+    :param root: The rank that receives the reduced result.
+
+    :returns: A request object of type ``Request<CommSpace>`` representing the non-blocking reduce operation.
 
 Utilities
 ---------
@@ -496,3 +572,27 @@ Utilities
     :param comm: A communication space object, immediately consumed.
     :param view: The Kokkos View to convert the value type from.
     :returns: The communication space representation of the Kokkos View value type.
+
+.. cpp:function:: template <CommunicationSpace CS, ReductionOperator RO>\
+                  [[nodiscard]] constexpr auto reduction_op() -> CS::reduction_op_type
+
+    Converts a Kokkos Comm :cpp:concept:`ReductionOperator` type to its communication-space-native equivalent.
+
+    When ``CS`` is:
+
+    * ``MpiSpace``, returns the corresponding ``MPI_Op``.
+    * ``Experimental::NcclSpace``, returns the corresponding ``ncclRedOp_t``.
+
+    :tparam CS: The target communication space backend.
+    :tparam RO: A type satisfying the :cpp:concept:`ReductionOperator` concept.
+    :returns: The communication space representation of the reduction operator.
+
+.. cpp:function:: template <CommunicationSpace CS, ReductionOperator RO>\
+                  [[nodiscard]] constexpr auto reduction_op_for(RO&& op) -> CS::reduction_op_type
+
+    Instance-based counterpart of :cpp:func:`reduction_op`.
+
+    :tparam CS: The target communication space backend.
+    :tparam RO: A type satisfying the :cpp:concept:`ReductionOperator` concept.
+    :param op: An instance of a reduction operator tag.
+    :returns: The communication space representation of the reduction operator.

@@ -22,7 +22,7 @@
 namespace KokkosComm {
 namespace mpi {
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SView, KokkosView RView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SView, MutKokkosView RView>
 auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int root, MPI_Comm comm)
     -> Request<MpiSpace> {
 // FIXME_EXTERNAL #215
@@ -105,7 +105,7 @@ auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int 
   return req;
 }
 
-template <KokkosView SendView, KokkosView RecvView>
+template <KokkosView SendView, MutKokkosView RecvView>
 void reduce(const SendView& sv, RecvView& rv, MPI_Op op, int root, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::reduce");
 
@@ -123,7 +123,7 @@ void reduce(const SendView& sv, RecvView& rv, MPI_Op op, int root, MPI_Comm comm
   Kokkos::Tools::popRegion();
 }
 
-template <KokkosExecutionSpace ExecSpace, KokkosView SendView, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, KokkosView SendView, MutKokkosView RecvView>
 void reduce(const ExecSpace& space, const SendView& sv, RecvView& rv, MPI_Op op, int root, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::reduce");
 
@@ -178,7 +178,7 @@ void reduce(const ExecSpace& space, const SendView& sv, RecvView& rv, MPI_Op op,
 }  // namespace mpi
 namespace Experimental::Impl {
 
-template <KokkosView SendView, KokkosView RecvView, ReductionOperator RedOp, KokkosExecutionSpace ExecSpace>
+template <KokkosView SendView, MutKokkosView RecvView, ReductionOperator RedOp, KokkosExecutionSpace ExecSpace>
 struct Reduce<SendView, RecvView, RedOp, ExecSpace, MpiSpace> {
   static auto execute(Communicator<MpiSpace, ExecSpace>& h, const SendView sv, RecvView rv, int root)
       -> Request<MpiSpace> {

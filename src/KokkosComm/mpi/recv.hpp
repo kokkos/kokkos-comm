@@ -15,7 +15,7 @@
 
 namespace KokkosComm::mpi {
 
-template <KokkosView RecvView>
+template <MutKokkosView RecvView>
 void recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *status) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::recv");
 
@@ -27,7 +27,7 @@ void recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *statu
   Kokkos::Tools::popRegion();
 }
 
-template <KokkosExecutionSpace ExecSpace, KokkosView RecvView>
+template <KokkosExecutionSpace ExecSpace, MutKokkosView RecvView>
 void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::recv");
 

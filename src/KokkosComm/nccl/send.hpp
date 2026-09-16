@@ -33,9 +33,9 @@ auto send(const ExecSpace& space, const SendView& sv, int peer, ncclComm_t comm)
     KC_NCCL_CHECK(
         ncclSend(data_handle(pckd_sv.view_), pckd_sv.count_, pckd_sv.datatype_, peer, comm, space.cuda_stream())
     );
-    req.capture_stream_state(space.cuda_stream());
     req.extend_view_lifetime(pckd_sv.view_);
   }
+  req.capture_stream_state(space.cuda_stream());
   req.extend_view_lifetime(sv);
 
   Kokkos::Tools::popRegion();

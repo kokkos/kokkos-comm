@@ -30,8 +30,8 @@ TYPED_TEST_SUITE(AllToAll, ScalarTypes);
 template <typename Scalar>
 auto alltoall_contig_1d() -> void {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto nccl_ctx = test_utils::nccl::Ctx::init();
-  auto raw_comm = nccl_ctx.comm();
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -41,8 +41,8 @@ auto alltoall_contig_1d() -> void {
   const int rank = comm.rank();
 
   int n_contrib = 100;
-  Kokkos::View<Scalar *> sv("sv", size * n_contrib);
-  Kokkos::View<Scalar *> rv("rv", size * n_contrib);
+  Kokkos::View<Scalar*> sv("sv", size * n_contrib);
+  Kokkos::View<Scalar*> rv("rv", size * n_contrib);
 
   // Prepare send view
   Kokkos::parallel_for(
@@ -56,7 +56,7 @@ auto alltoall_contig_1d() -> void {
   int errs;
   Kokkos::parallel_reduce(
       rv.extent(0),
-      KOKKOS_LAMBDA(const int i, int &lsum) {
+      KOKKOS_LAMBDA(const int i, int& lsum) {
         const int src = i / n_contrib;                       // who sent this data
         const int j   = rank * n_contrib + (i % n_contrib);  // what index i was at the source
         lsum += rv(i) != src + j;
