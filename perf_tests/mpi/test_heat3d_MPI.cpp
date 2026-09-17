@@ -487,22 +487,22 @@ struct System {
   }
 };
 
-void benchmark_heat3d_mpi(benchmark::State &state) {
+void benchmark_heat3d_mpi(benchmark::State& state) {
   while (state.KeepRunning()) {
     auto start = std::chrono::high_resolution_clock::now();
     System sys(MPI_COMM_WORLD);
     sys.setup_subdomain();
     sys.timestep();
     sys.destroy_exec_spaces();
-    auto end = std::chrono::high_resolution_clock::now();
+    auto end             = std::chrono::high_resolution_clock::now();
     auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
     state.SetIterationTime(elapsed_seconds.count());
   }
 }
 
 BENCHMARK(benchmark_heat3d_mpi)
-  ->Iterations(1)
-  ->Repetitions(10)
-  ->ReportAggregatesOnly(false)
-  ->UseManualTime()
-  ->Unit(benchmark::kMillisecond);
+    ->Iterations(1)
+    ->Repetitions(10)
+    ->ReportAggregatesOnly(false)
+    ->UseManualTime()
+    ->Unit(benchmark::kMillisecond);
