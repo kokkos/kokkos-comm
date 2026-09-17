@@ -64,13 +64,114 @@ struct CommHelper {
     front = z == 0 ? -1 : me - nx * ny;
     back  = z == nz - 1 ? -1 : me + nx * ny;
   }
+};
 
-  template <class ViewType>
-  void isend_irecv(
-      int partner, ViewType send_buffer, ViewType recv_buffer, MPI_Request* request_send, MPI_Request* request_recv
-  ) {
-    MPI_Irecv(recv_buffer.data(), recv_buffer.size(), MPI_DOUBLE, partner, 1, comm, request_recv);
-    MPI_Isend(send_buffer.data(), send_buffer.size(), MPI_DOUBLE, partner, 1, comm, request_send);
+using buffer_t = Kokkos::View<double**, Kokkos::LayoutLeft, Kokkos::DefaultExecutionSpace>;
+
+struct InnerDT {
+  Kokkos::View<double***> T, dT;
+  double q;
+
+  KOKKOS_FUNCTION
+  void operator()(int x, int y, int z) const {
+    double dT_xyz = 0.0;
+    double T_xyz  = T(x, y, z);
+    dT_xyz += q * (T(x - 1, y, z) - T_xyz);
+    dT_xyz += q * (T(x + 1, y, z) - T_xyz);
+    dT_xyz += q * (T(x, y - 1, z) - T_xyz);
+    dT_xyz += q * (T(x, y + 1, z) - T_xyz);
+    dT_xyz += q * (T(x, y, z - 1) - T_xyz);
+    dT_xyz += q * (T(x, y, z + 1) - T_xyz);
+
+    dT(x, y, z) = dT_xyz;
+  }
+};
+
+enum Direction { left, right, down, up, front, back };
+
+template <int Surface>
+struct SurfaceDT {
+  Kokkos::View<double***> T, dT;
+  buffer_t T_left, T_right, T_up, T_down, T_front, T_back;
+  int X_lo, Y_lo, Z_lo, X_hi, Y_hi, Z_hi, X, Y, Z;
+  double q, sigma, P;
+
+  KOKKOS_FUNCTION void operator()(int i, int j) const {
+    int NX = T.extent(0);
+    int NY = T.extent(1);
+    int NZ = T.extent(2);
+    int x, y, z;
+    if (Surface == left) {
+      x = 0;
+      y = i;
+      z = j;
+    }
+    if (Surface == right) {
+      x = NX - 1;
+      y = i;
+      z = j;
+    }
+    if (Surface == down) {
+      x = i;
+      y = 0;
+      z = j;
+    }
+    if (Surface == up) {
+      x = i;
+      y = NY - 1;
+      z = j;
+    }
+    if (Surface == front) {
+      x = i;
+      y = j;
+      z = 0;
+    }
+    if (Surface == back) {
+      x = i;
+      y = j;
+      z = NZ - 1;
+    }
+
+    double dT_xyz = 0.0;
+    double T_xyz  = T(x, y, z);
+
+    // Heat conduction to inner body
+    if (x > 0) dT_xyz += q * (T(x - 1, y, z) - T_xyz);
+    if (x < NX - 1) dT_xyz += q * (T(x + 1, y, z) - T_xyz);
+    if (y > 0) dT_xyz += q * (T(x, y - 1, z) - T_xyz);
+    if (y < NY - 1) dT_xyz += q * (T(x, y + 1, z) - T_xyz);
+    if (z > 0) dT_xyz += q * (T(x, y, z - 1) - T_xyz);
+    if (z < NZ - 1) dT_xyz += q * (T(x, y, z + 1) - T_xyz);
+
+    // Heat conduction with Halo
+    if (x == 0 && X_lo != 0) dT_xyz += q * (T_left(y, z) - T_xyz);
+    if (x == (NX - 1) && X_hi != X) dT_xyz += q * (T_right(y, z) - T_xyz);
+    if (y == 0 && Y_lo != 0) dT_xyz += q * (T_down(x, z) - T_xyz);
+    if (y == (NY - 1) && Y_hi != Y) dT_xyz += q * (T_up(x, z) - T_xyz);
+    if (z == 0 && Z_lo != 0) dT_xyz += q * (T_front(x, y) - T_xyz);
+    if (z == (NZ - 1) && Z_hi != Z) dT_xyz += q * (T_back(x, y) - T_xyz);
+
+    // Incoming Power
+    if (x == 0 && X_lo == 0) dT_xyz += P;
+
+    // thermal radiation
+    int num_surfaces = ((x == 0 && X_lo == 0) ? 1 : 0) + ((x == (NX - 1) && X_hi == X) ? 1 : 0) +
+                       ((y == 0 && Y_lo == 0) ? 1 : 0) + ((y == (NY - 1) && Y_hi == Y) ? 1 : 0) +
+                       ((z == 0 && Z_lo == 0) ? 1 : 0) + ((z == (NZ - 1) && Z_hi == Z) ? 1 : 0);
+    dT_xyz -= sigma * T_xyz * T_xyz * T_xyz * T_xyz * num_surfaces;
+    dT(x, y, z) = dT_xyz;
+  }
+};
+
+// Some compilers have deduction issues if this were just a tagged operator, so a full Functor here instead
+struct UpdateT {
+  Kokkos::View<double***> T, dT;
+  double dt;
+  UpdateT(Kokkos::View<double***> T_, Kokkos::View<double***> dT_, double dt_) : T(T_), dT(dT_), dt(dt_) {}
+  KOKKOS_FUNCTION
+  void operator()(int x, int y, int z, double& sum_T) const {
+    sum_T += T(x, y, z);
+    T(x, y, z) += dt * dT(x, y, z);
   }
 };
 
@@ -93,7 +194,6 @@ struct System {
   // Temperature and delta Temperature
   Kokkos::View<double***> T, dT;
   // Halo data
-  using buffer_t = Kokkos::View<double**, Kokkos::LayoutLeft, Kokkos::DefaultExecutionSpace>;
   buffer_t T_left, T_right, T_up, T_down, T_front, T_back;
   buffer_t T_left_out, T_right_out, T_up_out, T_down_out, T_front_out, T_back_out;
 
@@ -111,7 +211,7 @@ struct System {
     X = Y = Z = 200;
     X_lo = Y_lo = Z_lo = 0;
     X_hi = Y_hi = Z_hi = X;
-    N                  = 5;  // 10000 reduced for quick testing
+    N                  = 100;  // 10000 reduced for quick testing
     I                  = N - 1;
     T                  = Kokkos::View<double***>();
     dT                 = Kokkos::View<double***>();
@@ -216,108 +316,20 @@ struct System {
   }
 
   // Compute inner update
-  struct ComputeInnerDT {};
-
-  KOKKOS_FUNCTION
-  void operator()(ComputeInnerDT, int x, int y, int z) const {
-    double dT_xyz = 0.0;
-    double T_xyz  = T(x, y, z);
-    dT_xyz += q * (T(x - 1, y, z) - T_xyz);
-    dT_xyz += q * (T(x + 1, y, z) - T_xyz);
-    dT_xyz += q * (T(x, y - 1, z) - T_xyz);
-    dT_xyz += q * (T(x, y + 1, z) - T_xyz);
-    dT_xyz += q * (T(x, y, z - 1) - T_xyz);
-    dT_xyz += q * (T(x, y, z + 1) - T_xyz);
-
-    dT(x, y, z) = dT_xyz;
-  }
   void compute_inner_dT() {
-    using policy_t = Kokkos::MDRangePolicy<Kokkos::Rank<3>, ComputeInnerDT, int>;
+    using policy_t = Kokkos::MDRangePolicy<Kokkos::Rank<3>, int>;
     int myX        = T.extent(0);
     int myY        = T.extent(1);
     int myZ        = T.extent(2);
     Kokkos::parallel_for(
-        "ComputeInnerDT",
+        "InnerDT",
         Kokkos::Experimental::require(
             policy_t(E_bulk, {1, 1, 1}, {myX - 1, myY - 1, myZ - 1}),
             Kokkos::Experimental::WorkItemProperty::HintLightWeight
         ),
-        *this
+        InnerDT{T, dT, q}
     );
   };
-
-  // Compute non-exposed surface, dispatch makes sure that we don't hit elements twice
-  enum { left, right, down, up, front, back };
-
-  template <int Surface>
-  struct ComputeSurfaceDT {};
-
-  template <int Surface>
-  KOKKOS_FUNCTION void operator()(ComputeSurfaceDT<Surface>, int i, int j) const {
-    int NX = T.extent(0);
-    int NY = T.extent(1);
-    int NZ = T.extent(2);
-    int x, y, z;
-    if (Surface == left) {
-      x = 0;
-      y = i;
-      z = j;
-    }
-    if (Surface == right) {
-      x = NX - 1;
-      y = i;
-      z = j;
-    }
-    if (Surface == down) {
-      x = i;
-      y = 0;
-      z = j;
-    }
-    if (Surface == up) {
-      x = i;
-      y = NY - 1;
-      z = j;
-    }
-    if (Surface == front) {
-      x = i;
-      y = j;
-      z = 0;
-    }
-    if (Surface == back) {
-      x = i;
-      y = j;
-      z = NZ - 1;
-    }
-
-    double dT_xyz = 0.0;
-    double T_xyz  = T(x, y, z);
-
-    // Heat conduction to inner body
-    if (x > 0) dT_xyz += q * (T(x - 1, y, z) - T_xyz);
-    if (x < NX - 1) dT_xyz += q * (T(x + 1, y, z) - T_xyz);
-    if (y > 0) dT_xyz += q * (T(x, y - 1, z) - T_xyz);
-    if (y < NY - 1) dT_xyz += q * (T(x, y + 1, z) - T_xyz);
-    if (z > 0) dT_xyz += q * (T(x, y, z - 1) - T_xyz);
-    if (z < NZ - 1) dT_xyz += q * (T(x, y, z + 1) - T_xyz);
-
-    // Heat conduction with Halo
-    if (x == 0 && X_lo != 0) dT_xyz += q * (T_left(y, z) - T_xyz);
-    if (x == (NX - 1) && X_hi != X) dT_xyz += q * (T_right(y, z) - T_xyz);
-    if (y == 0 && Y_lo != 0) dT_xyz += q * (T_down(x, z) - T_xyz);
-    if (y == (NY - 1) && Y_hi != Y) dT_xyz += q * (T_up(x, z) - T_xyz);
-    if (z == 0 && Z_lo != 0) dT_xyz += q * (T_front(x, y) - T_xyz);
-    if (z == (NZ - 1) && Z_hi != Z) dT_xyz += q * (T_back(x, y) - T_xyz);
-
-    // Incoming Power
-    if (x == 0 && X_lo == 0) dT_xyz += P;
-
-    // thermal radiation
-    int num_surfaces = ((x == 0 && X_lo == 0) ? 1 : 0) + ((x == (NX - 1) && X_hi == X) ? 1 : 0) +
-                       ((y == 0 && Y_lo == 0) ? 1 : 0) + ((y == (NY - 1) && Y_hi == Y) ? 1 : 0) +
-                       ((z == 0 && Z_lo == 0) ? 1 : 0) + ((z == (NZ - 1) && Z_hi == Z) ? 1 : 0);
-    dT_xyz -= sigma * T_xyz * T_xyz * T_xyz * T_xyz * num_surfaces;
-    dT(x, y, z) = dT_xyz;
-  }
 
   void pack_T_halo() {
     mpi_active_requests = 0;
@@ -352,47 +364,60 @@ struct System {
     int mar = 0;
     if (X_lo != 0) {
       E_left.fence();
-      comm.isend_irecv(comm.left, T_left_out, T_left, &mpi_requests_send[mar], &mpi_requests_recv[mar]);
+      MPI_Irecv(T_left.data(), T_left.size(), MPI_DOUBLE, comm.left, 1, comm.comm, &mpi_requests_recv[mar]);
+      MPI_Isend(T_left_out.data(), T_left_out.size(), MPI_DOUBLE, comm.left, 1, comm.comm, &mpi_requests_send[mar]);
       mar++;
     }
     if (Y_lo != 0) {
       E_down.fence();
-      comm.isend_irecv(comm.down, T_down_out, T_down, &mpi_requests_send[mar], &mpi_requests_recv[mar]);
+      MPI_Irecv(T_down.data(), T_down.size(), MPI_DOUBLE, comm.down, 1, comm.comm, &mpi_requests_recv[mar]);
+      MPI_Isend(T_down_out.data(), T_down_out.size(), MPI_DOUBLE, comm.down, 1, comm.comm, &mpi_requests_send[mar]);
       mar++;
     }
     if (Z_lo != 0) {
       E_front.fence();
-      comm.isend_irecv(comm.front, T_front_out, T_front, &mpi_requests_send[mar], &mpi_requests_recv[mar]);
+      MPI_Irecv(T_front.data(), T_front.size(), MPI_DOUBLE, comm.front, 1, comm.comm, &mpi_requests_recv[mar]);
+      MPI_Isend(T_front_out.data(), T_front_out.size(), MPI_DOUBLE, comm.front, 1, comm.comm, &mpi_requests_send[mar]);
       mar++;
     }
     if (X_hi != X) {
       E_right.fence();
-      comm.isend_irecv(comm.right, T_right_out, T_right, &mpi_requests_send[mar], &mpi_requests_recv[mar]);
+      MPI_Irecv(T_right.data(), T_right.size(), MPI_DOUBLE, comm.right, 1, comm.comm, &mpi_requests_recv[mar]);
+      MPI_Isend(T_right_out.data(), T_right_out.size(), MPI_DOUBLE, comm.right, 1, comm.comm, &mpi_requests_send[mar]);
       mar++;
     }
     if (Y_hi != Y) {
       E_up.fence();
-      comm.isend_irecv(comm.up, T_up_out, T_up, &mpi_requests_send[mar], &mpi_requests_recv[mar]);
+      MPI_Irecv(T_up.data(), T_up.size(), MPI_DOUBLE, comm.up, 1, comm.comm, &mpi_requests_recv[mar]);
+      MPI_Isend(T_up_out.data(), T_up_out.size(), MPI_DOUBLE, comm.up, 1, comm.comm, &mpi_requests_send[mar]);
       mar++;
     }
     if (Z_hi != Z) {
       E_back.fence();
-      comm.isend_irecv(comm.back, T_back_out, T_back, &mpi_requests_send[mar], &mpi_requests_recv[mar]);
+      MPI_Irecv(T_back.data(), T_back.size(), MPI_DOUBLE, comm.back, 1, comm.comm, &mpi_requests_recv[mar]);
+      MPI_Isend(T_back_out.data(), T_back_out.size(), MPI_DOUBLE, comm.back, 1, comm.comm, &mpi_requests_send[mar]);
       mar++;
     }
     mpi_active_requests = mar;
   }
 
   void compute_surface_dT() {
-    using policy_left_t  = Kokkos::MDRangePolicy<Kokkos::Rank<2>, ComputeSurfaceDT<left>, int>;
-    using policy_right_t = Kokkos::MDRangePolicy<Kokkos::Rank<2>, ComputeSurfaceDT<right>, int>;
-    using policy_down_t  = Kokkos::MDRangePolicy<Kokkos::Rank<2>, ComputeSurfaceDT<down>, int>;
-    using policy_up_t    = Kokkos::MDRangePolicy<Kokkos::Rank<2>, ComputeSurfaceDT<up>, int>;
-    using policy_front_t = Kokkos::MDRangePolicy<Kokkos::Rank<2>, ComputeSurfaceDT<front>, int>;
-    using policy_back_t  = Kokkos::MDRangePolicy<Kokkos::Rank<2>, ComputeSurfaceDT<back>, int>;
-    int x                = T.extent(0);
-    int y                = T.extent(1);
-    int z                = T.extent(2);
+    using policy_t = Kokkos::MDRangePolicy<Kokkos::Rank<2>, int>;
+    int x          = T.extent(0);
+    int y          = T.extent(1);
+    int z          = T.extent(2);
+    SurfaceDT<left> f_left{T,    dT,   T_left, T_right, T_up, T_down, T_front, T_back, X_lo,  Y_lo,
+                           Z_lo, X_hi, Y_hi,   Z_hi,    X,    Y,      Z,       q,      sigma, P};
+    SurfaceDT<right> f_right{T,    dT,   T_left, T_right, T_up, T_down, T_front, T_back, X_lo,  Y_lo,
+                             Z_lo, X_hi, Y_hi,   Z_hi,    X,    Y,      Z,       q,      sigma, P};
+    SurfaceDT<down> f_down{T,    dT,   T_left, T_right, T_up, T_down, T_front, T_back, X_lo,  Y_lo,
+                           Z_lo, X_hi, Y_hi,   Z_hi,    X,    Y,      Z,       q,      sigma, P};
+    SurfaceDT<up> f_up{T,    dT,   T_left, T_right, T_up, T_down, T_front, T_back, X_lo,  Y_lo,
+                       Z_lo, X_hi, Y_hi,   Z_hi,    X,    Y,      Z,       q,      sigma, P};
+    SurfaceDT<front> f_front{T,    dT,   T_left, T_right, T_up, T_down, T_front, T_back, X_lo,  Y_lo,
+                             Z_lo, X_hi, Y_hi,   Z_hi,    X,    Y,      Z,       q,      sigma, P};
+    SurfaceDT<back> f_back{T,    dT,   T_left, T_right, T_up, T_down, T_front, T_back, X_lo,  Y_lo,
+                           Z_lo, X_hi, Y_hi,   Z_hi,    X,    Y,      Z,       q,      sigma, P};
     if (mpi_active_requests > 0) {
       MPI_Waitall(mpi_active_requests, mpi_requests_send, MPI_STATUSES_IGNORE);
       MPI_Waitall(mpi_active_requests, mpi_requests_recv, MPI_STATUSES_IGNORE);
@@ -401,58 +426,46 @@ struct System {
     Kokkos::parallel_for(
         "ComputeSurfaceDT_Left",
         Kokkos::Experimental::require(
-            policy_left_t(E_left, {0, 0}, {y, z}), Kokkos::Experimental::WorkItemProperty::HintLightWeight
+            policy_t(E_left, {0, 0}, {y, z}), Kokkos::Experimental::WorkItemProperty::HintLightWeight
         ),
-        *this
+        f_left
     );
     Kokkos::parallel_for(
         "ComputeSurfaceDT_Right",
         Kokkos::Experimental::require(
-            policy_right_t(E_right, {0, 0}, {y, z}), Kokkos::Experimental::WorkItemProperty::HintLightWeight
+            policy_t(E_right, {0, 0}, {y, z}), Kokkos::Experimental::WorkItemProperty::HintLightWeight
         ),
-        *this
+        f_right
     );
     Kokkos::parallel_for(
         "ComputeSurfaceDT_Down",
         Kokkos::Experimental::require(
-            policy_down_t(E_down, {1, 0}, {x - 1, z}), Kokkos::Experimental::WorkItemProperty::HintLightWeight
+            policy_t(E_down, {1, 0}, {x - 1, z}), Kokkos::Experimental::WorkItemProperty::HintLightWeight
         ),
-        *this
+        f_down
     );
     Kokkos::parallel_for(
         "ComputeSurfaceDT_Up",
         Kokkos::Experimental::require(
-            policy_up_t(E_up, {1, 0}, {x - 1, z}), Kokkos::Experimental::WorkItemProperty::HintLightWeight
+            policy_t(E_up, {1, 0}, {x - 1, z}), Kokkos::Experimental::WorkItemProperty::HintLightWeight
         ),
-        *this
+        f_up
     );
     Kokkos::parallel_for(
         "ComputeSurfaceDT_front",
         Kokkos::Experimental::require(
-            policy_front_t(E_front, {1, 1}, {x - 1, y - 1}), Kokkos::Experimental::WorkItemProperty::HintLightWeight
+            policy_t(E_front, {1, 1}, {x - 1, y - 1}), Kokkos::Experimental::WorkItemProperty::HintLightWeight
         ),
-        *this
+        f_front
     );
     Kokkos::parallel_for(
         "ComputeSurfaceDT_back",
         Kokkos::Experimental::require(
-            policy_back_t(E_back, {1, 1}, {x - 1, y - 1}), Kokkos::Experimental::WorkItemProperty::HintLightWeight
+            policy_t(E_back, {1, 1}, {x - 1, y - 1}), Kokkos::Experimental::WorkItemProperty::HintLightWeight
         ),
-        *this
+        f_back
     );
   }
-
-  // Some compilers have deduction issues if this were just a tagged operator, so a full Functor here instead
-  struct UpdateT {
-    Kokkos::View<double***> T, dT;
-    double dt;
-    UpdateT(Kokkos::View<double***> T_, Kokkos::View<double***> dT_, double dt_) : T(T_), dT(dT_), dt(dt_) {}
-    KOKKOS_FUNCTION
-    void operator()(int x, int y, int z, double& sum_T) const {
-      sum_T += T(x, y, z);
-      T(x, y, z) += dt * dT(x, y, z);
-    }
-  };
 
   double update_T() {
     using policy_t = Kokkos::MDRangePolicy<Kokkos::Rank<3>, Kokkos::IndexType<int>>;
@@ -474,19 +487,22 @@ struct System {
   }
 };
 
-void benchmark_heat3d_mpi(benchmark::State& state) {
-  auto start = std::chrono::high_resolution_clock::now();
-  System sys(MPI_COMM_WORLD);
-  sys.setup_subdomain();
-  sys.timestep();
-  sys.destroy_exec_spaces();
-  auto end             = std::chrono::high_resolution_clock::now();
-  auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
-  std::cout << "heat3d_mpi_only_elapsed_seconds = " << elapsed_seconds << '\n';
-  state.SetIterationTime(elapsed_seconds.count());
-  if (!(state.skipped() || state.iterations() >= state.max_iterations)) {
-    state.SkipWithMessage("Loop exited prematurely!");
+void benchmark_heat3d_mpi(benchmark::State &state) {
+  while (state.KeepRunning()) {
+    auto start = std::chrono::high_resolution_clock::now();
+    System sys(MPI_COMM_WORLD);
+    sys.setup_subdomain();
+    sys.timestep();
+    sys.destroy_exec_spaces();
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    state.SetIterationTime(elapsed_seconds.count());
   }
 }
 
-BENCHMARK(benchmark_heat3d_mpi)->UseManualTime()->Unit(benchmark::kMillisecond);
+BENCHMARK(benchmark_heat3d_mpi)
+  ->Iterations(1)
+  ->Repetitions(10)
+  ->ReportAggregatesOnly(false)
+  ->UseManualTime()
+  ->Unit(benchmark::kMillisecond);
