@@ -47,3 +47,6 @@ if(KokkosComm_ENABLE_MPI_ADVANCE)
 endif()
 set(KokkosComm_ENABLE_STREAMCOMM KokkosComm_ENABLE_STREAMCOMM_FOUND)
 
+if(KokkosComm_ENABLE_STREAMCOMM)
+  kc_add_perf_test(bench.mpi.heat3d_st MPI NUM_PES 2 FILES bench_main.cpp mpi/test_heat3d_st.cpp LIBRARIES KokkosComm::KokkosComm)
+endif()
