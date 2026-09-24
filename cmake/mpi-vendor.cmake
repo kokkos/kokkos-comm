@@ -11,17 +11,21 @@ function(kokkoscomm_set_mpi_vendor_variables)
     message(STATUS "Using defined MPI vendor: OPENMPI")
     return()
   elseif(KokkosComm_ENABLE_MPI)
-    if(NOT MPIEXEC_EXECUTABLE)
-      message(WARNING "Unable to determine MPI vendor - `MPIEXEC_EXECUTABLE` is not set")
+    if(MPIEXEC_EXECUTABLE)
+      # Prefer the launcher directory because it is tied to the MPI runtime.
+      get_filename_component(MPI_BIN_DIR ${MPIEXEC_EXECUTABLE} DIRECTORY)
+    elseif(MPI_CXX_COMPILER)
+      # Some clusters expose an MPI compiler wrapper but intentionally disable
+      # mpiexec on login nodes.
+      get_filename_component(MPI_BIN_DIR ${MPI_CXX_COMPILER} DIRECTORY)
+    else()
+      message(WARNING "Unable to determine MPI vendor - neither `MPIEXEC_EXECUTABLE` nor `MPI_CXX_COMPILER` is set")
       return()
     endif()
 
-    # Get the directory of the MPI executable
-    get_filename_component(MPIEXEC_DIR ${MPIEXEC_EXECUTABLE} DIRECTORY)
-
     # Check for mpichversion and ompi_info
-    find_program(MPICHVERSION_EXECUTABLE mpichversion HINTS ${MPIEXEC_DIR} NO_DEFAULT_PATH)
-    find_program(OMPI_INFO_EXECUTABLE ompi_info HINTS ${MPIEXEC_DIR} NO_DEFAULT_PATH)
+    find_program(MPICHVERSION_EXECUTABLE mpichversion HINTS ${MPI_BIN_DIR} NO_DEFAULT_PATH)
+    find_program(OMPI_INFO_EXECUTABLE ompi_info HINTS ${MPI_BIN_DIR} NO_DEFAULT_PATH)
 
     if(MPICHVERSION_EXECUTABLE AND OPENMPI_INFO_EXECUTABLE)
       message(
