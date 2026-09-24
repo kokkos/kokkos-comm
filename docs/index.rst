@@ -21,6 +21,7 @@ Documentation Content
    :caption: Getting started
 
    getting_started/setup
+   getting_started/system_specific_hints
    getting_started/perf_tests
 
 .. toctree::
