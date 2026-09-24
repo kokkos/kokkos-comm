@@ -6,10 +6,8 @@ function(kokkoscomm_set_mpi_vendor_variables)
 
   if(KOKKOSCOMM_IMPL_MPI_IS_MPICH)
     message(STATUS "Using defined MPI vendor: MPICH")
-    return()
   elseif(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI)
     message(STATUS "Using defined MPI vendor: OPENMPI")
-    return()
   elseif(KokkosComm_ENABLE_MPI)
     if(MPIEXEC_EXECUTABLE)
       # Prefer the launcher directory because it is tied to the MPI runtime.
