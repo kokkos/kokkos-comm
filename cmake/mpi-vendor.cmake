@@ -27,7 +27,7 @@ function(kokkoscomm_set_mpi_vendor_variables)
     find_program(MPICHVERSION_EXECUTABLE mpichversion HINTS ${MPI_BIN_DIR} NO_DEFAULT_PATH)
     find_program(OMPI_INFO_EXECUTABLE ompi_info HINTS ${MPI_BIN_DIR} NO_DEFAULT_PATH)
 
-    if(MPICHVERSION_EXECUTABLE AND OPENMPI_INFO_EXECUTABLE)
+    if(MPICHVERSION_EXECUTABLE AND OMPI_INFO_EXECUTABLE)
       message(
         WARNING
         "Unable to determine MPI vendor - both `MPICHVERSION_EXECUTABLE` and `OMPI_INFO_EXECUTABLE` are set"
