@@ -16,6 +16,7 @@ target_sources(
         reduction_op.hpp
     # Implementation detail headers
     FILE_SET HEADERS BASE_DIRS ${PROJECT_SOURCE_DIR}/src FILES impl/contiguous.hpp
+    FILE_SET HEADERS BASE_DIRS ${PROJECT_SOURCE_DIR}/src FILES impl/metadata_checks.hpp
     # Configuration header
     FILE_SET HEADERS BASE_DIRS ${CMAKE_BINARY_DIR}/src FILES ${CMAKE_BINARY_DIR}/src/KokkosComm/config.hpp
 )

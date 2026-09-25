@@ -20,10 +20,13 @@ option(KokkosComm_ENABLE_MPI "Build Kokkos Comm with MPI backend" ON)
 option(KokkosComm_ENABLE_NCCL "Build Kokkos Comm with NCCL backend" OFF)
 option(KokkosComm_ABORT_ON_ERROR "Runtime error checks trigger a global abort" OFF)
 
+option(KokkosComm_ENABLE_DEBUG_RUNTIME_METADATA_CHECKS "Raise errors if runtime views metadata (ranks, extents) mismatch in communications" OFF)
+
 # Resolve options that must be PP-defined
 set(KOKKOSCOMM_ENABLE_MPI ${KokkosComm_ENABLE_MPI})
 set(KOKKOSCOMM_ENABLE_NCCL ${KokkosComm_ENABLE_NCCL})
 set(KOKKOSCOMM_ABORT_ON_ERROR ${KokkosComm_ABORT_ON_ERROR})
+set(KOKKOSCOMM_ENABLE_DEBUG_RUNTIME_METADATA_CHECKS ${KokkosComm_ENABLE_DEBUG_RUNTIME_METADATA_CHECKS})
 
 message(STATUS "Kokkos Comm version: ${CMAKE_PROJECT_VERSION}")
 set(KOKKOSCOMM_ENABLED_BACKENDS "")
