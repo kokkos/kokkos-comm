@@ -1,0 +1,11 @@
+--- mpi2/src/mpi/datatype/typerep/yaksa/configure       2026-02-03 22:45:15.000000000 +0000
++++ mpi/src/mpi/datatype/typerep/yaksa/configure        2026-09-03 07:31:25.366921588 +0000
+@@ -18240,7 +18240,7 @@
+         # check if NVCC has been set by the user
+         if test -z "$NVCC" ; then
+             if test -n "$ac_save_CC" ; then
+-                NVCC_FLAGS="$NVCC_FLAGS -ccbin $ac_save_CC"
++                NVCC_FLAGS="$NVCC_FLAGS"
+                 # - pgcc/nvc doesn't work, use pgc++/nvc++ instead
+                 # - Extra options such as `gcc -std=gnu99` doesn't work, strip the option
+                 NVCC_FLAGS=$(echo $NVCC_FLAGS | sed -e 's/nvc/nvc++/g' -e 's/pgcc/pgc++/g' -e's/ -std=.*//g')

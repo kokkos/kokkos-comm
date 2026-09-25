@@ -1,0 +1,13 @@
+services:
+  devcontainer:
+    build:
+      context: ../../
+      target: devhorse
+      args:
+        OPENMPI_URL: "https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.8.tar.gz"
+        MPI_VENDOR: openmpi
+    volumes:
+      - ../..:/workspace:cached,Z
+      - ../..:/root/.cached:cached,Z
+    tmpfs: /build
+    command: sleep infinity

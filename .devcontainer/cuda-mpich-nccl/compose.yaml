@@ -1,0 +1,13 @@
+services:
+  devcontainer:
+    build:
+      context: ../../
+      target: devhorse
+      args:
+        MPICH_URL: "https://www.mpich.org/static/downloads/5.0.0/mpich-5.0.0.tar.gz"
+        MPI_VENDOR: mpich
+    volumes:
+      - ../..:/workspace:cached,Z
+      - ../..:/root/.cached:cached,Z
+    tmpfs: /build
+    command: sleep infinity
