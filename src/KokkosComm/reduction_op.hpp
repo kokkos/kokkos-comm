@@ -8,12 +8,16 @@
 #include <Kokkos_Core.hpp>
 #ifdef KOKKOSCOMM_ENABLE_NCCL
 #include <nccl.h>
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+#include <rccl/rccl.h>
 #endif
 
 #include <KokkosComm/concepts.hpp>
 #include "mpi/mpi_space.hpp"
 #ifdef KOKKOSCOMM_ENABLE_NCCL
 #include "nccl/nccl_space.hpp"
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+#include "rccl/rccl_space.hpp"
 #endif
 
 namespace KokkosComm {
@@ -75,7 +79,7 @@ constexpr auto mpi_reduction_op() -> MPI_Op {
   }
 }
 
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
 template <ReductionOperator RO>
 constexpr auto nccl_reduction_op() -> ncclRedOp_t {
   if constexpr (std::is_same_v<RO, Sum>) {
@@ -103,6 +107,9 @@ template <CommunicationSpace CS, ReductionOperator RO>
     return Impl::mpi_reduction_op<RO>();
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
   } else if constexpr (std::is_same_v<CS, Experimental::NcclSpace>) {
+    return Impl::nccl_reduction_op<RO>();
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+  } else if constexpr (std::is_same_v<CS, Experimental::RcclSpace>) {
     return Impl::nccl_reduction_op<RO>();
 #endif
   } else {

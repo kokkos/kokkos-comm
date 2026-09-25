@@ -12,6 +12,8 @@
 #include <mpi.h>
 #elif defined(KOKKOSCOMM_ENABLE_NCCL)
 #include <nccl.h>
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+#include <rccl/rccl.h>
 #endif
 
 namespace {
@@ -22,7 +24,7 @@ class DatatypeConversion : public testing::Test {
   using Datatype = T;
 };
 
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
 using DatatypeTypes = ::testing::Types<
     char,
     int,
@@ -148,7 +150,7 @@ auto check_datatype_conversion(typename CS::datatype_type dtype) -> void {
     ASSERT_EQ(MPI_DOUBLE_COMPLEX, dtype);
 #endif
   }
-#elif defined(KOKKOSCOMM_ENABLE_NCCL)
+#elif defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
   if constexpr (std::is_same_v<T, char>) {
     ASSERT_EQ(ncclChar, dtype);
   } else if constexpr (std::is_same_v<T, int>) {

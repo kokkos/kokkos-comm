@@ -12,6 +12,9 @@
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
 #include <nccl.h>
 #include <cuda_runtime.h>
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+#include <hip/hip_runtime.h>
+#include <rccl/rccl.h>
 #endif
 #include <fmt/core.h>
 
@@ -66,5 +69,20 @@ constexpr std::array level_txt{"FATAL"sv, "ERROR"sv, "WARNING"sv, "INFO"sv, "TRA
     cudaError_t kc_res_ = (expr);                                                                                \
     return kc_res_ == cudaSuccess ? void(0)                                                                      \
                                   : KC_FATAL("CUDA check failed: `" #expr "`: {}", cudaGetErrorString(kc_res_)); \
+  }())
+#define KC_XCCL_CHECK(expr) KC_NCCL_CHECK(expr)
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+#define KC_XCCL_CHECK(expr)                                                                                      \
+  ([&]() {                                                                                                       \
+    ncclResult_t kc_res_ = (expr);                                                                               \
+    return kc_res_ == ncclSuccess ? void(0)                                                                      \
+                                  : KC_FATAL("RCCL check failed: `" #expr "`: {}", ncclGetErrorString(kc_res_)); \
+  }())
+
+#define KC_HIP_CHECK(expr)                                                                                    \
+  ([&]() {                                                                                                    \
+    hipError_t kc_res_ = (expr);                                                                              \
+    return kc_res_ == hipSuccess ? void(0)                                                                    \
+                                 : KC_FATAL("HIP check failed: `" #expr "`: {}", hipGetErrorString(kc_res_)); \
   }())
 #endif

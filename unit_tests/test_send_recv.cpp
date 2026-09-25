@@ -5,7 +5,7 @@
 #include <KokkosComm/KokkosComm.hpp>
 
 #include "view_utils.hpp"
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
 #include "nccl/utils.hpp"
 #endif
 
@@ -13,9 +13,9 @@ namespace {
 
 template <KokkosComm::KokkosView View>
 void test_core_send_recv(const View& v) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto& nccl_ctx = test_utils::NcclCtx::get();
-  auto raw_comm  = nccl_ctx.comm();
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
+  auto& xccl_ctx = test_utils::XcclCtx::get();
+  auto raw_comm  = xccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif
@@ -46,7 +46,7 @@ class SendRecv : public ::testing::Test {
   using Scalar = T;
 };
 
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
 using ScalarTypes = ::testing::Types<float, double, int, int64_t>;
 #else
 using ScalarTypes =

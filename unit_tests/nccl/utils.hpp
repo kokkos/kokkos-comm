@@ -6,40 +6,49 @@
 #include <memory>
 #include <mutex>
 
-#include <nccl.h>
+#include <KokkosComm/config.hpp>
+
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
 #include <cuda_runtime.h>
+#include <nccl.h>
+using DeviceStream = cudaStream_t;
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+#include <hip/hip_runtime.h>
+#include <rccl/rccl.h>
+using DeviceStream = hipStream_t;
+#endif
 
 namespace test_utils {
 
-class NcclCtx {
+class XcclCtx {
  public:
-  ~NcclCtx();
+  ~XcclCtx();
   // Singleton context; access through get().
-  NcclCtx(const NcclCtx&)                    = delete;
-  auto operator=(const NcclCtx&) -> NcclCtx& = delete;
-  NcclCtx(NcclCtx&&)                         = delete;
-  auto operator=(NcclCtx&&) -> NcclCtx&      = delete;
+  XcclCtx(const XcclCtx&)                    = delete;
+  auto operator=(const XcclCtx&) -> XcclCtx& = delete;
+  XcclCtx(XcclCtx&&)                         = delete;
+  auto operator=(XcclCtx&&) -> XcclCtx&      = delete;
 
   static auto init(bool verbose = true) -> void;
   static auto fini() -> void;
-  static auto get() -> NcclCtx&;
+  static auto get() -> XcclCtx&;
 
   auto comm() const -> ncclComm_t;
-  auto stream() const -> cudaStream_t;
+  auto stream() const -> DeviceStream;
   auto size() const -> int;
   auto rank() const -> int;
   auto device() const -> int;
 
  private:
-  NcclCtx(ncclComm_t comm, cudaStream_t stream, int dev, int n_ranks, int my_rank);
+  XcclCtx(ncclComm_t comm, DeviceStream stream, int dev, int n_ranks, int my_rank);
 
   ncclComm_t comm_     = nullptr;
-  cudaStream_t stream_ = nullptr;
+  DeviceStream stream_ = nullptr;
   int dev_             = -1;
   int size_            = 0;
   int rank_            = 0;
 
-  static std::unique_ptr<NcclCtx> instance_;
+  static std::unique_ptr<XcclCtx> instance_;
   static std::once_flag init_flag_;
 };
 

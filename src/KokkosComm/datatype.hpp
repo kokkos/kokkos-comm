@@ -11,12 +11,16 @@
 #include <mpi.h>
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
 #include <nccl.h>
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+#include <rccl/rccl.h>
 #endif
 
 #include "concepts.hpp"
 #include "mpi/mpi_space.hpp"
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
 #include "nccl/nccl_space.hpp"
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+#include "rccl/rccl_space.hpp"
 #endif
 
 namespace KokkosComm {
@@ -96,7 +100,7 @@ constexpr auto mpi_datatype() -> MPI_Datatype {
   }
 }
 
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
 template <typename T>
 constexpr auto nccl_datatype() -> ncclDataType_t {
   if constexpr (std::is_same_v<T, char>) {
@@ -156,6 +160,9 @@ template <CommunicationSpace C, typename T>
     return Impl::mpi_datatype<std::remove_cv_t<T>>();
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
   } else if constexpr (std::is_same_v<C, Experimental::NcclSpace>) {
+    return Impl::nccl_datatype<std::remove_cv_t<T>>();
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+  } else if constexpr (std::is_same_v<C, Experimental::RcclSpace>) {
     return Impl::nccl_datatype<std::remove_cv_t<T>>();
 #endif
   } else {
