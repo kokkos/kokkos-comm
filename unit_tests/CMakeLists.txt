@@ -171,6 +171,14 @@ if(KokkosComm_ENABLE_MPI)
     FILES test_main.cpp mpi/test_channel_p2p.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
+
+  kc_add_unit_test(
+    test.mpi.request
+    MPI
+    NUM_PES 1
+    FILES test_main.cpp mpi/test_request.cpp
+    LIBRARIES KokkosComm::KokkosComm
+  )
 endif()
 
 # --- NCCL backend unit tests --- #
@@ -217,6 +225,14 @@ if(KokkosComm_ENABLE_NCCL)
     NCCL
     NUM_PES 2
     FILES test_main.cpp nccl/test_reduce.cpp nccl/utils.cpp
+    LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
+  )
+
+  kc_add_unit_test(
+    test.nccl.request
+    NCCL
+    NUM_PES 1
+    FILES test_main.cpp nccl/test_request.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
 endif()
