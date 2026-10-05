@@ -71,6 +71,7 @@ int main(int argc, char* argv[]) {
   int provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
   KC_CHECK(provided == MPI_THREAD_MULTIPLE, "MPI_THREAD_MULTIPLE is required");
+  MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 #ifdef KOKKOSCOMM_ENABLE_NCCL
   // Initialize the NCCL environment once for all tests (false = no verbose logs)
   test_utils::NcclCtx::init(false);
