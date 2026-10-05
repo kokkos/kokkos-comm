@@ -29,6 +29,9 @@ message(STATUS "Kokkos Comm version: ${CMAKE_PROJECT_VERSION}")
 set(KOKKOSCOMM_ENABLED_BACKENDS "")
 
 # --- DEPENDENCIES --- #
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 find_package(Kokkos 4.7.0 REQUIRED)
 
 if(KokkosComm_ENABLE_MPI)
