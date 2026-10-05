@@ -5,9 +5,10 @@
 
 #include <cstdio>
 #include <string_view>
-
 #include <nccl.h>
 #include <Kokkos_Core.hpp>
+
+#include <KokkosComm/error.hpp>
 
 #define KC_CUDA_CHECK(expr)                                                                             \
   ([&]() {                                                                                              \
@@ -34,7 +35,7 @@
       if (const char* nccl_last_ = ncclGetLastError(nullptr); nccl_last_ && *nccl_last_)                 \
         std::cerr << ": " << nccl_last_;                                                                 \
       std::cerr << std::endl;                                                                            \
-      return std::unexpected(Error{NCCLError, static_cast<int>(nccl_err_)});                             \
+      return tl::unexpected(Error{NCCLError, static_cast<int>(nccl_err_)});                              \
     }                                                                                                    \
   } while (0)
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tl/expected.hpp>
+
 namespace KokkosComm {
 
 enum ErrorCode { WrongExtent, KokkosNotInitialized, MPIError };

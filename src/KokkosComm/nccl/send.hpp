@@ -22,7 +22,7 @@ namespace Experimental::nccl {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
 auto send(const ExecSpace& space, const SendView& sv, int peer, ncclComm_t comm)
-    -> std::expected<Request<NcclSpace>, Error> {
+    -> tl::expected<Request<NcclSpace>, Error> {
   using T = typename SendView::non_const_value_type;
   Kokkos::Tools::pushRegion("KokkosComm::Impl::send");
 
@@ -50,7 +50,7 @@ namespace Impl {
 template <KokkosView SendView>
 struct Send<SendView, Kokkos::Cuda, Experimental::NcclSpace> {
   static auto execute(Communicator<Experimental::NcclSpace, Kokkos::Cuda>& h, SendView sv, int peer)
-      -> std::expected<Request<Experimental::NcclSpace>, Error> {
+      -> tl::expected<Request<Experimental::NcclSpace>, Error> {
     return Experimental::nccl::send(h.exec(), sv, peer, h.comm());
   }
 };

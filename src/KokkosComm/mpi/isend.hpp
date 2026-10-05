@@ -22,11 +22,11 @@ namespace KokkosComm {
 namespace Impl {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, mpi::CommunicationMode SendMode>
-std::expected<Request<MpiSpace>, KokkosComm::Error> isend_impl(
+tl::expected<Request<MpiSpace>, KokkosComm::Error> isend_impl(
     Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag, SendMode
 ) {
   auto mpi_isend_fn = [](void* mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
-                         MPI_Comm mpi_comm, MPI_Request* mpi_req) -> std::expected<void, KokkosComm::Error> {
+                         MPI_Comm mpi_comm, MPI_Request* mpi_req) -> tl::expected<void, KokkosComm::Error> {
     if constexpr (std::is_same_v<SendMode, mpi::CommModeStandard>) {
       KC_MPI_CHECK(
           MPI_Isend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req),
@@ -56,7 +56,7 @@ std::expected<Request<MpiSpace>, KokkosComm::Error> isend_impl(
             dest, tag, h.comm(), req.request_ptr()
         );
         !r.has_value())
-      return std::unexpected(r.error());
+      return tl::unexpected(r.error());
 
     req.extend_view_lifetime(sv);
   } else {
@@ -74,7 +74,7 @@ std::expected<Request<MpiSpace>, KokkosComm::Error> isend_impl(
 // Implementation of KokkosComm::Send
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
 struct Send<SendView, ExecSpace, MpiSpace> {
-  static std::expected<Request<MpiSpace>, KokkosComm::Error> execute(
+  static tl::expected<Request<MpiSpace>, KokkosComm::Error> execute(
       Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest
   ) {
     return isend_impl<ExecSpace, SendView>(h, sv, dest, POINTTOPOINT_TAG, mpi::DefaultCommMode{});
@@ -85,14 +85,14 @@ struct Send<SendView, ExecSpace, MpiSpace> {
 namespace mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode SendMode>
-std::expected<Request<MpiSpace>, KokkosComm::Error> isend(
+tl::expected<Request<MpiSpace>, KokkosComm::Error> isend(
     Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag, SendMode
 ) {
   return KokkosComm::Impl::isend_impl<ExecSpace, SendView>(h, sv, dest, tag, SendMode{});
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
-std::expected<Request<MpiSpace>, KokkosComm::Error> isend(
+tl::expected<Request<MpiSpace>, KokkosComm::Error> isend(
     Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag
 ) {
   return isend<ExecSpace, SendView>(h, sv, dest, tag, DefaultCommMode{});

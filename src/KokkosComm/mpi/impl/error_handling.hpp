@@ -5,10 +5,11 @@
 
 #include <cstdio>
 #include <string_view>
-#include <expected>
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
+
+#include <KokkosComm/error.hpp>
 
 namespace KokkosComm::mpi {
 
@@ -34,7 +35,7 @@ inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = 
       if (MPI_Error_string(mpi_err_, mpi_msg_, &mpi_len_) != MPI_SUCCESS) mpi_len_ = 0; \
       std::cerr << "Error: " << caller << " returned error code " << mpi_err_ << " ("   \
                 << std::string_view(mpi_msg_, mpi_len_) << ")" << std::endl;            \
-      return std::unexpected(Error{MPIError, mpi_err_});                                \
+      return tl::unexpected(Error{MPIError, mpi_err_});                                 \
     }                                                                                   \
   } while (0)
 

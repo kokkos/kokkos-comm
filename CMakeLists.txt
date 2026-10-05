@@ -29,9 +29,6 @@ message(STATUS "Kokkos Comm version: ${CMAKE_PROJECT_VERSION}")
 set(KOKKOSCOMM_ENABLED_BACKENDS "")
 
 # --- DEPENDENCIES --- #
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 find_package(Kokkos 4.7.0 REQUIRED)
 
 if(KokkosComm_ENABLE_MPI)
@@ -58,10 +55,23 @@ else()
   message(STATUS "Enabled Kokkos Comm backends: ${BACKENDS_STRING}")
 endif()
 
+include(FetchContent)
+FetchContent_Declare(tl-expected
+  GIT_REPOSITORY https://github.com/TartanLlama/expected.git
+  GIT_TAG        v1.3.1
+  GIT_SHALLOW    TRUE
+  FIND_PACKAGE_ARGS CONFIG)
+set(EXPECTED_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(tl-expected)
+
 # --- LIBRARY --- #
 add_library(KokkosComm INTERFACE)
 add_subdirectory(src/KokkosComm)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
+
+target_link_libraries(KokkosComm INTERFACE
+  $<BUILD_INTERFACE:tl::expected>
+  $<INSTALL_INTERFACE:tl::expected>)
 
 # --- TESTING --- #
 if(KokkosComm_ENABLE_TESTS)
