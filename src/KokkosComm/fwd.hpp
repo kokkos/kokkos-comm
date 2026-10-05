@@ -7,6 +7,7 @@
 #include "concepts.hpp"
 #include "datatype.hpp"
 #include "reduction_op.hpp"
+#include "error.hpp"
 
 namespace KokkosComm {
 

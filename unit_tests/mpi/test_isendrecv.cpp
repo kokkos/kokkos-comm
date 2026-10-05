@@ -42,7 +42,7 @@ void isend_comm_mode_1d_contig() {
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; }
     );
-    KokkosComm::mpi::isend(h, a, dst, 0, IsendMode{}).wait();
+    KokkosComm::mpi::isend(h, a, dst, 0, IsendMode{}).value().wait();
   } else if (1 == h.rank()) {
     int src = 0;
     KokkosComm::mpi::recv(h.exec(), a, src, 0, h.comm());
@@ -74,7 +74,7 @@ void isend_comm_mode_1d_noncontig() {
     Kokkos::parallel_for(
         a.extent(0), KOKKOS_LAMBDA(const int i) { a(i) = i; }
     );
-    KokkosComm::mpi::isend(h, a, dst, 0, IsendMode{}).wait();
+    KokkosComm::mpi::isend(h, a, dst, 0, IsendMode{}).value().wait();
   } else if (1 == h.rank()) {
     int src = 0;
     KokkosComm::mpi::recv(h.exec(), a, src, 0, h.comm());
