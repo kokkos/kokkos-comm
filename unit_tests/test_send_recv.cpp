@@ -71,13 +71,16 @@ TYPED_TEST(SendRecv, NonContig2D) {
   test_core_send_recv(v);
 }
 
-template <typename Scalar>
-void test_core_error_send_recv() {
+TEST(SendRecvError, NullBuffer) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto& nccl_ctx = test_utils::NcclCtx::get();
-  auto raw_comm  = nccl_ctx.comm();
+  auto& nccl_ctx                 = test_utils::NcclCtx::get();
+  auto raw_comm                  = nccl_ctx.comm();
+  constexpr auto expected_code   = KokkosComm::ErrorCode::NCCLError;
+  constexpr int expected_backend = ncclInvalidArgument;
 #else
   auto raw_comm = MPI_COMM_WORLD;
+  constexpr auto expected_code = KokkosComm::ErrorCode::MPIError;
+  constexpr int expected_backend = MPI_ERR_BUFFER;
 #endif
   auto exec      = Kokkos::DefaultExecutionSpace{};
   auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
@@ -87,23 +90,18 @@ void test_core_error_send_recv() {
     GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
   }
 
-  // Unmanaged, contiguous view: null data pointer but non-zero extent
-  using UnmanagedView =
-      Kokkos::View<Scalar*, Kokkos::DefaultExecutionSpace::memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-  UnmanagedView v(static_cast<Scalar*>(nullptr), 1013);
-
   const int src = 0;
   const int dst = 1;
 
-  if (rank == src) {
-    auto request = KokkosComm::send(comm, v, dst);
-    EXPECT_FALSE(request.has_value());
-  } else if (rank == dst) {
-    auto request = KokkosComm::recv(comm, v, src);
-    EXPECT_FALSE(request.has_value());
-  }
+  // Unmanaged, contiguous view: null data pointer but non-zero extent
+  Kokkos::View<int*, Kokkos::DefaultExecutionSpace::memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v(
+      static_cast<int*>(nullptr), 1013
+  );
+
+  auto request = (rank == src) ? KokkosComm::send(comm, v, dst) : KokkosComm::recv(comm, v, src);
+
+  ASSERT_FALSE(request.has_value());
+  EXPECT_EQ(request.error().code, expected_code);
+  EXPECT_EQ(request.error().backend_code, expected_backend);
 }
-
-TYPED_TEST(SendRecv, Error) { test_core_error_send_recv<typename TestFixture::Scalar>(); }
-
 }  // namespace

@@ -7,6 +7,7 @@
 #include "concepts.hpp"
 #include "point_to_point.hpp"
 #include "collective.hpp"
+#include "error.hpp"
 
 // Communication spaces declarations
 #if defined(KOKKOSCOMM_ENABLE_MPI)

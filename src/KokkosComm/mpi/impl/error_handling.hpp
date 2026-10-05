@@ -25,13 +25,17 @@ inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = 
   }
 }
 
-#define KC_MPI_CHECK(call, caller)                                                          \
-  do {                                                                                      \
-    int mpi_err_ = (call);                                                                  \
-    if (mpi_err_ != MPI_SUCCESS) {                                                          \
-      std::cerr << "Error: " << caller << " returned error code " << mpi_err_ << std::endl; \
-      return std::unexpected(Error{MPIError, mpi_err_});                                    \
-    }                                                                                       \
+#define KC_MPI_CHECK(call, caller)                                                      \
+  do {                                                                                  \
+    int mpi_err_ = (call);                                                              \
+    if (mpi_err_ != MPI_SUCCESS) {                                                      \
+      char mpi_msg_[MPI_MAX_ERROR_STRING];                                              \
+      int mpi_len_ = 0;                                                                 \
+      if (MPI_Error_string(mpi_err_, mpi_msg_, &mpi_len_) != MPI_SUCCESS) mpi_len_ = 0; \
+      std::cerr << "Error: " << caller << " returned error code " << mpi_err_ << " ("   \
+                << std::string_view(mpi_msg_, mpi_len_) << ")" << std::endl;            \
+      return std::unexpected(Error{MPIError, mpi_err_});                                \
+    }                                                                                   \
   } while (0)
 
 }  // namespace KokkosComm::mpi
