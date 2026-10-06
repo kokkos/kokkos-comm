@@ -114,7 +114,7 @@ if(KokkosComm_INSTALL_CMAKE_PACKAGE)
 
   # Generate package version file
   write_basic_package_version_file(
-    ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake
+    ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfigVersion.cmake
     COMPATIBILITY ExactVersion
     ARCH_INDEPENDENT # KokkosComm is a header-only library
   )
@@ -123,7 +123,7 @@ if(KokkosComm_INSTALL_CMAKE_PACKAGE)
   install(
     FILES
       ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfig.cmake
-      ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommVersion.cmake
+      ${PROJECT_BINARY_DIR}/cmake/KokkosComm/KokkosCommConfigVersion.cmake
       ${PROJECT_SOURCE_DIR}/cmake/FindNCCL.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/KokkosComm
   )
