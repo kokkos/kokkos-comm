@@ -109,7 +109,7 @@ Point-to-point
 
     The send and receive storage must not overlap. Do not modify the send
     data or access the receive data until completion. For the portable API,
-    use :cpp:func:`KokkosComm::sendrecv` with a
+    use :cpp:func:`KokkosComm::exchange` with a
     ``Communicator<NcclSpace, Kokkos::Cuda>``.
 
 

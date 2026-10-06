@@ -29,13 +29,14 @@ FetchContent_Declare(
 set(INSTALL_GTEST OFF)
 FetchContent_MakeAvailable(googletest)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  target_compile_options(gtest PUBLIC -w)
+  target_compile_options(gtest PRIVATE -w)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  target_compile_options(gtest PUBLIC /w)
+  target_compile_options(gtest PRIVATE /w)
 endif()
 
 FetchContent_Declare(
   fmt
+  SYSTEM
   GIT_REPOSITORY https://github.com/fmtlib/fmt.git
   GIT_TAG
     407c905e45ad75fc29bf0f9bb7c5c2fd3475976f #v12.1.0
@@ -47,6 +48,7 @@ include(kc-test)
 
 # --- Core API unit tests --- #
 kc_add_unit_test(test.core.send-recv CORE NUM_PES 2 FILES test_main.cpp test_send_recv.cpp)
+kc_add_unit_test(test.core.exchange CORE NUM_PES 2 FILES test_main.cpp test_exchange.cpp)
 kc_add_unit_test(test.core.broadcast CORE NUM_PES 2 FILES test_main.cpp test_broadcast.cpp)
 kc_add_unit_test(test.core.all-gather CORE NUM_PES 2 FILES test_main.cpp test_allgather.cpp)
 kc_add_unit_test(test.core.reduce CORE NUM_PES 2 FILES test_main.cpp test_reduce.cpp)

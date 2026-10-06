@@ -240,7 +240,7 @@ Point-to-point
     and any receive unpacking before returning.
 
     For an exchange without explicit MPI tags, use
-    :cpp:func:`KokkosComm::sendrecv` with a ``Communicator<MpiSpace, Exec>``.
+    :cpp:func:`KokkosComm::exchange` with a ``Communicator<MpiSpace, Exec>``.
 
 
 Collectives

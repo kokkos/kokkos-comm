@@ -58,6 +58,9 @@ template <
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 struct Send;
 
+template <CommunicationSpace Comm, KokkosExecutionSpace Exec, KokkosView SendV, MutKokkosView RecvV>
+struct Exchange;
+
 }  // namespace Impl
 
 // Collectives are currently experimental functions

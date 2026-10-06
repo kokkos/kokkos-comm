@@ -67,4 +67,16 @@ auto sendrecv(Kokkos::Cuda const& exec, SendV const& sv, int dst, RecvV const& r
 }
 
 }  // namespace Experimental::nccl
+namespace Impl {
+
+template <KokkosView SendV, MutKokkosView RecvV>
+struct Exchange<Experimental::NcclSpace, Kokkos::Cuda, SendV, RecvV> {
+  static auto execute(
+      Communicator<Experimental::NcclSpace, Kokkos::Cuda>& comm, const SendV& sv, int dst, const RecvV& rv, int src
+  ) -> Request<Experimental::NcclSpace> {
+    return Experimental::nccl::sendrecv(comm.exec(), sv, dst, rv, src, comm.comm());
+  }
+};
+
+}  // namespace Impl
 }  // namespace KokkosComm

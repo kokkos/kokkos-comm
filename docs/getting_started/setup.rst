@@ -37,7 +37,7 @@ System requirements
 Kokkos Comm will attempt to support the `same systems and toolchains as Kokkos <https://kokkos.org/kokkos-core-wiki/get-started/requirements.html>`_.
 
 The MPI backend requires MPI 4.0 or newer for ``MPI_Isendrecv``, which implements
-the core :cpp:func:`KokkosComm::sendrecv` operation used for halo exchanges.
+the core :cpp:func:`KokkosComm::exchange` operation used for halo exchanges.
 
 
 Installation

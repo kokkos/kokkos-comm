@@ -61,4 +61,15 @@ auto isendrecv(Exec const& exec, SendV const& sv, int dst, int stag, RecvV const
   return req;
 }
 }  // namespace mpi
+namespace Impl {
+
+template <KokkosExecutionSpace Exec, KokkosView SendV, MutKokkosView RecvV>
+struct Exchange<MpiSpace, Exec, SendV, RecvV> {
+  static auto execute(Communicator<MpiSpace, Exec>& comm, SendV const& sv, int dst, const RecvV& rv, int src)
+      -> Request<MpiSpace> {
+    return mpi::isendrecv(comm.exec(), sv, dst, Impl::POINTTOPOINT_TAG, rv, src, Impl::POINTTOPOINT_TAG, comm.comm());
+  }
+};
+
+}  // namespace Impl
 }  // namespace KokkosComm

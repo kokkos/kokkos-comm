@@ -368,6 +368,14 @@ Communication Primitives
 Point-to-point
 --------------
 
+.. important::
+
+    Use :cpp:func:`exchange` for halo exchanges that require a send and a receive
+    to progress together. Separate :cpp:func:`send` and :cpp:func:`recv` calls
+    are not a portable substitute: with a blocking NCCL communicator, initiating
+    a receive can wait for the peer's send. If every rank initiates its receive
+    first, no rank can reach its send, causing a deadlock.
+
 Send
 ^^^^
 
@@ -419,6 +427,56 @@ Receive
 
 .. literalinclude:: core_recv.cpp
    :language: cpp
+
+
+Exchange
+^^^^^^^^
+
+.. cpp:function:: template <CommunicationSpace Comm, KokkosExecutionSpace Exec, KokkosView SendV, MutKokkosView RecvV> \
+                  auto exchange(Communicator<Comm, Exec>& comm, const SendV& sv, int dst, const RecvV& rv, int src) -> Request<Comm>
+
+    Initiates one send to ``dst`` and one receive from ``src`` together, returning
+    one request that tracks both operations. The destination and source may be
+    different ranks.
+
+    :tparam Comm: The communication backend, deduced from ``comm``.
+    :tparam Exec: The execution space, deduced from ``comm``.
+    :tparam SendV: The type of the send view. Const-valued views are supported.
+    :tparam RecvV: The type of the receive view, whose elements must be mutable.
+
+    :param comm: The communicator and execution space used for both operations.
+    :param sv: The view containing the data to send.
+    :param dst: The destination rank.
+    :param rv: The view where received data will be stored.
+    :param src: The source rank.
+    :returns: A request representing completion of both the send and the receive.
+
+    Both views may be multi-dimensional and independently contiguous or
+    non-contiguous. Non-contiguous send data is packed before communication;
+    non-contiguous receive data is unpacked when the request completes.
+    The send and receive counts and datatypes need not be the same locally,
+    but each message must match its peer's count and datatype. The send and
+    receive storage must not overlap.
+
+    The request retains the view handles and any temporary packing buffers.
+    Do not modify the send data or access the receive data until completion.
+    Calling ``wait()`` waits for both operations and finishes any receive
+    unpacking before returning, so the receive view is then ready to use.
+
+    The MPI backend uses ``MPI_Isendrecv`` and requires MPI 4.0 or newer.
+    The NCCL backend groups ``ncclSend`` and ``ncclRecv`` so both can progress
+    together. Its communicator may block during initiation, but completion of
+    the CUDA work is tracked by the returned request.
+
+**Example usage:**
+
+Given initialized communication and Kokkos runtimes, and a valid
+``raw_comm_handle`` for the selected backend, all ranks execute this example
+to exchange one side of a periodic domain. The column subviews are
+non-contiguous; the received left halo is ready after ``wait()``.
+
+.. literalinclude:: core_exchange.cpp
+    :language: cpp
 
 
 Collectives
