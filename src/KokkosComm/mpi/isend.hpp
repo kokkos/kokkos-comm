@@ -64,7 +64,9 @@ tl::expected<Request<MpiSpace>, KokkosComm::Error> isend_impl(
 
     auto args = Packer::pack(h.exec(), "pkd_sv", sv);
     h.exec().fence("fence before isend");
-    auto result = mpi_isend_fn(args.view.data(), args.count, args.datatype, dest, tag, h.comm(), req.request_ptr());
+    if (auto r = mpi_isend_fn(args.view.data(), args.count, args.datatype, dest, tag, h.comm(), req.request_ptr());
+        !r.has_value())
+      return tl::unexpected(r.error());
     req.extend_view_lifetime(args.view);
     req.extend_view_lifetime(sv);
   }

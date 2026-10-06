@@ -5,6 +5,7 @@
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Profiling_ScopedRegion.hpp>
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
@@ -17,7 +18,7 @@ namespace KokkosComm::mpi {
 
 template <MutKokkosView RecvView>
 KokkosComm::status_type recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *status) {
-  Kokkos::Tools::pushRegion("KokkosComm::mpi::recv");
+  Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::recv");
 
   KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "only contiguous views supported for low-level recv");
 
@@ -29,7 +30,6 @@ KokkosComm::status_type recv(const RecvView &rv, int src, int tag, MPI_Comm comm
       "KokkosComm::mpi::recv"
   );
 
-  Kokkos::Tools::popRegion();
   return {};
 }
 
