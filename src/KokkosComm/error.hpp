@@ -4,7 +4,7 @@
 
 namespace KokkosComm {
 
-enum ErrorCode { WrongExtent, KokkosNotInitialized, MPIError, NCCLError };
+enum ErrorCode { NotSupported, MPIError, NCCLError };
 
 struct Error {
   ErrorCode code;

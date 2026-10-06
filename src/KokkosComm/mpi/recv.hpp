@@ -35,7 +35,7 @@ KokkosComm::status_type recv(const RecvView &rv, int src, int tag, MPI_Comm comm
 
 template <KokkosExecutionSpace ExecSpace, MutKokkosView RecvView>
 KokkosComm::status_type recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
-  Kokkos::Tools::pushRegion("KokkosComm::mpi::recv");
+  Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::recv");
 
   using Packer = typename Impl::PackTraits<RecvView>::packer_type;
 
@@ -58,8 +58,6 @@ KokkosComm::status_type recv(const ExecSpace &space, RecvView &rv, int src, int 
         "KokkosComm::mpi::recv"
     );
   }
-
-  Kokkos::Tools::popRegion();
   return {};
 }
 

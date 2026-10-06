@@ -20,35 +20,31 @@ namespace KokkosComm::mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode SendMode>
 KokkosComm::status_type send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm, SendMode) {
-  Kokkos::Tools::pushRegion("KokkosComm::mpi::send");
+  Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::send");
   using T      = typename SendView::non_const_value_type;
   using Packer = typename Impl::PackTraits<SendView>::packer_type;
 
-  auto mpi_send_fn = [dest, tag, comm](void *view, int cnt, MPI_Datatype dtype) -> KokkosComm::status_type {
+  auto mpi_send_fn = [dest, tag, comm](void *view, int cnt, MPI_Datatype dtype) -> int {
     if constexpr (std::is_same_v<SendMode, CommModeStandard>) {
-      KC_MPI_CHECK(MPI_Send(view, cnt, dtype, dest, tag, comm), "KokkosComm::mpi::send");
+      return MPI_Send(view, cnt, dtype, dest, tag, comm);
     } else if constexpr (std::is_same_v<SendMode, CommModeReady>) {
-      KC_MPI_CHECK(MPI_Rsend(view, cnt, dtype, dest, tag, comm), "KokkosComm::mpi::send");
+      return MPI_Rsend(view, cnt, dtype, dest, tag, comm);
     } else if constexpr (std::is_same_v<SendMode, CommModeSynchronous>) {
-      KC_MPI_CHECK(MPI_Ssend(view, cnt, dtype, dest, tag, comm), "KokkosComm::mpi::send");
+      return MPI_Ssend(view, cnt, dtype, dest, tag, comm);
     } else {
       static_assert(std::is_void_v<SendMode>, "KokkosComm::mpi::send: unexpected communication mode");
-      return {};
     }
   };
 
   if (is_contiguous(sv)) {
     space.fence("fence before send");
-    if (auto r = mpi_send_fn(data_handle(sv), span(sv), datatype<MpiSpace, T>()); !r.has_value())
-      return tl::unexpected(r.error());
+    KC_MPI_CHECK(mpi_send_fn(data_handle(sv), span(sv), datatype<MpiSpace, T>()), "KokkosComm::mpi::send");
   } else {
     auto args = Packer::pack(space, "pkd_sv", sv);
     space.fence("fence before send");
-    if (auto r = mpi_send_fn(data_handle(args.view), args.count, args.datatype); !r.has_value())
-      return tl::unexpected(r.error());
+    KC_MPI_CHECK(mpi_send_fn(data_handle(args.view), args.count, args.datatype), "KokkosComm::mpi::send");
   }
 
-  Kokkos::Tools::popRegion();
   return {};
 }
 

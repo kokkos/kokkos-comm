@@ -23,14 +23,14 @@ namespace Impl {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, mpi::CommunicationMode SendMode>
 Request<MpiSpace> isend_impl(Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag, SendMode) {
-  auto mpi_isend_fn = [](void* buf, int count, MPI_Datatype dt, int dest, int tag, MPI_Comm comm,
-                         MPI_Request* r) -> int {
+  auto mpi_isend_fn = [](void* mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
+                         MPI_Comm mpi_comm, MPI_Request* mpi_req) -> int {
     if constexpr (std::is_same_v<SendMode, mpi::CommModeStandard>) {
-      return MPI_Isend(buf, count, dt, dest, tag, comm, r);
+      return MPI_Isend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
     } else if constexpr (std::is_same_v<SendMode, mpi::CommModeReady>) {
-      return MPI_Irsend(buf, count, dt, dest, tag, comm, r);
+      return MPI_Irsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
     } else if constexpr (std::is_same_v<SendMode, mpi::CommModeSynchronous>) {
-      return MPI_Issend(buf, count, dt, dest, tag, comm, r);
+      return MPI_Issend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
     } else {
       static_assert(std::is_void_v<SendMode>, "unexpected communication mode");
     }
