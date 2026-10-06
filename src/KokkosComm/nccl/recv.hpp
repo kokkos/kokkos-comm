@@ -26,12 +26,16 @@ auto recv(const ExecSpace& space, RecvView& rv, int peer, ncclComm_t comm) -> tl
 
   Request<NcclSpace> req;
   if (is_contiguous(rv)) {
-    KC_NCCL_CHECK(ncclRecv(data_handle(rv), span(rv), datatype<NcclSpace, T>(), peer, comm, space.cuda_stream()));
+    KC_NCCL_CHECK(
+        ncclRecv(data_handle(rv), span(rv), datatype<NcclSpace, T>(), peer, comm, space.cuda_stream()),
+        "KokkosComm::Impl::send"
+    );
   } else {
     using Packer = typename Impl::PackTraits<RecvView>::packer_type;
     auto pckd_rv = Packer::allocate_packed_for(space, "pckd_rv", rv);
     KC_NCCL_CHECK(
-        ncclRecv(data_handle(pckd_rv.view_), pckd_rv.count_, pckd_rv.datatype_, peer, comm, space.cuda_stream())
+        ncclRecv(data_handle(pckd_rv.view_), pckd_rv.count_, pckd_rv.datatype_, peer, comm, space.cuda_stream()),
+        "KokkosComm::Impl::send"
     );
     req.add_callback([space, rv, pckd_rv]() {
       Packer::unpack_into(space, rv, pckd_rv.view_);

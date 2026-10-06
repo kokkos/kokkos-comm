@@ -28,12 +28,16 @@ auto send(const ExecSpace& space, const SendView& sv, int peer, ncclComm_t comm)
 
   Request<NcclSpace> req;
   if (is_contiguous(sv)) {
-    KC_NCCL_CHECK(ncclSend(data_handle(sv), span(sv), datatype<NcclSpace, T>(), peer, comm, space.cuda_stream()));
+    KC_NCCL_CHECK(
+        ncclSend(data_handle(sv), span(sv), datatype<NcclSpace, T>(), peer, comm, space.cuda_stream()),
+        "KokkosComm::Impl::send"
+    );
   } else {
     using Packer = typename Impl::PackTraits<SendView>::packer_type;
     auto pckd_sv = Packer::pack(space, "pckd_sv", sv);
     KC_NCCL_CHECK(
-        ncclSend(data_handle(pckd_sv.view_), pckd_sv.count_, pckd_sv.datatype_, peer, comm, space.cuda_stream())
+        ncclSend(data_handle(pckd_sv.view_), pckd_sv.count_, pckd_sv.datatype_, peer, comm, space.cuda_stream()),
+        "KokkosComm::Impl::send"
     );
     req.extend_view_lifetime(pckd_sv.view_);
   }
