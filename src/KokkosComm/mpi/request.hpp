@@ -12,6 +12,8 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/fwd.hpp>
+#include <KokkosComm/error.hpp>
+
 #include "mpi_space.hpp"
 
 #include "impl/error_handling.hpp"
@@ -25,6 +27,7 @@ class Request<MpiSpace> {
   using communication_space = MpiSpace;
   using request_type        = MpiSpace::request_type;
   using rank_type           = MpiSpace::rank_type;
+  using status_type         = KokkosComm::status_type;
 
   /// @brief Constructs a `Request` from an `MPI_Request`.
   /// @param request The request to encapsulate. Defaults to `MPI_REQUEST_NULL`.
@@ -67,31 +70,31 @@ class Request<MpiSpace> {
 
   /// @brief Waits on the request until completion of the associated operation.
   /// The underlying `MPI_Request` object is set to `MPI_REQUEST_NULL` upon return.
-  auto wait() -> void {
+  auto wait() -> status_type {
     MPI_Status status;
-    int err = MPI_Wait(request_ptr(), &status);
-    // FIXME: Do something smarter with status` for better error handling and reporting
-    mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::wait: request completion failed");
+    KC_MPI_CHECK(MPI_Wait(request_ptr(), &status), "KokkosComm::Request<MpiSpace>::wait()");
 
     execute_all_callbacks();
+
+    return {};
   }
 
   /// @brief Queries the request for the completion of the associated operation.
   /// If the operation has completed, all callbacks are executed and the underlying `MPI_Request` object is set to
   /// `MPI_REQUEST_NULL` upon return, similarly to having called `wait`.
   /// @return True if the request has completed or is null/inactive, false otherwise.
-  [[nodiscard]] auto test() -> bool {
-    int has_completed;
-    MPI_Status status;
-    int err = MPI_Test(request_ptr(), &has_completed, &status);
-    // FIXME: Do something smarter with status` for better error handling and reporting
-    mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::test: request query failed");
+  /*   [[nodiscard]] auto test() -> bool {
+      int has_completed;
+      MPI_Status status;
+      int err = MPI_Test(request_ptr(), &has_completed, &status);
+      // FIXME: Do something smarter with status` for better error handling and reporting
+      mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::test: request query failed");
 
-    if (has_completed) {
-      execute_all_callbacks();
-    }
-    return static_cast<bool>(has_completed);
-  }
+      if (has_completed) {
+        execute_all_callbacks();
+      }
+      return static_cast<bool>(has_completed);
+    } */
 
  private:
   request_type request_;
@@ -107,9 +110,9 @@ class Request<MpiSpace> {
 
   friend auto wait(Request<communication_space>& request) -> void;
   friend auto wait(Request<communication_space>&& request) -> void;
-  friend auto wait_all(std::span<Request<communication_space>> requests) -> void;
-  friend auto wait_any(std::span<Request<communication_space>> requests) -> std::optional<rank_type>;
-  friend auto test(Request<communication_space>& request) -> bool;
+  // friend auto wait_all(std::span<Request<communication_space>> requests) -> void;
+  // friend auto wait_any(std::span<Request<communication_space>> requests) -> std::optional<rank_type>;
+  // friend auto test(Request<communication_space>& request) -> bool;
 };
 
 /// @brief Waits on the request until completion of the associated operation.
@@ -122,7 +125,7 @@ inline auto wait(Request<MpiSpace>&& request) -> void { request.wait(); }
 /// @brief Waits for the completion of all passed requests.
 /// Incurs an overhead for copying the underlying `MPI_Request` objects to an intermediate container.
 /// @param requests The list of requests to complete.
-inline auto wait_all(std::span<Request<MpiSpace>> requests) -> void {
+/* inline auto wait_all(std::span<Request<MpiSpace>> requests) -> void {
   if (requests.empty()) {
     return;
   }
@@ -142,12 +145,12 @@ inline auto wait_all(std::span<Request<MpiSpace>> requests) -> void {
     req.execute_all_callbacks();
   }
 }
-
+*/
 /// @brief Waits for the completion of one request among all passed requests.
 /// Incurs an overhead for copying the underlying `MPI_Request` objects to an intermediate container.
 /// @param requests The list of requests to try to complete.
 /// @return The index of the request within the passed list upon successful completion, `std::nullopt` otherwise.
-inline auto wait_any(std::span<Request<MpiSpace>> requests) -> std::optional<typename Request<MpiSpace>::rank_type> {
+/* inline auto wait_any(std::span<Request<MpiSpace>> requests) -> std::optional<typename Request<MpiSpace>::rank_type> {
   if (requests.empty()) {
     return std::nullopt;
   }
@@ -169,10 +172,10 @@ inline auto wait_any(std::span<Request<MpiSpace>> requests) -> std::optional<typ
 
   requests[idx].execute_all_callbacks();
   return static_cast<typename Request<MpiSpace>::rank_type>(idx);
-}
+} */
 
 /// @brief Queries the request for completion of the associated operation.
 /// @param request A reference on the request to query its completion.
-inline auto test(Request<MpiSpace>& request) -> bool { return request.test(); }
+// inline auto test(Request<MpiSpace>& request) -> bool { return request.test(); }
 
 }  // namespace KokkosComm
