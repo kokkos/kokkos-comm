@@ -30,6 +30,9 @@ Low-level MPI interfaces
     * - ``MPI_Recv``
       - ``recv``
       - ✓
+    * - ``MPI_Isendrecv``
+      - ``isendrecv``
+      - ✓
     * - ``MPI_Allgather``
       - ``allgather``
       - ✓
@@ -202,6 +205,42 @@ Point-to-point
     :param tag: The message tag.
     :param comm: The MPI communicator.
     :param req: The MPI request.
+
+
+.. cpp:function:: template <KokkosExecutionSpace Exec, KokkosView SendV, MutKokkosView RecvV> \
+                  auto isendrecv(const Exec& exec, const SendV& sv, int dst, int stag, const RecvV& rv, int src, int rtag, MPI_Comm comm) -> Request<MpiSpace>
+
+    Initiates a combined non-blocking send and receive using ``MPI_Isendrecv``.
+    Requires MPI 4.0 or newer. The send and receive are initiated together,
+    allowing exchanges between neighbors without a receive-first deadlock.
+
+    :tparam Exec: The execution space.
+    :tparam SendV: The type of the send view. Const-valued views are supported.
+    :tparam RecvV: The type of the receive view, whose elements must be mutable.
+
+    :param exec: The execution space used for packing and unpacking.
+    :param sv: The view containing the data to send.
+    :param dst: The destination rank.
+    :param stag: The send message tag.
+    :param rv: The view where received data will be stored.
+    :param src: The source rank.
+    :param rtag: The receive message tag.
+    :param comm: The MPI communicator used for both operations.
+    :returns: A request tracking both operations and any receive unpacking.
+
+    The send and receive ranks, tags, counts, and datatypes are independent;
+    each message must match the corresponding operation on its peer.
+    Multi-dimensional views are supported, and either view may be
+    non-contiguous. Packing and unpacking are selected independently for each
+    view. The execution space is fenced before initiating MPI communication.
+
+    The send and receive storage must not overlap. The request retains the
+    view handles and temporary buffers. Do not modify the send data or access
+    the receive data until completion. ``wait()`` completes both operations
+    and any receive unpacking before returning.
+
+    For an exchange without explicit MPI tags, use
+    :cpp:func:`KokkosComm::sendrecv` with a ``Communicator<MpiSpace, Exec>``.
 
 
 Collectives
