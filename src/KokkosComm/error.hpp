@@ -11,4 +11,6 @@ struct Error {
   int backend_code;
 };
 
+using status_type = tl::expected<void, Error>;
+
 }  // namespace KokkosComm

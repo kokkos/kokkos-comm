@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#include <Kokkos_Core_fwd.hpp>
 #include <type_traits>
 
 #include <gtest/gtest.h>
@@ -106,6 +107,31 @@ TYPED_TEST(IsendRecv, 1D_noncontig_ready) {
 
 TYPED_TEST(IsendRecv, 1D_noncontig_synchronous) {
   isend_comm_mode_1d_noncontig<CommModeSynchronous, typename TestFixture::Scalar>();
+}
+
+TEST(MpiIsendRecvError, NullBuffer) {
+  auto h = KokkosComm::Communicator<>::from_raw(MPI_COMM_WORLD);
+  if (h.size() < 2) {
+    GTEST_SKIP() << "Requires >= 2 ranks (" << h.size() << " provided)";
+  }
+
+  // Unmanaged, contiguous view: null data pointer but non-zero extent
+  Kokkos::View<int*, Kokkos::DefaultExecutionSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v(
+      static_cast<int*>(nullptr), 1013
+  );
+
+  if (0 == h.rank()) {
+    auto req = KokkosComm::mpi::isend(h, v, 1, 0);
+    ASSERT_FALSE(req.has_value());
+    EXPECT_EQ(req.error().code, KokkosComm::ErrorCode::MPIError);
+    EXPECT_EQ(req.error().backend_code, MPI_ERR_BUFFER);
+  } else if (1 == h.rank()) {
+    MPI_Request mpi_req;
+    auto status = KokkosComm::mpi::recv(h.exec(), v, 0, 0, h.comm());
+    ASSERT_FALSE(status.has_value());
+    EXPECT_EQ(status.error().code, KokkosComm::ErrorCode::MPIError);
+    EXPECT_EQ(status.error().backend_code, MPI_ERR_BUFFER);
+  }
 }
 
 }  // namespace

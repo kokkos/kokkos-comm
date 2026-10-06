@@ -26,7 +26,7 @@ tl::expected<Request<MpiSpace>, KokkosComm::Error> isend_impl(
     Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag, SendMode
 ) {
   auto mpi_isend_fn = [](void* mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
-                         MPI_Comm mpi_comm, MPI_Request* mpi_req) -> tl::expected<void, KokkosComm::Error> {
+                         MPI_Comm mpi_comm, MPI_Request* mpi_req) -> KokkosComm::status_type {
     if constexpr (std::is_same_v<SendMode, mpi::CommModeStandard>) {
       KC_MPI_CHECK(
           MPI_Isend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req),
