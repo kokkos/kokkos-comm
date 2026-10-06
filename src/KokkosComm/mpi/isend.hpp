@@ -22,51 +22,39 @@ namespace KokkosComm {
 namespace Impl {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, mpi::CommunicationMode SendMode>
-tl::expected<Request<MpiSpace>, KokkosComm::Error> isend_impl(
-    Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag, SendMode
-) {
-  auto mpi_isend_fn = [](void* mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
-                         MPI_Comm mpi_comm, MPI_Request* mpi_req) -> KokkosComm::status_type {
+Request<MpiSpace> isend_impl(Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag, SendMode) {
+  auto mpi_isend_fn = [](void* buf, int count, MPI_Datatype dt, int dest, int tag, MPI_Comm comm,
+                         MPI_Request* r) -> int {
     if constexpr (std::is_same_v<SendMode, mpi::CommModeStandard>) {
-      KC_MPI_CHECK(
-          MPI_Isend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req),
-          "KokkosComm::Impl::isend_impl"
-      );
+      return MPI_Isend(buf, count, dt, dest, tag, comm, r);
     } else if constexpr (std::is_same_v<SendMode, mpi::CommModeReady>) {
-      KC_MPI_CHECK(
-          MPI_Irsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req),
-          "KokkosComm::Impl::isend_impl"
-      );
+      return MPI_Irsend(buf, count, dt, dest, tag, comm, r);
     } else if constexpr (std::is_same_v<SendMode, mpi::CommModeSynchronous>) {
-      KC_MPI_CHECK(
-          MPI_Issend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req),
-          "KokkosComm::Impl::isend_impl"
-      );
+      return MPI_Issend(buf, count, dt, dest, tag, comm, r);
     } else {
       static_assert(std::is_void_v<SendMode>, "unexpected communication mode");
     }
-    return {};
   };
 
   Request<MpiSpace> req;
   if (KokkosComm::is_contiguous(sv)) {
     h.exec().fence("fence before isend");
-    if (auto r = mpi_isend_fn(
+    KC_MPI_CHECK_REQ(
+        mpi_isend_fn(
             KokkosComm::data_handle(sv), KokkosComm::span(sv), datatype<MpiSpace, typename SendView::value_type>(),
             dest, tag, h.comm(), req.request_ptr()
-        );
-        !r.has_value())
-      return tl::unexpected(r.error());
-
+        ),
+        "KokkosComm::Impl::isend_impl"
+    );
     req.extend_view_lifetime(sv);
   } else {
     using Packer = typename mpi::Impl::PackTraits<SendView>::packer_type;
-
-    auto args = Packer::pack(h.exec(), "pkd_sv", sv);
+    auto args    = Packer::pack(h.exec(), "pkd_sv", sv);
     h.exec().fence("fence before isend");
-    if (auto r = mpi_isend_fn(args.view.data(), args.count, args.datatype, dest, tag, h.comm(), req.request_ptr());
-        !r.has_value())
-      return tl::unexpected(r.error());
+    KC_MPI_CHECK_REQ(
+        mpi_isend_fn(args.view.data(), args.count, args.datatype, dest, tag, h.comm(), req.request_ptr()),
+        "KokkosComm::Impl::isend_impl"
+    );
     req.extend_view_lifetime(args.view);
     req.extend_view_lifetime(sv);
   }
@@ -76,9 +64,7 @@ tl::expected<Request<MpiSpace>, KokkosComm::Error> isend_impl(
 // Implementation of KokkosComm::Send
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
 struct Send<SendView, ExecSpace, MpiSpace> {
-  static tl::expected<Request<MpiSpace>, KokkosComm::Error> execute(
-      Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest
-  ) {
+  static Request<MpiSpace> execute(Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest) {
     return isend_impl<ExecSpace, SendView>(h, sv, dest, POINTTOPOINT_TAG, mpi::DefaultCommMode{});
   }
 };
@@ -87,16 +73,12 @@ struct Send<SendView, ExecSpace, MpiSpace> {
 namespace mpi {
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode SendMode>
-tl::expected<Request<MpiSpace>, KokkosComm::Error> isend(
-    Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag, SendMode
-) {
+Request<MpiSpace> isend(Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag, SendMode) {
   return KokkosComm::Impl::isend_impl<ExecSpace, SendView>(h, sv, dest, tag, SendMode{});
 }
 
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
-tl::expected<Request<MpiSpace>, KokkosComm::Error> isend(
-    Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag
-) {
+Request<MpiSpace> isend(Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag) {
   return isend<ExecSpace, SendView>(h, sv, dest, tag, DefaultCommMode{});
 }
 

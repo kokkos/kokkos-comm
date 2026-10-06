@@ -21,9 +21,7 @@ namespace Impl {
 // Recv implementation for Mpi
 template <KokkosExecutionSpace ExecSpace, MutKokkosView RecvView>
 struct Recv<RecvView, ExecSpace, MpiSpace> {
-  static tl::expected<Request<MpiSpace>, KokkosComm::Error> execute(
-      Communicator<MpiSpace, ExecSpace>& h, const RecvView& rv, int src
-  ) {
+  static Request<MpiSpace> execute(Communicator<MpiSpace, ExecSpace>& h, const RecvView& rv, int src) {
     using Packer = typename mpi::Impl::PackTraits<RecvView>::packer_type;
 
     const ExecSpace& space = h.exec();
@@ -31,7 +29,7 @@ struct Recv<RecvView, ExecSpace, MpiSpace> {
     Request<MpiSpace> req;
     if (KokkosComm::is_contiguous(rv)) {
       space.fence("fence before irecv");
-      KC_MPI_CHECK(
+      KC_MPI_CHECK_REQ(
           MPI_Irecv(
               KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, typename RecvView::value_type>(),
               src, POINTTOPOINT_TAG, h.comm(), req.request_ptr()
@@ -42,7 +40,7 @@ struct Recv<RecvView, ExecSpace, MpiSpace> {
     } else {
       auto args = Packer::allocate_packed_for(space, "TODO", rv);
       space.fence("fence before irecv");
-      KC_MPI_CHECK(
+      KC_MPI_CHECK_REQ(
           MPI_Irecv(args.view.data(), args.count, args.datatype, src, POINTTOPOINT_TAG, h.comm(), req.request_ptr()),
           "KokkosComm::Impl::Recv::execute"
       );

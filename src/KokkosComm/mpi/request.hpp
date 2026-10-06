@@ -35,6 +35,13 @@ class Request<MpiSpace> {
   /// @brief Destructor.
   ~Request() = default;
 
+  // Build an already-failed request (used by isend/irecv on post failure)
+  static auto failed(Error e) -> Request {
+    Request r;  // request_ = MPI_REQUEST_NULL
+    r.status_ = tl::unexpected(e);
+    return r;
+  }
+
   /// @brief Copy constructor is deleted because a `Request` can only be moved.
   Request(const Request&) = delete;
   /// @brief Copy assignment operator is deleted because a `Request` can only be moved.
@@ -52,6 +59,9 @@ class Request<MpiSpace> {
   [[nodiscard]] constexpr auto request_ptr() noexcept -> request_type* { return &request_; }
   /// @return A const pointer to the underlying `MPI_Request` object.
   [[nodiscard]] constexpr auto request_ptr() const noexcept -> const request_type* { return &request_; }
+  // Let users check eagerly if they want to, without waiting
+  [[nodiscard]] auto status() const noexcept -> const status_type& { return status_; }
+  [[nodiscard]] auto success() const noexcept -> bool { return status_.has_value(); }
 
   /// @brief Adds a function to a list of callbacks to be invoked after the request's completion.
   /// @param cb The callback function to register.
@@ -71,12 +81,18 @@ class Request<MpiSpace> {
   /// @brief Waits on the request until completion of the associated operation.
   /// The underlying `MPI_Request` object is set to `MPI_REQUEST_NULL` upon return.
   auto wait() -> status_type {
-    MPI_Status status;
-    KC_MPI_CHECK(MPI_Wait(request_ptr(), &status), "KokkosComm::Request<MpiSpace>::wait()");
-
+    if (!status_.has_value()) {  // post already failed: don't touch MPI
+      callbacks_.clear();        // drop lifetime captures, skip unpack
+      return status_;
+    }
+    MPI_Status mpi_status;
+    if (int err = MPI_Wait(&request_, &mpi_status); err != MPI_SUCCESS) {
+      callbacks_.clear();
+      status_ = tl::unexpected(Error{MPIError, err});
+      return status_;
+    }
     execute_all_callbacks();
-
-    return {};
+    return status_;
   }
 
   /// @brief Queries the request for the completion of the associated operation.
@@ -99,6 +115,7 @@ class Request<MpiSpace> {
  private:
   request_type request_;
   std::vector<std::function<void()>> callbacks_;
+  status_type status_{};  // success by default
 
   /// @brief Executes all the callbacks registered on the request.
   auto execute_all_callbacks() -> void {
@@ -108,8 +125,8 @@ class Request<MpiSpace> {
     callbacks_.clear();
   }
 
-  friend auto wait(Request<communication_space>& request) -> void;
-  friend auto wait(Request<communication_space>&& request) -> void;
+  friend auto wait(Request<communication_space>& request) -> status_type;
+  friend auto wait(Request<communication_space>&& request) -> status_type;
   // friend auto wait_all(std::span<Request<communication_space>> requests) -> void;
   // friend auto wait_any(std::span<Request<communication_space>> requests) -> std::optional<rank_type>;
   // friend auto test(Request<communication_space>& request) -> bool;
@@ -117,10 +134,10 @@ class Request<MpiSpace> {
 
 /// @brief Waits on the request until completion of the associated operation.
 /// @param request A reference on the request to wait for completion.
-inline auto wait(Request<MpiSpace>& request) -> void { request.wait(); }
+inline auto wait(Request<MpiSpace>& request) -> status_type { return request.wait(); }
 /// @brief Waits on the request until completion of the associated operation.
 /// @param request An r-value reference on the request, consumed upon completion.
-inline auto wait(Request<MpiSpace>&& request) -> void { request.wait(); }
+inline auto wait(Request<MpiSpace>&& request) -> status_type { return request.wait(); }
 
 /// @brief Waits for the completion of all passed requests.
 /// Incurs an overhead for copying the underlying `MPI_Request` objects to an intermediate container.

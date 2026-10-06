@@ -104,26 +104,4 @@ TYPED_TEST(MpiSendRecv, 1D_noncontig_synchronous) {
   send_comm_mode_1d_noncontig<CommModeSynchronous, typename TestFixture::Scalar>();
 }
 
-TEST(MpiSendRecvError, NullBuffer) {
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  if (size < 2) {
-    GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
-  }
-
-  // Unmanaged, contiguous view: null data pointer but non-zero extent
-  Kokkos::View<int *, Kokkos::DefaultExecutionSpace::memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v(
-      static_cast<int *>(nullptr), 1013
-  );
-
-  auto space  = Kokkos::DefaultExecutionSpace{};
-  auto status = (rank == 0) ? KokkosComm::mpi::send(space, v, 1, 0, MPI_COMM_WORLD)
-                            : KokkosComm::mpi::recv(space, v, 0, 0, MPI_COMM_WORLD);
-
-  ASSERT_FALSE(status.has_value());
-  EXPECT_EQ(status.error().code, KokkosComm::ErrorCode::MPIError);
-  EXPECT_EQ(status.error().backend_code, MPI_ERR_BUFFER);
-}
-
 }  // namespace

@@ -28,8 +28,7 @@ template <
     KokkosView SendView,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
-auto send(Communicator<CommSpace, ExecSpace>& h, const SendView& sv, int peer)
-    -> tl::expected<Request<CommSpace>, KokkosComm::Error> {
+auto send(Communicator<CommSpace, ExecSpace>& h, const SendView& sv, int peer) -> Request<CommSpace> {
   return Impl::Send<SendView, ExecSpace, CommSpace>::execute(h, sv, peer);
 }
 
@@ -38,8 +37,7 @@ template <
     MutKokkosView RecvView,
     KokkosExecutionSpace ExecSpace = Kokkos::DefaultExecutionSpace,
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
-auto recv(Communicator<CommSpace, ExecSpace>& h, RecvView& rv, int peer)
-    -> tl::expected<Request<CommSpace>, KokkosComm::Error> {
+auto recv(Communicator<CommSpace, ExecSpace>& h, RecvView& rv, int peer) -> Request<CommSpace> {
   return Impl::Recv<RecvView, ExecSpace, CommSpace>::execute(h, rv, peer);
 }
 
