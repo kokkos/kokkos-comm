@@ -29,20 +29,16 @@ struct Recv<RecvView, ExecSpace, MpiSpace> {
     Request<MpiSpace> req;
     if (KokkosComm::is_contiguous(rv)) {
       space.fence("fence before irecv");
-      KC_MPI_CHECK_REQ(
-          MPI_Irecv(
-              KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, typename RecvView::value_type>(),
-              src, POINTTOPOINT_TAG, h.comm(), req.request_ptr()
-          ),
-          "KokkosComm::Impl::Recv::execute"
-      );
+      KC_MPI_CHECK_REQ(MPI_Irecv(
+          KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, typename RecvView::value_type>(), src,
+          POINTTOPOINT_TAG, h.comm(), req.request_ptr()
+      ));
       req.extend_view_lifetime(rv);
     } else {
       auto args = Packer::allocate_packed_for(space, "TODO", rv);
       space.fence("fence before irecv");
       KC_MPI_CHECK_REQ(
-          MPI_Irecv(args.view.data(), args.count, args.datatype, src, POINTTOPOINT_TAG, h.comm(), req.request_ptr()),
-          "KokkosComm::Impl::Recv::execute"
+          MPI_Irecv(args.view.data(), args.count, args.datatype, src, POINTTOPOINT_TAG, h.comm(), req.request_ptr())
       );
       // implicitly extends args.view and rv lifetime due to lambda capture
       req.add_callback([space, rv, args]() {

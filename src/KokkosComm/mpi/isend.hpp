@@ -39,22 +39,16 @@ Request<MpiSpace> isend_impl(Communicator<MpiSpace, ExecSpace>& h, const SendVie
   Request<MpiSpace> req;
   if (KokkosComm::is_contiguous(sv)) {
     h.exec().fence("fence before isend");
-    KC_MPI_CHECK_REQ(
-        mpi_isend_fn(
-            KokkosComm::data_handle(sv), KokkosComm::span(sv), datatype<MpiSpace, typename SendView::value_type>(),
-            dest, tag, h.comm(), req.request_ptr()
-        ),
-        "KokkosComm::Impl::isend_impl"
-    );
+    KC_MPI_CHECK_REQ(mpi_isend_fn(
+        KokkosComm::data_handle(sv), KokkosComm::span(sv), datatype<MpiSpace, typename SendView::value_type>(), dest,
+        tag, h.comm(), req.request_ptr()
+    ));
     req.extend_view_lifetime(sv);
   } else {
     using Packer = typename mpi::Impl::PackTraits<SendView>::packer_type;
     auto args    = Packer::pack(h.exec(), "pkd_sv", sv);
     h.exec().fence("fence before isend");
-    KC_MPI_CHECK_REQ(
-        mpi_isend_fn(args.view.data(), args.count, args.datatype, dest, tag, h.comm(), req.request_ptr()),
-        "KokkosComm::Impl::isend_impl"
-    );
+    KC_MPI_CHECK_REQ(mpi_isend_fn(args.view.data(), args.count, args.datatype, dest, tag, h.comm(), req.request_ptr()));
     req.extend_view_lifetime(args.view);
     req.extend_view_lifetime(sv);
   }

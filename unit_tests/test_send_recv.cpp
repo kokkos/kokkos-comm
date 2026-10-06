@@ -75,13 +75,13 @@ TEST(SendRecvError, NullBuffer) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
   auto& nccl_ctx                 = test_utils::NcclCtx::get();
   auto raw_comm                  = nccl_ctx.comm();
-  constexpr auto expected_code   = KokkosComm::ErrorCode::NCCLError;
   constexpr int expected_backend = ncclInvalidArgument;
 #else
   auto raw_comm = MPI_COMM_WORLD;
-  constexpr auto expected_code = KokkosComm::ErrorCode::MPIError;
   constexpr int expected_backend = MPI_ERR_BUFFER;
 #endif
+  constexpr auto expected_code = KokkosComm::ErrorCode::BackendError;
+
   auto exec      = Kokkos::DefaultExecutionSpace{};
   auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
   const int size = comm.size();
@@ -101,7 +101,7 @@ TEST(SendRecvError, NullBuffer) {
   auto request = (rank == src) ? KokkosComm::send(comm, v, dst) : KokkosComm::recv(comm, v, src);
 
   ASSERT_FALSE(request.success());
-  EXPECT_EQ(request.status().error().code, expected_code);
-  EXPECT_EQ(request.status().error().backend_code, expected_backend);
+  EXPECT_EQ(request.error_code(), expected_code);
+  EXPECT_EQ(request.backend_error_code(), expected_backend);
 }
 }  // namespace

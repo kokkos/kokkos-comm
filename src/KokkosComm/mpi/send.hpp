@@ -38,11 +38,11 @@ KokkosComm::status_type send(const ExecSpace &space, const SendView &sv, int des
 
   if (is_contiguous(sv)) {
     space.fence("fence before send");
-    KC_MPI_CHECK(mpi_send_fn(data_handle(sv), span(sv), datatype<MpiSpace, T>()), "KokkosComm::mpi::send");
+    KC_MPI_CHECK(mpi_send_fn(data_handle(sv), span(sv), datatype<MpiSpace, T>()));
   } else {
     auto args = Packer::pack(space, "pkd_sv", sv);
     space.fence("fence before send");
-    KC_MPI_CHECK(mpi_send_fn(data_handle(args.view), args.count, args.datatype), "KokkosComm::mpi::send");
+    KC_MPI_CHECK(mpi_send_fn(data_handle(args.view), args.count, args.datatype));
   }
 
   return {};

@@ -5,10 +5,12 @@
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Profiling_ScopedRegion.hpp>
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include "KokkosComm/error.hpp"
 #include "mpi_space.hpp"
 #include "communicator.hpp"
 #include "request.hpp"
@@ -21,17 +23,18 @@ namespace mpi {
 template <KokkosExecutionSpace ExecSpace, MutKokkosView View>
 auto ibroadcast(const ExecSpace& space, View& v, int root, MPI_Comm comm) -> Request<MpiSpace> {
   using T = typename View::non_const_value_type;
-  Kokkos::Tools::pushRegion("KokkosComm::mpi::ibroadcast");
-  fail_if(!is_contiguous(v), "KokkosComm::mpi::ibroadcast: unimplemented for non-contiguous views");
+  Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::ibroadcast");
+
+  std::cout << is_contiguous(v) << std::endl;
+  KC_FAIL_IF_REQ(!is_contiguous(v), ErrorCode::NotSupported);
 
   // Sync: Work in space may have been used to produce view data.
   space.fence("fence before non-blocking broadcast");
 
   Request<MpiSpace> req;
-  MPI_Ibcast(data_handle(v), span(v), datatype_for<MpiSpace>(v), root, comm, req.request_ptr());
+  KC_MPI_CHECK_REQ(MPI_Ibcast(data_handle(v), span(v), datatype_for<MpiSpace>(v), root, comm, req.request_ptr()));
   req.extend_view_lifetime(v);
 
-  Kokkos::Tools::popRegion();
   return req;
 }
 
@@ -41,7 +44,7 @@ void broadcast(View const& v, int root, MPI_Comm comm) {
 
   using Scalar = typename View::value_type;
 
-  KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(v), "low-level broadcast requires contiguous view");
+  // KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(v), "low-level broadcast requires contiguous view");
 
   MPI_Bcast(KokkosComm::data_handle(v), KokkosComm::span(v), datatype<MpiSpace, Scalar>(), root, comm);
 

@@ -60,7 +60,13 @@ class Request<MpiSpace> {
   /// @return A const pointer to the underlying `MPI_Request` object.
   [[nodiscard]] constexpr auto request_ptr() const noexcept -> const request_type* { return &request_; }
   // Let users check eagerly if they want to, without waiting
-  [[nodiscard]] auto status() const noexcept -> const status_type& { return status_; }
+  [[nodiscard]] auto error_code() const noexcept -> const ErrorCode {
+    return success() ? ErrorCode::NoError : status_.error().code;
+  }
+  [[nodiscard]] auto backend_error_code() const noexcept -> const std::optional<int> {
+    return success() ? std::nullopt : status_.error().backend_code;
+  }
+
   [[nodiscard]] auto success() const noexcept -> bool { return status_.has_value(); }
 
   /// @brief Adds a function to a list of callbacks to be invoked after the request's completion.
@@ -88,7 +94,7 @@ class Request<MpiSpace> {
     MPI_Status mpi_status;
     if (int err = MPI_Wait(&request_, &mpi_status); err != MPI_SUCCESS) {
       callbacks_.clear();
-      status_ = tl::unexpected(Error{MPIError, err});
+      status_ = tl::unexpected(Error{BackendError, err});
       return status_;
     }
     execute_all_callbacks();
