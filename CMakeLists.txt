@@ -55,18 +55,13 @@ else()
   message(STATUS "Enabled Kokkos Comm backends: ${BACKENDS_STRING}")
 endif()
 
-
+# Header-only, used for `KokkosComm::status_type` (see src/KokkosComm/error.hpp)
 find_package(tl-expected 1.3.1 REQUIRED)
-
 
 # --- LIBRARY --- #
 add_library(KokkosComm INTERFACE)
 add_subdirectory(src/KokkosComm)
 add_library(KokkosComm::KokkosComm ALIAS KokkosComm)
-
-target_link_libraries(KokkosComm INTERFACE
-  $<BUILD_INTERFACE:tl::expected>
-  $<INSTALL_INTERFACE:tl::expected>)
 
 # --- TESTING --- #
 if(KokkosComm_ENABLE_TESTS)
