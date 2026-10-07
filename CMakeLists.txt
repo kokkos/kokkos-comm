@@ -55,14 +55,9 @@ else()
   message(STATUS "Enabled Kokkos Comm backends: ${BACKENDS_STRING}")
 endif()
 
-include(FetchContent)
-FetchContent_Declare(tl-expected
-  GIT_REPOSITORY https://github.com/TartanLlama/expected.git
-  GIT_TAG        v1.3.1
-  GIT_SHALLOW    TRUE
-  FIND_PACKAGE_ARGS CONFIG)
-set(EXPECTED_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(tl-expected)
+
+find_package(tl-expected 1.3.1 REQUIRED)
+
 
 # --- LIBRARY --- #
 add_library(KokkosComm INTERFACE)
