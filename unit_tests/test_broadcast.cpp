@@ -51,12 +51,16 @@ auto broadcast_0d() -> void {
     exec.fence();
   }
 
-  KokkosComm::Experimental::broadcast(comm, v, root).wait();
+  auto request = KokkosComm::Experimental::broadcast(comm, v, root);
+  EXPECT_FALSE(request.has_error());
+  request.wait();
+  EXPECT_FALSE(request.has_error());
 
   int errs;
   Kokkos::parallel_reduce(
       v.extent(0), KOKKOS_LAMBDA(const int, int& lsum) { lsum += v() != size; }, errs
   );
+
   EXPECT_EQ(errs, 0);
 }
 
@@ -96,29 +100,6 @@ auto broadcast_contig_1d() -> void {
 TYPED_TEST(Broadcast, 0D) { broadcast_0d<typename TestFixture::Scalar>(); }
 TYPED_TEST(Broadcast, Contiguous1D) { broadcast_contig_1d<typename TestFixture::Scalar>(); }
 
-/* TEST(BroadcastError, NullBuffer) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto& nccl_ctx                 = test_utils::NcclCtx::get();
-  auto raw_comm                  = nccl_ctx.comm();
-  constexpr int expected_backend = ncclInvalidArgument;
-#else
-  auto raw_comm                  = MPI_COMM_WORLD;
-  constexpr int expected_backend = MPI_ERR_BUFFER;
-#endif
-  auto exec      = Ex();
-  auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
-  const int root = 0;
-
-  // Unmanaged, contiguous view: null data pointer but non-zero extent
-  Kokkos::View<int*, Ex::memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v(static_cast<int*>(nullptr), 100);
-
-  auto request = KokkosComm::Experimental::broadcast(comm, v, root);
-
-  ASSERT_FALSE(request.success());
-  EXPECT_EQ(request.error_code(), KokkosComm::ErrorCode::BackendError);
-  EXPECT_EQ(request.backend_error_code(), expected_backend);
-} */
-
 TEST(BroadcastError, NonContiguousNotSupported) {
 #if defined(KOKKOSCOMM_ABORT_ON_ERROR)
   GTEST_SKIP() << "KokkosComm errors abort when KOKKOSCOMM_ABORT_ON_ERROR is defined";
@@ -138,7 +119,7 @@ TEST(BroadcastError, NonContiguousNotSupported) {
 
   auto request = KokkosComm::Experimental::broadcast(comm, v, root);
 
-  ASSERT_FALSE(request.success());
+  ASSERT_TRUE(request.has_error());
   EXPECT_EQ(request.error_code(), KokkosComm::ErrorCode::NotSupported);
   EXPECT_FALSE(request.backend_error_code().has_value());
 }

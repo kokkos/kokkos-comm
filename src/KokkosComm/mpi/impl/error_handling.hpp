@@ -27,19 +27,19 @@ inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = 
 }
 
 #ifdef KOKKOSCOMM_ABORT_ON_ERROR
-#define KC_ON_ERROR_IMPL_(make_ret, err) MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE)
+#define KC_MPI_ON_ERROR_IMPL_(make_ret, err) MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE)
 #else
-#define KC_ON_ERROR_IMPL_(make_ret, err) return make_ret(err)
+#define KC_MPI_ON_ERROR_IMPL_(make_ret, err) return make_ret(err)
 #endif
 
 #define KC_ERR_TO_UNEXPECTED_(e) tl::unexpected(e)
 #define KC_ERR_TO_REQUEST_(e) ::KokkosComm::Request<::KokkosComm::MpiSpace>::failed(e)
 
-#define KC_FAIL_IF_IMPL(cond, code, make_ret)                                                                    \
+#define KC_MPI_FAIL_IF_IMPL(cond, code, make_ret)                                                                \
   do {                                                                                                           \
     if (cond) {                                                                                                  \
       std::cerr << "Error: KokkosComm check `" #cond "` failed at " << __FILE__ << ":" << __LINE__ << std::endl; \
-      KC_ON_ERROR_IMPL_(make_ret, (::KokkosComm::Error{code}));                                                  \
+      KC_MPI_ON_ERROR_IMPL_(make_ret, (::KokkosComm::Error{code}));                                              \
     }                                                                                                            \
   } while (0)
 
@@ -57,11 +57,11 @@ inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = 
   } while (0)
 
 /// For functions returning status_type
-#define KC_FAIL_IF(cond, code) KC_FAIL_IF_IMPL(cond, code, KC_ERR_TO_UNEXPECTED_)
+#define KC_MPI_FAIL_IF(cond, code) KC_MPI_FAIL_IF_IMPL(cond, code, KC_ERR_TO_UNEXPECTED_)
 #define KC_MPI_CHECK(call) KC_MPI_CHECK_IMPL(call, KC_ERR_TO_UNEXPECTED_)
 
 /// For functions returning Request<MpiSpace>
-#define KC_FAIL_IF_REQ(cond, code) KC_FAIL_IF_IMPL(cond, code, KC_ERR_TO_REQUEST_)
+#define KC_MPI_FAIL_IF_REQ(cond, code) KC_MPI_FAIL_IF_IMPL(cond, code, KC_ERR_TO_REQUEST_)
 #define KC_MPI_CHECK_REQ(call) KC_MPI_CHECK_IMPL(call, KC_ERR_TO_REQUEST_)
 
 }  // namespace KokkosComm::mpi

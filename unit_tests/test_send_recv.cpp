@@ -32,9 +32,15 @@ void test_core_send_recv(const View& v) {
   if (rank == src) {
     test_utils::init_view(exec, v);
     exec.fence();
-    KokkosComm::send(comm, v, dst).wait();
+    auto request = KokkosComm::send(comm, v, dst);
+    ASSERT_FALSE(request.has_error());
+    request.wait();
+    ASSERT_FALSE(request.has_error());
   } else if (rank == dst) {
-    KokkosComm::recv(comm, v, src).wait();
+    auto request = KokkosComm::recv(comm, v, src);
+    ASSERT_FALSE(request.has_error());
+    request.wait();
+    ASSERT_FALSE(request.has_error());
     int errs = test_utils::count_errors(v);
     ASSERT_EQ(errs, 0);
   }
@@ -100,7 +106,7 @@ TEST(SendRecvError, NullBuffer) {
 
   auto request = (rank == src) ? KokkosComm::send(comm, v, dst) : KokkosComm::recv(comm, v, src);
 
-  ASSERT_FALSE(request.success());
+  ASSERT_TRUE(request.has_error());
   EXPECT_EQ(request.error_code(), expected_code);
   EXPECT_EQ(request.backend_error_code(), expected_backend);
 }

@@ -76,7 +76,7 @@ Request<MpiSpace> isend(Communicator<MpiSpace, ExecSpace>& h, const SendView& sv
   return isend<ExecSpace, SendView>(h, sv, dest, tag, DefaultCommMode{});
 }
 
-/* template <KokkosView SendView>
+template <KokkosView SendView>
 void isend(const SendView& sv, int dest, int tag, MPI_Comm comm, MPI_Request& req) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
 
@@ -86,7 +86,7 @@ void isend(const SendView& sv, int dest, int tag, MPI_Comm comm, MPI_Request& re
   MPI_Isend(KokkosComm::data_handle(sv), KokkosComm::span(sv), datatype<MpiSpace, SendScalar>(), dest, tag, comm, &req);
 
   Kokkos::Tools::popRegion();
-} */
+}
 
 }  // namespace mpi
 }  // namespace KokkosComm

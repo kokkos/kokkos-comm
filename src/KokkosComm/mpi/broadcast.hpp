@@ -25,8 +25,7 @@ auto ibroadcast(const ExecSpace& space, View& v, int root, MPI_Comm comm) -> Req
   using T = typename View::non_const_value_type;
   Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::ibroadcast");
 
-  std::cout << is_contiguous(v) << std::endl;
-  KC_FAIL_IF_REQ(!is_contiguous(v), ErrorCode::NotSupported);
+  KC_MPI_FAIL_IF_REQ(!is_contiguous(v), ErrorCode::NotSupported);
 
   // Sync: Work in space may have been used to produce view data.
   space.fence("fence before non-blocking broadcast");
