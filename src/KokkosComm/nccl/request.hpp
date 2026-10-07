@@ -34,7 +34,10 @@ class Request<Experimental::NcclSpace> {
   /// @brief Constructs a `Request`.
   explicit Request() : request_(nullptr) {}
 
-  // Build an already-failed request (used by send/recv/broadcast on post failure)
+  /// @brief Constructs a `Request` in the failed state, without any associated operation.
+  /// Used when posting the operation failed; `wait` on such a request returns immediately.
+  /// @param e The error to store in the request.
+  /// @return A `Request` for which `has_error()` is true.
   static auto failed(Error e) -> Request {
     Request r;  // request_ = nullptr
     r.status_ = tl::unexpected(e);
@@ -75,14 +78,17 @@ class Request<Experimental::NcclSpace> {
   [[nodiscard]] constexpr auto request_ptr() noexcept -> request_type* { return &request_; }
   /// @return A const pointer to the underlying `cudaEvent_t` object.
   [[nodiscard]] constexpr auto request_ptr() const noexcept -> const request_type* { return &request_; }
-  // Let users check eagerly if they want to, without waiting
+  /// @return The category of the error stored in the request, or `ErrorCode::NoError` if there is none.
+  /// Can be queried before `wait` to detect a failure to post the operation.
   [[nodiscard]] auto error_code() const noexcept -> ErrorCode {
     return !has_error() ? KokkosComm::ErrorCode::NoError : status_.error().code;
   }
+  /// @return The raw backend error code stored in the request, if the error came from the backend.
   [[nodiscard]] auto backend_error_code() const noexcept -> std::optional<int> {
     return !has_error() ? std::nullopt : status_.error().backend_code;
   }
 
+  /// @return True if posting or completing the associated operation failed, false otherwise.
   [[nodiscard]] auto has_error() const noexcept -> bool { return !status_.has_value(); }
 
   /// @brief Adds a function to a list of callbacks to be invoked after the request's completion.
@@ -101,6 +107,9 @@ class Request<Experimental::NcclSpace> {
   }
 
   /// @brief Waits on the request until completion of the associated operation.
+  /// If the request is already in the failed state, returns immediately. If `cudaEventSynchronize` fails, the error
+  /// is stored in the request with the `cudaError_t` as backend code. In both cases, registered callbacks are discarded
+  /// without being invoked; check `has_error()` after waiting.
   auto wait() -> void {
     if (has_error()) {     // post already failed: no event was recorded, don't touch CUDA
       callbacks_.clear();  // drop lifetime captures, skip unpack

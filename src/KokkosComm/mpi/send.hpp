@@ -18,6 +18,7 @@
 
 namespace KokkosComm::mpi {
 
+/// @return An empty `status_type` on success, or the `Error` that occurred.
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, CommunicationMode SendMode>
 KokkosComm::status_type send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm, SendMode) {
   Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::send");
@@ -48,12 +49,14 @@ KokkosComm::status_type send(const ExecSpace &space, const SendView &sv, int des
   return {};
 }
 
+/// @return An empty `status_type` on success, or the `Error` that occurred.
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView>
 KokkosComm::status_type send(const ExecSpace &space, const SendView &sv, int dest, int tag, MPI_Comm comm) {
   return send(space, sv, dest, tag, comm, DefaultCommMode{});
 }
 
 /// NOTE: This overload has the side effect of fencing on the default execution space.
+/// @return An empty `status_type` on success, or the `Error` that occurred.
 template <KokkosView SendView>
 KokkosComm::status_type send(const SendView &sv, int dest, int tag, MPI_Comm comm) {
   return send(Kokkos::DefaultExecutionSpace(), sv, dest, tag, comm, DefaultCommMode{});

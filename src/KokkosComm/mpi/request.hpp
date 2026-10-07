@@ -36,7 +36,10 @@ class Request<MpiSpace> {
   /// @brief Destructor.
   ~Request() = default;
 
-  // Build an already-failed request (used by isend/irecv on post failure)
+  /// @brief Constructs a `Request` in the failed state, without any associated operation.
+  /// Used when posting the operation failed; `wait` on such a request returns immediately.
+  /// @param e The error to store in the request.
+  /// @return A `Request` for which `has_error()` is true.
   static auto failed(Error e) -> Request {
     Request r;  // request_ = MPI_REQUEST_NULL
     r.status_ = tl::unexpected(e);
@@ -60,14 +63,17 @@ class Request<MpiSpace> {
   [[nodiscard]] constexpr auto request_ptr() noexcept -> request_type* { return &request_; }
   /// @return A const pointer to the underlying `MPI_Request` object.
   [[nodiscard]] constexpr auto request_ptr() const noexcept -> const request_type* { return &request_; }
-  // Let users check eagerly if they want to, without waiting
+  /// @return The category of the error stored in the request, or `ErrorCode::NoError` if there is none.
+  /// Can be queried before `wait` to detect a failure to post the operation.
   [[nodiscard]] auto error_code() const noexcept -> ErrorCode {
     return !has_error() ? KokkosComm::ErrorCode::NoError : status_.error().code;
   }
+  /// @return The raw backend error code stored in the request, if the error came from the backend.
   [[nodiscard]] auto backend_error_code() const noexcept -> std::optional<int> {
     return !has_error() ? std::nullopt : status_.error().backend_code;
   }
 
+  /// @return True if posting or completing the associated operation failed, false otherwise.
   [[nodiscard]] auto has_error() const noexcept -> bool { return !status_.has_value(); }
 
   /// @brief Adds a function to a list of callbacks to be invoked after the request's completion.
@@ -87,6 +93,9 @@ class Request<MpiSpace> {
 
   /// @brief Waits on the request until completion of the associated operation.
   /// The underlying `MPI_Request` object is set to `MPI_REQUEST_NULL` upon return.
+  /// If the request is already in the failed state, returns immediately. If `MPI_Wait` fails, the error is stored in
+  /// the request. In both cases, registered callbacks are discarded without being invoked; check `has_error()` after
+  /// waiting.
   auto wait() -> void {
     if (has_error()) {     // post already failed: don't touch MPI
       callbacks_.clear();  // drop lifetime captures, skip unpack

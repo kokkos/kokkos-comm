@@ -16,6 +16,7 @@
 
 namespace KokkosComm::mpi {
 
+/// @return An empty `status_type` on success, or the `Error` that occurred.
 template <MutKokkosView RecvView>
 KokkosComm::status_type recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *status) {
   Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::recv");
@@ -30,6 +31,7 @@ KokkosComm::status_type recv(const RecvView &rv, int src, int tag, MPI_Comm comm
   return {};
 }
 
+/// @return An empty `status_type` on success, or the `Error` that occurred.
 template <KokkosExecutionSpace ExecSpace, MutKokkosView RecvView>
 KokkosComm::status_type recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
   Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::recv");
