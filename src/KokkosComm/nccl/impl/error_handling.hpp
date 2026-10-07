@@ -5,10 +5,9 @@
 
 #include <cstdio>
 #include <string_view>
+
 #include <nccl.h>
 #include <Kokkos_Core.hpp>
-
-#include <KokkosComm/error.hpp>
 
 #define KC_CUDA_CHECK(expr)                                                                             \
   ([&]() {                                                                                              \
@@ -25,19 +24,6 @@
       std::fprintf(stderr, "%s:%d: error (NCCL): %s\n", __FILE__, __LINE__, ncclGetErrorString(kcRes)); \
     }                                                                                                   \
   }())
-
-#define KC_NCCL_CHECK(call, caller)                                                                      \
-  do {                                                                                                   \
-    ncclResult_t nccl_err_ = (call);                                                                     \
-    if (nccl_err_ != ncclSuccess) {                                                                      \
-      std::cerr << "Error: " << caller << " returned error code " << static_cast<int>(nccl_err_) << " (" \
-                << ncclGetErrorString(nccl_err_) << ")";                                                 \
-      if (const char* nccl_last_ = ncclGetLastError(nullptr); nccl_last_ && *nccl_last_)                 \
-        std::cerr << ": " << nccl_last_;                                                                 \
-      std::cerr << std::endl;                                                                            \
-      return tl::unexpected(Error{NCCLError, static_cast<int>(nccl_err_)});                              \
-    }                                                                                                    \
-  } while (0)
 
 namespace KokkosComm::nccl {
 

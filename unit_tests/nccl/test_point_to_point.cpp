@@ -46,9 +46,9 @@ auto p2p_contig_1d() -> void {
     );
 
     // Using the same execution space for both operations lets us not need an explicit `fence`
-    KokkosComm::Experimental::nccl::send(exec, v, dst, comm).value().wait();
+    KokkosComm::Experimental::nccl::send(exec, v, dst, comm).wait();
   } else if (rank == dst) {
-    KokkosComm::Experimental::nccl::recv(exec, v, src, comm).value().wait();
+    KokkosComm::Experimental::nccl::recv(exec, v, src, comm).wait();
 
     int errs;
     Kokkos::parallel_reduce(
@@ -80,9 +80,9 @@ auto p2p_noncontig_1d() -> void {
     );
 
     // Using the same execution space for both operations lets us not need an explicit `fence`
-    KokkosComm::Experimental::nccl::send(exec, sv, dst, comm).value().wait();
+    KokkosComm::Experimental::nccl::send(exec, sv, dst, comm).wait();
   } else if (rank == dst) {
-    KokkosComm::Experimental::nccl::recv(exec, sv, src, comm).value().wait();
+    KokkosComm::Experimental::nccl::recv(exec, sv, src, comm).wait();
 
     int errs;
     Kokkos::parallel_reduce(
