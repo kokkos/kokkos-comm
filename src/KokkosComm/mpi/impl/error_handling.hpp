@@ -26,6 +26,8 @@ inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = 
   }
 }
 
+}  // namespace KokkosComm::mpi
+
 #ifdef KOKKOSCOMM_ABORT_ON_ERROR
 #define KC_MPI_ON_ERROR_IMPL_(make_ret, err) MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE)
 #else
@@ -63,5 +65,3 @@ inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = 
 /// For functions returning Request<MpiSpace>
 #define KC_MPI_FAIL_IF_REQ(cond, code) KC_MPI_FAIL_IF_IMPL(cond, code, KC_ERR_TO_REQUEST_)
 #define KC_MPI_CHECK_REQ(call) KC_MPI_CHECK_IMPL(call, KC_ERR_TO_REQUEST_)
-
-}  // namespace KokkosComm::mpi

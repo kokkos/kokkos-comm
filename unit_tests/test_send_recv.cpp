@@ -77,14 +77,14 @@ TYPED_TEST(SendRecv, NonContig2D) {
   test_core_send_recv(v);
 }
 
-TEST(SendRecvError, NullBuffer) {
+TEST(SendRecvError, InvalidSrcDst) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
   auto& nccl_ctx                 = test_utils::NcclCtx::get();
   auto raw_comm                  = nccl_ctx.comm();
   constexpr int expected_backend = ncclInvalidArgument;
 #else
   auto raw_comm = MPI_COMM_WORLD;
-  constexpr int expected_backend = MPI_ERR_BUFFER;
+  constexpr int expected_backend = MPI_ERR_RANK;
 #endif
   constexpr auto expected_code = KokkosComm::ErrorCode::BackendError;
 
@@ -100,11 +100,9 @@ TEST(SendRecvError, NullBuffer) {
   const int dst = 1;
 
   // Unmanaged, contiguous view: null data pointer but non-zero extent
-  Kokkos::View<int*, Kokkos::DefaultExecutionSpace::memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v(
-      static_cast<int*>(nullptr), 1013
-  );
+  Kokkos::View<int*> v("v", 10);
 
-  auto request = (rank == src) ? KokkosComm::send(comm, v, dst) : KokkosComm::recv(comm, v, src);
+  auto request = (rank == src) ? KokkosComm::send(comm, v, size) : KokkosComm::recv(comm, v, size);
 
   ASSERT_TRUE(request.has_error());
   EXPECT_EQ(request.error_code(), expected_code);

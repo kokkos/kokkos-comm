@@ -51,7 +51,7 @@ struct Recv<RecvView, ExecSpace, MpiSpace> {
 };
 
 }  // namespace Impl
-/* namespace mpi {
+namespace mpi {
 
 template <MutKokkosView RecvView>
 void irecv(const RecvView& rv, int src, int tag, MPI_Comm comm, MPI_Request& req) {
@@ -65,5 +65,5 @@ void irecv(const RecvView& rv, int src, int tag, MPI_Comm comm, MPI_Request& req
   Kokkos::Tools::popRegion();
 }
 
-}  // namespace mpi */
+}  // namespace mpi
 }  // namespace KokkosComm

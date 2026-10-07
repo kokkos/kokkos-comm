@@ -20,7 +20,7 @@ template <MutKokkosView RecvView>
 KokkosComm::status_type recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *status) {
   Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::recv");
 
-  KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "only contiguous views supported for low-level recv");
+  KC_MPI_FAIL_IF(!KokkosComm::is_contiguous(rv), KokkosComm::ErrorCode::NotSupported);
 
   using ScalarType = typename RecvView::non_const_value_type;
   KC_MPI_CHECK(MPI_Recv(

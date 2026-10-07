@@ -7,6 +7,7 @@
 #include <memory>
 #include <span>
 #include <vector>
+#include <optional>
 
 #include <mpi.h>
 
@@ -60,10 +61,10 @@ class Request<MpiSpace> {
   /// @return A const pointer to the underlying `MPI_Request` object.
   [[nodiscard]] constexpr auto request_ptr() const noexcept -> const request_type* { return &request_; }
   // Let users check eagerly if they want to, without waiting
-  [[nodiscard]] auto error_code() const noexcept -> const std::optional<ErrorCode> {
-    return !has_error() ? std::nullopt : status_.error().code;
+  [[nodiscard]] auto error_code() const noexcept -> ErrorCode {
+    return !has_error() ? KokkosComm::ErrorCode::NoError : status_.error().code;
   }
-  [[nodiscard]] auto backend_error_code() const noexcept -> const std::optional<int> {
+  [[nodiscard]] auto backend_error_code() const noexcept -> std::optional<int> {
     return !has_error() ? std::nullopt : status_.error().backend_code;
   }
 
@@ -89,11 +90,12 @@ class Request<MpiSpace> {
   auto wait() -> void {
     if (has_error()) {     // post already failed: don't touch MPI
       callbacks_.clear();  // drop lifetime captures, skip unpack
+      return;
     }
     MPI_Status mpi_status;
     if (int err = MPI_Wait(&request_, &mpi_status); err != MPI_SUCCESS) {
       callbacks_.clear();
-      status_ = tl::unexpected(Error{BackendError, err});
+      status_ = tl::unexpected(Error{KokkosComm::ErrorCode::BackendError, err});
     }
     execute_all_callbacks();
   }

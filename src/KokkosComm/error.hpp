@@ -1,13 +1,14 @@
 #pragma once
 
 #include <tl/expected.hpp>
+#include <optional>
 
 namespace KokkosComm {
 
-enum ErrorCode { NotSupported, BackendError };  // Backend error: MPI or nccl encountered and error.
+enum class ErrorCode { NoError, NotSupported, BackendError };  // Backend error: MPI or nccl encountered and error.
 
 struct Error {
-  std::optional<ErrorCode> code;    // only when an error has occurred
+  ErrorCode code;                   // only when an error has occurred
   std::optional<int> backend_code;  // only when error came from MPI/NCCL
 };
 

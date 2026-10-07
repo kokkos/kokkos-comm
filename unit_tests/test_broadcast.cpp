@@ -101,9 +101,6 @@ TYPED_TEST(Broadcast, 0D) { broadcast_0d<typename TestFixture::Scalar>(); }
 TYPED_TEST(Broadcast, Contiguous1D) { broadcast_contig_1d<typename TestFixture::Scalar>(); }
 
 TEST(BroadcastError, NonContiguousNotSupported) {
-#if defined(KOKKOSCOMM_ABORT_ON_ERROR)
-  GTEST_SKIP() << "KokkosComm errors abort when KOKKOSCOMM_ABORT_ON_ERROR is defined";
-#endif
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
   auto& nccl_ctx = test_utils::NcclCtx::get();
   auto raw_comm  = nccl_ctx.comm();
