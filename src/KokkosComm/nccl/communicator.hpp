@@ -12,6 +12,7 @@
 #include <KokkosComm/fwd.hpp>
 #include <KokkosComm/concepts.hpp>
 #include "nccl_space.hpp"
+#include "impl/error_handling.hpp"
 
 namespace KokkosComm {
 
@@ -42,7 +43,7 @@ class Communicator<Experimental::NcclSpace, Kokkos::Cuda> {
       const communicator_type comm, int color, int key, const execution_space& exec = execution_space{}
   ) noexcept -> std::optional<Communicator<communication_space, execution_space>> {
     communicator_type new_comm;
-    ncclCommSplit(comm, color, key, &new_comm, nullptr);
+    KC_NCCL_CHECK(ncclCommSplit(comm, color, key, &new_comm, nullptr));
     if (new_comm == nullptr) {
       return std::nullopt;
     }
@@ -60,7 +61,7 @@ class Communicator<Experimental::NcclSpace, Kokkos::Cuda> {
       const communicator_type comm, const execution_space& exec = execution_space{}
   ) noexcept -> std::optional<Communicator<communication_space, execution_space>> {
     int rank;
-    ncclCommUserRank(comm, &rank);
+    KC_NCCL_CHECK(ncclCommUserRank(comm, &rank));
     return Communicator::split_from_raw(comm, 0, rank, exec);
   }
 
@@ -72,7 +73,7 @@ class Communicator<Experimental::NcclSpace, Kokkos::Cuda> {
   /// @brief Destructor.
   ~Communicator() {
     if (owned_) {
-      ncclCommDestroy(comm_);
+      KC_NCCL_CHECK(ncclCommDestroy(comm_));
     }
   }
   /// @brief Copy constructor is deleted because a `Communicator` cannot be implicitly copied.
@@ -93,7 +94,7 @@ class Communicator<Experimental::NcclSpace, Kokkos::Cuda> {
     if (this != &other) {
       // Run destructor logic on current state before overwriting (if `this` is already initialized)
       if (owned_) {
-        ncclCommDestroy(comm_);
+        KC_NCCL_CHECK(ncclCommDestroy(comm_));
       }
       comm_  = std::exchange(other.comm_, nullptr);
       exec_  = std::move(other.exec_);
@@ -118,8 +119,8 @@ class Communicator<Experimental::NcclSpace, Kokkos::Cuda> {
     set_rank();
   }
 
-  auto set_size() noexcept -> void { ncclCommCount(comm_, &size_); }
-  auto set_rank() noexcept -> void { ncclCommUserRank(comm_, &rank_); }
+  auto set_size() noexcept -> void { KC_NCCL_CHECK(ncclCommCount(comm_, &size_)); }
+  auto set_rank() noexcept -> void { KC_NCCL_CHECK(ncclCommUserRank(comm_, &rank_)); }
 
   execution_space exec_;
   communicator_type comm_;

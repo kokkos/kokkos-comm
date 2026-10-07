@@ -12,6 +12,7 @@
 #include "nccl_space.hpp"
 #include "communicator.hpp"
 #include "request.hpp"
+#include "KokkosComm/impl/metadata_checks.hpp"
 
 #include "impl/pack_traits.hpp"
 #include "impl/error_handling.hpp"

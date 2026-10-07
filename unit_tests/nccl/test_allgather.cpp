@@ -83,4 +83,19 @@ auto allgather_contig_1d() -> void {
 TYPED_TEST(AllGather, 0D) { allgather_0d<typename TestFixture::Scalar>(); }
 TYPED_TEST(AllGather, Contiguous1D) { allgather_contig_1d<typename TestFixture::Scalar>(); }
 
+TEST(AllGather, SizeMismatch) {
+  auto& nccl_ctx  = test_utils::NcclCtx::get();
+  const auto exec = Kokkos::Cuda(nccl_ctx.stream());
+  const auto comm = nccl_ctx.comm();
+  const int size  = nccl_ctx.size();
+  const int rank  = nccl_ctx.rank();
+  const int root  = 0;
+
+  const int n_contrib = 100;
+  Kokkos::View<int*> sv("sv", n_contrib);
+  Kokkos::View<int*> rv("rv", size * n_contrib + 1);  // Wrong
+
+  // Using the same execution space for both operations lets us not need an explicit `fence`
+  EXPECT_DEATH(KokkosComm::Experimental::nccl::allgather(exec, sv, rv, comm).wait(), "size mismatch");
+}
 }  // namespace
