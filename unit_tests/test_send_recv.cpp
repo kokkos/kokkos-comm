@@ -82,11 +82,14 @@ TEST(SendRecvError, InvalidSrcDst) {
   auto& nccl_ctx                 = test_utils::NcclCtx::get();
   auto raw_comm                  = nccl_ctx.comm();
   constexpr int expected_backend = ncclInvalidArgument;
+  constexpr auto expected_code   = KokkosComm::ErrorCode::NcclError;
+
 #else
   auto raw_comm = MPI_COMM_WORLD;
   constexpr int expected_backend = MPI_ERR_RANK;
+  constexpr auto expected_code = KokkosComm::ErrorCode::MpiError;
+
 #endif
-  constexpr auto expected_code = KokkosComm::ErrorCode::BackendError;
 
   auto exec      = Kokkos::DefaultExecutionSpace{};
   auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);

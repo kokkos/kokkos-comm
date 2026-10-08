@@ -12,22 +12,6 @@
 
 #include <KokkosComm/error.hpp>
 
-#define KC_CUDA_CHECK(expr)                                                                             \
-  ([&]() {                                                                                              \
-    cudaError_t kcErr = (expr);                                                                         \
-    if (cudaSuccess != kcErr) {                                                                         \
-      std::fprintf(stderr, "%s:%d: error (CUDA): %s\n", __FILE__, __LINE__, cudaGetErrorString(kcErr)); \
-    }                                                                                                   \
-  }())
-
-#define KC_NCCL_CHECK(expr)                                                                             \
-  ([&]() {                                                                                              \
-    ncclResult_t kcRes = (expr);                                                                        \
-    if (ncclSuccess != kcRes) {                                                                         \
-      std::fprintf(stderr, "%s:%d: error (NCCL): %s\n", __FILE__, __LINE__, ncclGetErrorString(kcRes)); \
-    }                                                                                                   \
-  }())
-
 #ifdef KOKKOSCOMM_ABORT_ON_ERROR
 #define KC_NCCL_ON_ERROR_IMPL_(make_ret, err) Kokkos::abort("KokkosComm (NCCL): aborting on error")
 #else
@@ -50,7 +34,10 @@
     if (nccl_err_ != ncclSuccess) {                                                                                \
       std::cerr << "Error: NCCL call `" #call "` failed at " << __FILE__ << ":" << __LINE__ << " with error code " \
                 << static_cast<int>(nccl_err_) << " (" << ncclGetErrorString(nccl_err_) << ")" << std::endl;       \
-      return make_ret((::KokkosComm::Error{::KokkosComm::ErrorCode::BackendError, static_cast<int>(nccl_err_)}));  \
+      if (nccl_err_ == ncclUnhandledCudaError) {                                                                   \
+        ::KokkosComm::nccl::print_cuda_error_hint();                                                               \
+      }                                                                                                            \
+      return make_ret((::KokkosComm::Error{::KokkosComm::ErrorCode::NcclError, static_cast<int>(nccl_err_)}));     \
     }                                                                                                              \
   } while (0)
 
@@ -58,7 +45,35 @@
 #define KC_NCCL_FAIL_IF_REQ(cond, code) KC_NCCL_FAIL_IF_IMPL(cond, code, KC_NCCL_ERR_TO_REQUEST_)
 #define KC_NCCL_CHECK_REQ(call) KC_NCCL_CHECK_IMPL(call, KC_NCCL_ERR_TO_REQUEST_)
 
+#define KC_CUDA_CHECK(expr)                                                                             \
+  ([&]() {                                                                                              \
+    cudaError_t kcErr = (expr);                                                                         \
+    if (cudaSuccess != kcErr) {                                                                         \
+      std::fprintf(stderr, "%s:%d: error (CUDA): %s\n", __FILE__, __LINE__, cudaGetErrorString(kcErr)); \
+    }                                                                                                   \
+  }())
+
+#define KC_CUDA_CHECK_IMPL(call, make_ret)                                                                         \
+  do {                                                                                                             \
+    cudaError_t cuda_err_ = (call);                                                                                \
+    if (cuda_err_ != cudaSuccess) {                                                                                \
+      std::cerr << "Error: CUDA call `" #call "` failed at " << __FILE__ << ":" << __LINE__ << " with error code " \
+                << static_cast<int>(cuda_err_) << " (" << cudaGetErrorName(cuda_err_) << ": "                      \
+                << cudaGetErrorString(cuda_err_) << ")" << std::endl;                                              \
+      return make_ret((::KokkosComm::Error{::KokkosComm::ErrorCode::CudaError, static_cast<int>(cuda_err_)}));     \
+    }                                                                                                              \
+  } while (0)
+
+/// For functions returning Request<NcclSpace>
+#define KC_CUDA_CHECK_REQ(call) KC_CUDA_CHECK_IMPL(call, KC_NCCL_ERR_TO_REQUEST_)
+
 namespace KokkosComm::nccl {
+
+inline auto print_cuda_error_hint() -> void {
+  cudaError_t cuda_hint = cudaPeekAtLastError();
+  std::cerr << "  CUDA last error (hint, may be unrelated): " << cudaGetErrorName(cuda_hint) << " ("
+            << cudaGetErrorString(cuda_hint) << ");" << std::endl;
+}
 
 inline auto fail_if(bool condition, std::string_view error_msg) -> void {
   if (condition) {

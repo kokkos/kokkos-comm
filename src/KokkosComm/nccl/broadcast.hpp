@@ -34,11 +34,11 @@ auto broadcast(const Kokkos::Cuda& space, View& v, int root, ncclComm_t comm) ->
 
   KC_NCCL_FAIL_IF_REQ(!KC::is_contiguous(v), ErrorCode::NotSupported);
 
-  Request<NcclSpace> req;
+  Request<NcclSpace> req(comm);
   KC_NCCL_CHECK_REQ(
       ncclBcast(KC::data_handle(v), KC::span(v), datatype<NcclSpace, T>(), root, comm, space.cuda_stream())
   );
-  req.capture_stream_state(space.cuda_stream());
+  KC_CUDA_CHECK_REQ(req.capture_stream_state(space.cuda_stream()));
   req.extend_view_lifetime(v);
 
   return req;

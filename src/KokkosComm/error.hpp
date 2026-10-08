@@ -9,7 +9,9 @@ namespace KokkosComm {
 enum class ErrorCode {
   NoError,       ///< No error occurred.
   NotSupported,  ///< The requested operation is not supported for the given arguments (e.g., non-contiguous views).
-  BackendError,  ///< The communication backend (MPI, NCCL or CUDA) reported an error.
+  MpiError,
+  NcclError,
+  CudaError
 };
 
 /// @brief Describes an error reported by Kokkos Comm.

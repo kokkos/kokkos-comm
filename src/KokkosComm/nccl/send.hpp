@@ -26,7 +26,8 @@ auto send(const ExecSpace& space, const SendView& sv, int peer, ncclComm_t comm)
   using T = typename SendView::non_const_value_type;
   Kokkos::Profiling::ScopedRegion region("KokkosComm::Impl::send");
 
-  Request<NcclSpace> req;
+  Request<NcclSpace> req(comm);
+
   if (is_contiguous(sv)) {
     KC_NCCL_CHECK_REQ(ncclSend(data_handle(sv), span(sv), datatype<NcclSpace, T>(), peer, comm, space.cuda_stream()));
   } else {
@@ -37,7 +38,8 @@ auto send(const ExecSpace& space, const SendView& sv, int peer, ncclComm_t comm)
     );
     req.extend_view_lifetime(pckd_sv.view_);
   }
-  req.capture_stream_state(space.cuda_stream());
+
+  KC_CUDA_CHECK_REQ(req.capture_stream_state(space.cuda_stream()));
   req.extend_view_lifetime(sv);
 
   return req;

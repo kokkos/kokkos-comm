@@ -104,7 +104,7 @@ class Request<MpiSpace> {
     MPI_Status mpi_status;
     if (int err = MPI_Wait(&request_, &mpi_status); err != MPI_SUCCESS) {
       callbacks_.clear();
-      status_ = tl::unexpected(Error{KokkosComm::ErrorCode::BackendError, err});
+      status_ = tl::unexpected(Error{KokkosComm::ErrorCode::MpiError, err});
     }
     execute_all_callbacks();
   }

@@ -26,7 +26,8 @@ auto recv(const ExecSpace& space, RecvView& rv, int peer, ncclComm_t comm) -> Re
   using T = typename RecvView::non_const_value_type;
   Kokkos::Profiling::ScopedRegion region("KokkosComm::Impl::recv");
 
-  Request<NcclSpace> req;
+  Request<NcclSpace> req(comm);
+
   if (is_contiguous(rv)) {
     KC_NCCL_CHECK_REQ(ncclRecv(data_handle(rv), span(rv), datatype<NcclSpace, T>(), peer, comm, space.cuda_stream()));
   } else {
@@ -40,7 +41,7 @@ auto recv(const ExecSpace& space, RecvView& rv, int peer, ncclComm_t comm) -> Re
       space.fence("fence `pckd_rv` unpacking after NCCL call");
     });
   }
-  req.capture_stream_state(space.cuda_stream());
+  KC_CUDA_CHECK_REQ(req.capture_stream_state(space.cuda_stream()));
   req.extend_view_lifetime(rv);
 
   return req;
