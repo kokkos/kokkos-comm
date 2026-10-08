@@ -18,7 +18,7 @@ enum class ErrorCode {
 struct Error {
   /// @brief Category of the error.
   ErrorCode code;
-  /// @brief Raw error code returned by the backend, only set when `code` is `ErrorCode::BackendError`.
+  /// @brief Raw error code returned by the backend, only when relevant
   std::optional<int> backend_code;
 };
 

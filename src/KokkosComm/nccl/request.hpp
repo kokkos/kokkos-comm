@@ -32,7 +32,7 @@ class Request<Experimental::NcclSpace> {
   using status_type         = KokkosComm::status_type;
 
   /// @brief Constructs a `Request`.
-  explicit Request() : request_(nullptr), comm_({}) {}
+  explicit Request() : request_(nullptr), comm_(nullptr_) {}
 
   /// @brief Constructs a `Request`.
   /// @param comm The communicator used in the request.

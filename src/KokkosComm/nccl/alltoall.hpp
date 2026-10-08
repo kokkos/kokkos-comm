@@ -28,7 +28,7 @@ auto alltoall(const ExecSpace& space, const SendView& sv, const RecvView& rv, in
   static_assert(std::is_same_v<ST, RT>, "KokkosComm::Experimental::nccl::alltoall: View value types must be identical");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::alltoall");
 
-  Request<NcclSpace> req;
+  Request<NcclSpace> req(comm);
   if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
 #if NCCL_VERSION_CODE >= NCCL_VERSION(2, 28, 0)
     ncclAlltoAll(KC::data_handle(sv), KC::data_handle(rv), count, datatype<NcclSpace, ST>(), comm, space.cuda_stream());

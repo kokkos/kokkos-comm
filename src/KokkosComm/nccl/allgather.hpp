@@ -29,7 +29,7 @@ auto allgather(const ExecSpace& space, const SendView& sv, const RecvView& rv, n
   );
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::allgather");
 
-  Request<NcclSpace> req;
+  Request<NcclSpace> req(comm);
   if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
     ncclAllGather(
         KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), comm, space.cuda_stream()

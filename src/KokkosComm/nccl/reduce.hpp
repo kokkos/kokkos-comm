@@ -32,7 +32,7 @@ auto reduce(
   static_assert(std::is_same_v<ST, RT>, "KokkosComm::Experimental::nccl::reduce: View value types must be identical");
   Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::reduce");
 
-  Request<NcclSpace> req;
+  Request<NcclSpace> req(comm);
   if (is_contiguous(sv)) {
     if (rank != root and is_contiguous(rv)) {
       ncclReduce(
