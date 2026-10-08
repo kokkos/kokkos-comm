@@ -21,6 +21,7 @@
 #include "mpi/isend.hpp"
 #include "mpi/recv.hpp"
 #include "mpi/send.hpp"
+#include "mpi/sendrecv.hpp"
 
 #include "mpi/broadcast.hpp"
 #include "mpi/allgather.hpp"
@@ -40,6 +41,7 @@
 
 #include "nccl/recv.hpp"
 #include "nccl/send.hpp"
+#include "nccl/sendrecv.hpp"
 
 #include "nccl/broadcast.hpp"
 #include "nccl/allgather.hpp"

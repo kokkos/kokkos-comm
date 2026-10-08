@@ -15,6 +15,9 @@ Low-level NCCL interfaces
     * - ``ncclRecv``
       - ``recv``
       - ✓
+    * - ``ncclSend`` + ``ncclRecv`` (grouped)
+      - ``sendrecv``
+      - ✓
     * - ``ncclAllGather``
       - ``allgather``
       - ✓
@@ -67,6 +70,47 @@ Point-to-point
     :param comm: The NCCL communicator.
 
     :return: A request object representing the asynchronous receive operation.
+
+
+.. cpp:function:: template <KokkosView SendV, MutKokkosView RecvV> \
+                  auto sendrecv(const Kokkos::Cuda& exec, const SendV& sv, int dst, const RecvV& rv, int src, ncclComm_t comm) -> Request<NcclSpace>
+
+    Enqueues a send to ``dst`` and a receive from ``src`` in one NCCL group on
+    the execution space's CUDA stream. The destination and source may differ.
+
+    :tparam SendV: The type of the send view. Const-valued views are supported.
+    :tparam RecvV: The type of the receive view, whose elements must be mutable.
+
+    :param exec: The CUDA execution space used for communication and packing.
+    :param sv: The view containing the data to send.
+    :param dst: The destination rank.
+    :param rv: The view where received data will be stored.
+    :param src: The source rank.
+    :param comm: The NCCL communicator used for both operations.
+    :returns: A request tracking both transfers and any receive unpacking.
+
+    The send and receive counts and datatypes are independent, but each send
+    must match its peer's receive count and datatype. Both views may be
+    multi-dimensional, and either may be non-contiguous. Packing is enqueued
+    on ``exec`` before the grouped communication.
+
+    Grouping ``ncclSend`` and ``ncclRecv`` between ``ncclGroupStart`` and
+    ``ncclGroupEnd`` lets both operations progress together. This is necessary
+    for halo exchanges: with a blocking communicator, separate receive-first
+    calls can wait indefinitely for sends that their peers cannot reach.
+    See NCCL's `point-to-point communication documentation
+    <https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/p2p.html>`_.
+
+    A blocking NCCL communicator may block the host during initiation; it does
+    not imply that CUDA work has completed when this function returns.
+    The request records a CUDA event after ``ncclGroupEnd`` so it tracks both
+    transfers. It retains the view handles and temporary buffers, and
+    ``wait()`` completes any receive unpacking before returning.
+
+    The send and receive storage must not overlap. Do not modify the send
+    data or access the receive data until completion. For the portable API,
+    use :cpp:func:`KokkosComm::exchange` with a
+    ``Communicator<NcclSpace, Kokkos::Cuda>``.
 
 
 Collectives
