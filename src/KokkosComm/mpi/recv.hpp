@@ -5,7 +5,6 @@
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
-#include <Kokkos_Profiling_ScopedRegion.hpp>
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
@@ -16,44 +15,41 @@
 
 namespace KokkosComm::mpi {
 
-/// @return An empty `status_type` on success, or the `Error` that occurred.
 template <MutKokkosView RecvView>
-KokkosComm::status_type recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *status) {
-  Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::recv");
+void recv(const RecvView &rv, int src, int tag, MPI_Comm comm, MPI_Status *status) {
+  Kokkos::Tools::pushRegion("KokkosComm::mpi::recv");
 
-  KC_MPI_FAIL_IF(!KokkosComm::is_contiguous(rv), KokkosComm::ErrorCode::NotSupported);
+  KokkosComm::mpi::deprecated::fail_if(
+      !KokkosComm::is_contiguous(rv), "only contiguous views supported for low-level recv"
+  );
 
   using ScalarType = typename RecvView::non_const_value_type;
-  KC_MPI_CHECK(MPI_Recv(
-      KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, ScalarType>(), src, tag, comm, status
-  ));
+  MPI_Recv(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, ScalarType>(), src, tag, comm, status);
 
-  return {};
+  Kokkos::Tools::popRegion();
 }
 
-/// @return An empty `status_type` on success, or the `Error` that occurred.
 template <KokkosExecutionSpace ExecSpace, MutKokkosView RecvView>
-KokkosComm::status_type recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
-  Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::recv");
+void recv(const ExecSpace &space, RecvView &rv, int src, int tag, MPI_Comm comm) {
+  Kokkos::Tools::pushRegion("KokkosComm::mpi::recv");
 
   using Packer = typename Impl::PackTraits<RecvView>::packer_type;
 
   if (!KokkosComm::is_contiguous(rv)) {
     auto args = Packer::allocate_packed_for(space, "packed", rv);
     space.fence("Fence after allocation before MPI_Recv");
-    KC_MPI_CHECK(
-        MPI_Recv(KokkosComm::data_handle(args.view), args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE)
-    );
+    MPI_Recv(KokkosComm::data_handle(args.view), args.count, args.datatype, src, tag, comm, MPI_STATUS_IGNORE);
     Packer::unpack_into(space, rv, args.view);
   } else {
     using RecvScalar = typename RecvView::value_type;
     space.fence("Fence before MPI_Recv");  // prevent work in `space` from writing to recv buffer
-    KC_MPI_CHECK(MPI_Recv(
+    MPI_Recv(
         KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, RecvScalar>(), src, tag, comm,
         MPI_STATUS_IGNORE
-    ));
+    );
   }
-  return {};
+
+  Kokkos::Tools::popRegion();
 }
 
 }  // namespace KokkosComm::mpi

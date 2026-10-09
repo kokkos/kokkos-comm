@@ -4,6 +4,8 @@
 #pragma once
 
 #include <cstdio>
+#include <cstdlib>
+#include <iostream>
 #include <string_view>
 
 #include <mpi.h>
@@ -11,8 +13,10 @@
 
 #include <KokkosComm/error.hpp>
 
-namespace KokkosComm::mpi {
+namespace KokkosComm::mpi::deprecated {
 
+/// @deprecated Aborts on failure. Only kept for the blocking `mpi::` functions, `Channel`, `test`, `wait_all` and
+/// `wait_any`, which do not report errors yet. New code must use `KC_MPI_FAIL_IF_REQ` / `KC_MPI_CHECK_REQ`.
 inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = MPI_COMM_WORLD) -> void {
   if (condition) {
 #ifdef KOKKOSCOMM_ABORT_ON_ERROR
@@ -26,26 +30,28 @@ inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = 
   }
 }
 
-}  // namespace KokkosComm::mpi
+}  // namespace KokkosComm::mpi::deprecated
+
+// Error-checking macros for functions returning `Request<MpiSpace>`.
+// On error, they print a diagnostic and either return a failed request, or abort if `KOKKOSCOMM_ABORT_ON_ERROR` is set.
 
 #ifdef KOKKOSCOMM_ABORT_ON_ERROR
-#define KC_MPI_ON_ERROR_IMPL_(make_ret, err) MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE)
+#define KC_MPI_ON_ERROR_IMPL_(err) MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE)
 #else
-#define KC_MPI_ON_ERROR_IMPL_(make_ret, err) return make_ret(err)
+#define KC_MPI_ON_ERROR_IMPL_(err) return ::KokkosComm::Request<::KokkosComm::MpiSpace>::failed(err)
 #endif
 
-#define KC_ERR_TO_UNEXPECTED_(e) tl::unexpected(e)
-#define KC_ERR_TO_REQUEST_(e) ::KokkosComm::Request<::KokkosComm::MpiSpace>::failed(e)
-
-#define KC_MPI_FAIL_IF_IMPL(cond, code, make_ret)                                                                \
+/// Fails the enclosing function with `code` if `cond` holds.
+#define KC_MPI_FAIL_IF_REQ(cond, code)                                                                           \
   do {                                                                                                           \
     if (cond) {                                                                                                  \
       std::cerr << "Error: KokkosComm check `" #cond "` failed at " << __FILE__ << ":" << __LINE__ << std::endl; \
-      KC_MPI_ON_ERROR_IMPL_(make_ret, (::KokkosComm::Error{code}));                                              \
+      KC_MPI_ON_ERROR_IMPL_((::KokkosComm::Error{code}));                                                        \
     }                                                                                                            \
   } while (0)
 
-#define KC_MPI_CHECK_IMPL(call, make_ret)                                                                         \
+/// Fails the enclosing function with `ErrorCode::MpiError` if `call` does not return `MPI_SUCCESS`.
+#define KC_MPI_CHECK_REQ(call)                                                                                    \
   do {                                                                                                            \
     int mpi_err_ = (call);                                                                                        \
     if (mpi_err_ != MPI_SUCCESS) {                                                                                \
@@ -54,14 +60,6 @@ inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = 
       if (MPI_Error_string(mpi_err_, mpi_msg_, &mpi_len_) != MPI_SUCCESS) mpi_len_ = 0;                           \
       std::cerr << "Error: MPI call `" #call "` failed at " << __FILE__ << ":" << __LINE__ << " with error code " \
                 << mpi_err_ << " (" << std::string_view(mpi_msg_, mpi_len_) << ")" << std::endl;                  \
-      return make_ret((::KokkosComm::Error{::KokkosComm::ErrorCode::MpiError, mpi_err_}));                        \
+      KC_MPI_ON_ERROR_IMPL_((::KokkosComm::Error{::KokkosComm::ErrorCode::MpiError, mpi_err_}));                  \
     }                                                                                                             \
   } while (0)
-
-/// For functions returning status_type
-#define KC_MPI_FAIL_IF(cond, code) KC_MPI_FAIL_IF_IMPL(cond, code, KC_ERR_TO_UNEXPECTED_)
-#define KC_MPI_CHECK(call) KC_MPI_CHECK_IMPL(call, KC_ERR_TO_UNEXPECTED_)
-
-/// For functions returning Request<MpiSpace>
-#define KC_MPI_FAIL_IF_REQ(cond, code) KC_MPI_FAIL_IF_IMPL(cond, code, KC_ERR_TO_REQUEST_)
-#define KC_MPI_CHECK_REQ(call) KC_MPI_CHECK_IMPL(call, KC_ERR_TO_REQUEST_)

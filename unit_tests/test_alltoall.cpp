@@ -68,4 +68,27 @@ auto alltoall_contig_1d() -> void {
 
 TYPED_TEST(AllToAll, Contiguous1D) { alltoall_contig_1d<typename TestFixture::Scalar>(); }
 
+TEST(AllToAllError, NonContiguousNotSupported) {
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
+#else
+  auto raw_comm = MPI_COMM_WORLD;
+#endif
+  auto exec      = Ex();
+  auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
+  const int size = comm.size();
+
+  const int n_contrib = 10;
+  // Strided view (stride 2): non-contiguous regardless of the default layout
+  Kokkos::View<int*, Kokkos::LayoutStride, Ex::memory_space> sv("sv", Kokkos::LayoutStride(size * n_contrib, 2));
+  Kokkos::View<int*, Ex::memory_space> rv("rv", size * n_contrib);
+
+  auto request = KokkosComm::Experimental::alltoall(comm, sv, rv, n_contrib);
+
+  ASSERT_TRUE(request.has_error());
+  EXPECT_EQ(request.error_code(), KokkosComm::ErrorCode::NotSupported);
+  EXPECT_FALSE(request.backend_error_code().has_value());
+}
+
 }  // namespace

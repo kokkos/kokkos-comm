@@ -108,4 +108,30 @@ auto allreduce_contig_1d() -> void {
 TYPED_TEST(AllReduce, 0D) { allreduce_0d<typename TestFixture::Scalar>(); }
 TYPED_TEST(AllReduce, Contiguous1D) { allreduce_contig_1d<typename TestFixture::Scalar>(); }
 
+TEST(AllReduceError, NonContiguousNotSupported) {
+// FIXME_EXTERNAL #215
+#if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI) && (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP))
+  GTEST_SKIP() << "Unimplemented test for Open MPI + CUDA/HIP";
+#else
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
+#else
+  auto raw_comm = MPI_COMM_WORLD;
+#endif
+  auto exec      = Ex();
+  auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
+
+  // Strided view (stride 2): non-contiguous regardless of the default layout
+  Kokkos::View<int*, Kokkos::LayoutStride, Ex::memory_space> sv("sv", Kokkos::LayoutStride(10, 2));
+  Kokkos::View<int*, Ex::memory_space> rv("rv", 10);
+
+  auto request = KokkosComm::Experimental::allreduce(comm, sv, rv, KokkosComm::Sum{});
+
+  ASSERT_TRUE(request.has_error());
+  EXPECT_EQ(request.error_code(), KokkosComm::ErrorCode::NotSupported);
+  EXPECT_FALSE(request.backend_error_code().has_value());
+#endif
+}
+
 }  // namespace

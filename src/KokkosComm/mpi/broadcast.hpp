@@ -10,7 +10,7 @@
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
-#include "KokkosComm/error.hpp"
+#include <KokkosComm/error.hpp>
 #include "mpi_space.hpp"
 #include "communicator.hpp"
 #include "request.hpp"
@@ -43,7 +43,7 @@ void broadcast(View const& v, int root, MPI_Comm comm) {
 
   using Scalar = typename View::value_type;
 
-  // KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(v), "low-level broadcast requires contiguous view");
+  KokkosComm::mpi::deprecated::fail_if(!KokkosComm::is_contiguous(v), "low-level broadcast requires contiguous view");
 
   MPI_Bcast(KokkosComm::data_handle(v), KokkosComm::span(v), datatype<MpiSpace, Scalar>(), root, comm);
 

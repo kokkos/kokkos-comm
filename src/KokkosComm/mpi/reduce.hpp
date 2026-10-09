@@ -7,10 +7,12 @@
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Profiling_ScopedRegion.hpp>
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include <KokkosComm/error.hpp>
 #include <KokkosComm/reduction_op.hpp>
 #include "mpi_space.hpp"
 #include "communicator.hpp"
@@ -48,23 +50,20 @@ auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int 
       rank<SView>() <= 1 and rank<RView>() <= 1,
       "KokkosComm::mpi::ireduce: Views with rank higher than 1 are not supported"
   );
-  Kokkos::Tools::pushRegion("KokkosComm::mpi::ireduce");
+  Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::ireduce");
 
-  const int rank = [=]() {
-    int _r;
-    MPI_Comm_rank(comm, &_r);
-    return _r;
-  }();
+  int rank;
+  KC_MPI_CHECK_REQ(MPI_Comm_rank(comm, &rank));
 
   Request<MpiSpace> req;
   if (is_contiguous(sv)) {
     if (rank == root and not is_contiguous(rv)) {
       auto pkd_rv = RPkr::allocate_packed_for(space, "KC::mpi::ireduce c_sv pkd_rv", rv);
       space.fence("fence `pkd_rv` packing before MPI call");
-      MPI_Ireduce(
+      KC_MPI_CHECK_REQ(MPI_Ireduce(
           data_handle(sv), data_handle(pkd_rv.view), span(sv), datatype<MpiSpace, ST>(), op, root, comm,
           req.request_ptr()
-      );
+      ));
       // Implicitly extend `pkd_rv` lifetime because of lambda capture
       req.add_callback([space, rv, pkd_rv]() {
         RPkr::unpack_into(space, rv, pkd_rv.view);
@@ -72,9 +71,9 @@ auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int 
       });
     } else {
       space.fence("fence before MPI call");
-      MPI_Ireduce(
+      KC_MPI_CHECK_REQ(MPI_Ireduce(
           data_handle(sv), data_handle(rv), span(sv), datatype<MpiSpace, ST>(), op, root, comm, req.request_ptr()
-      );
+      ));
     }
   } else {
     auto pkd_sv = SPkr::pack(space, "pkd_sv", sv);
@@ -82,26 +81,25 @@ auto ireduce(const ExecSpace& space, const SView& sv, RView& rv, MPI_Op op, int 
     if (rank == root and not is_contiguous(rv)) {
       auto pkd_rv = RPkr::allocate_packed_for(space, "KC::mpi::ireduce nc_sv pkd_rv", rv);
       space.fence("fence `pkd_rv` packing before MPI call");
-      MPI_Ireduce(
+      KC_MPI_CHECK_REQ(MPI_Ireduce(
           data_handle(pkd_sv.view), data_handle(pkd_rv.view), pkd_sv.count, pkd_sv.datatype, op, root, comm,
           req.request_ptr()
-      );
+      ));
       // Implicitly extend `pkd_rv` lifetime because of lambda capture
       req.add_callback([space, rv, pkd_rv]() {
         RPkr::unpack_into(space, rv, pkd_rv.view);
         space.fence("fence `pkd_rv` unpacking after MPI call");
       });
     } else {
-      MPI_Ireduce(
+      KC_MPI_CHECK_REQ(MPI_Ireduce(
           data_handle(pkd_sv.view), data_handle(rv), pkd_sv.count, pkd_sv.datatype, op, root, comm, req.request_ptr()
-      );
+      ));
     }
     req.extend_view_lifetime(pkd_sv.view);
   }
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 
-  Kokkos::Tools::popRegion();
   return req;
 }
 
@@ -109,7 +107,7 @@ template <KokkosView SendView, MutKokkosView RecvView>
 void reduce(const SendView& sv, RecvView& rv, MPI_Op op, int root, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::reduce");
 
-  KokkosComm::mpi::fail_if(
+  KokkosComm::mpi::deprecated::fail_if(
       !KokkosComm::is_contiguous(sv) || !KokkosComm::is_contiguous(rv),
       "only contiguous views supported for low-level reduce"
   );

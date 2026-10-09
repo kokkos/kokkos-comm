@@ -118,7 +118,7 @@ class Request<MpiSpace> {
     MPI_Status status;
     int err = MPI_Test(request_ptr(), &has_completed, &status);
     // FIXME: Do something smarter with status` for better error handling and reporting
-    mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::test: request query failed");
+    mpi::deprecated::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::test: request query failed");
 
     if (has_completed) {
       execute_all_callbacks();
@@ -170,7 +170,7 @@ inline auto wait_all(std::span<Request<MpiSpace>> requests) -> void {
   }
   int err = MPI_Waitall(static_cast<int>(mpi_requests.size()), mpi_requests.data(), mpi_statuses.data());
   // FIXME: Do something smarter with `statuses` for better error handling and reporting
-  mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::wait_all: request completions failed");
+  mpi::deprecated::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::wait_all: request completions failed");
 
   for (auto& req : requests) {
     req.execute_all_callbacks();
@@ -195,7 +195,7 @@ inline auto wait_any(std::span<Request<MpiSpace>> requests) -> std::optional<typ
   MPI_Status status;
   int err = MPI_Waitany(static_cast<int>(mpi_requests.size()), mpi_requests.data(), &idx, &status);
   // FIXME: Do something smarter with `status` for better error handling and reporting
-  mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::wait_any: request completion failed");
+  mpi::deprecated::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::wait_any: request completion failed");
 
   if (idx == MPI_UNDEFINED) {
     return std::nullopt;

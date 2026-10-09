@@ -64,7 +64,10 @@ class Request<Experimental::NcclSpace> {
   /// @brief Destructor.
   ~Request() noexcept {
     if (request_ != nullptr) {
-      KC_CUDA_CHECK(cudaEventDestroy(request_));
+      // Cannot report from a destructor: print and carry on, as before
+      if (cudaError_t err = cudaEventDestroy(request_); err != cudaSuccess) {
+        std::fprintf(stderr, "%s:%d: error (CUDA): %s\n", __FILE__, __LINE__, cudaGetErrorString(err));
+      }
     }
   };
 
@@ -180,7 +183,7 @@ class Request<Experimental::NcclSpace> {
     }
 
     // FIXME: Do something smarter with `err` for better error reporting
-    nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait: request completion failed");
+    nccl::deprecated::fail_if(err != cudaSuccess, "KokkosComm::Request::wait: request completion failed");
     // unreachable
     return false;
   }
@@ -237,7 +240,7 @@ inline auto wait_all(std::span<Request<Experimental::NcclSpace>> requests) -> vo
         continue;
       } else {
         // FIXME: Do something smarter with `err` for better error reporting
-        nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait_all: request completions failed");
+        nccl::deprecated::fail_if(err != cudaSuccess, "KokkosComm::Request::wait_all: request completions failed");
       }
     }
   }
@@ -267,7 +270,7 @@ inline auto wait_any(std::span<Request<Experimental::NcclSpace>> requests)
         continue;
       } else {
         // FIXME: Do something smarter with `err` for better error reporting
-        nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait_any: request completion failed");
+        nccl::deprecated::fail_if(err != cudaSuccess, "KokkosComm::Request::wait_any: request completion failed");
       }
     }
   }

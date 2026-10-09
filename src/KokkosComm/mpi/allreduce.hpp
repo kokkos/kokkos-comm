@@ -7,10 +7,12 @@
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Profiling_ScopedRegion.hpp>
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include <KokkosComm/error.hpp>
 #include <KokkosComm/reduction_op.hpp>
 #include "mpi_space.hpp"
 #include "communicator.hpp"
@@ -40,22 +42,21 @@ auto iallreduce(const ExecSpace& space, const SView sv, RView rv, MPI_Op op, MPI
   using ST = typename SView::non_const_value_type;
   using RT = typename RView::non_const_value_type;
   static_assert(std::is_same_v<ST, RT>, "KokkosComm::mpi::iallreduce: View value types must be identical");
-  Kokkos::Tools::pushRegion("KokkosComm::mpi::iallreduce");
+  Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::iallreduce");
 
-  fail_if(
-      !is_contiguous(sv) || !is_contiguous(rv), "KokkosComm::mpi::iallreduce: unimplemented for non-contiguous views"
-  );
+  KC_MPI_FAIL_IF_REQ(!is_contiguous(sv) || !is_contiguous(rv), ErrorCode::NotSupported);
 
   // Sync: Work in space may have been used to produce view data.
   space.fence("fence before non-blocking all-gather");
 
   Request<MpiSpace> req;
   // All ranks send/recv same count
-  MPI_Iallreduce(data_handle(sv), data_handle(rv), span(sv), datatype<MpiSpace, ST>(), op, comm, req.request_ptr());
+  KC_MPI_CHECK_REQ(
+      MPI_Iallreduce(data_handle(sv), data_handle(rv), span(sv), datatype<MpiSpace, ST>(), op, comm, req.request_ptr())
+  );
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 
-  Kokkos::Tools::popRegion();
   return req;
 }
 
@@ -70,9 +71,15 @@ void allreduce(SendView const& sv, RecvView const& rv, MPI_Op op, MPI_Comm comm)
       "Send and receive views have different value types"
   );
 
-  KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(sv), "low-level allreduce requires contiguous send view");
-  KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "low-level allreduce requires contiguous recv view");
-  KokkosComm::mpi::fail_if(sv.size() != rv.size(), "allreduce requires send and receive views to have the same size");
+  KokkosComm::mpi::deprecated::fail_if(
+      !KokkosComm::is_contiguous(sv), "low-level allreduce requires contiguous send view"
+  );
+  KokkosComm::mpi::deprecated::fail_if(
+      !KokkosComm::is_contiguous(rv), "low-level allreduce requires contiguous recv view"
+  );
+  KokkosComm::mpi::deprecated::fail_if(
+      sv.size() != rv.size(), "allreduce requires send and receive views to have the same size"
+  );
 
   int const count = sv.size();
   MPI_Allreduce(
@@ -88,7 +95,9 @@ void allreduce(View const& v, MPI_Op op, MPI_Comm comm) {
 
   using Scalar = typename View::value_type;
 
-  KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(v), "low-level allgather requires contiguous recv view");
+  KokkosComm::mpi::deprecated::fail_if(
+      !KokkosComm::is_contiguous(v), "low-level allgather requires contiguous recv view"
+  );
 
   int const count = v.size();
   MPI_Allreduce(MPI_IN_PLACE, KokkosComm::data_handle(v), count, datatype<MpiSpace, Scalar>(), op, comm);
@@ -100,7 +109,7 @@ template <KokkosExecutionSpace ExecSpace, KokkosView SendView, MutKokkosView Rec
 void allreduce(ExecSpace const& space, SendView const& sv, RecvView const& rv, MPI_Op op, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::allreduce");
 
-  KokkosComm::mpi::fail_if(
+  KokkosComm::mpi::deprecated::fail_if(
       !KokkosComm::is_contiguous(sv) || !KokkosComm::is_contiguous(rv),
       "allreduce for non-contiguous views not implemented"
   );
@@ -115,7 +124,9 @@ template <KokkosExecutionSpace ExecSpace, MutKokkosView View>
 void allreduce(ExecSpace const& space, View const& v, MPI_Op op, MPI_Comm comm) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::allreduce");
 
-  KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(v), "allreduce for non-contiguous views not implemented");
+  KokkosComm::mpi::deprecated::fail_if(
+      !KokkosComm::is_contiguous(v), "allreduce for non-contiguous views not implemented"
+  );
 
   space.fence("fence before allreduce");  // work in space may have been used to produce send view data
   allreduce(v, op, comm);

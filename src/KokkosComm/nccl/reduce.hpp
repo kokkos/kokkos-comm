@@ -7,16 +7,19 @@
 
 #include <nccl.h>
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Profiling_ScopedRegion.hpp>
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include <KokkosComm/error.hpp>
 #include <KokkosComm/reduction_op.hpp>
 #include "nccl_space.hpp"
 #include "communicator.hpp"
 #include "request.hpp"
 
 #include "impl/pack_traits.hpp"
+#include "impl/error_handling.hpp"
 
 namespace KokkosComm::Experimental {
 namespace nccl {
@@ -30,22 +33,22 @@ auto reduce(
   using SendPacker = typename Impl::PackTraits<SendView>::packer_type;
   using RecvPacker = typename Impl::PackTraits<RecvView>::packer_type;
   static_assert(std::is_same_v<ST, RT>, "KokkosComm::Experimental::nccl::reduce: View value types must be identical");
-  Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::reduce");
+  Kokkos::Profiling::ScopedRegion region("KokkosComm::Experimental::nccl::reduce");
 
   Request<NcclSpace> req(comm);
   if (is_contiguous(sv)) {
     if (rank != root and is_contiguous(rv)) {
-      ncclReduce(
+      KC_NCCL_CHECK_REQ(ncclReduce(
           data_handle(sv), data_handle(rv), span(sv), datatype<NcclSpace, ST>(), op, root, comm, space.cuda_stream()
-      );
-      req.capture_stream_state(space.cuda_stream());
+      ));
+      KC_CUDA_CHECK_REQ(req.capture_stream_state(space.cuda_stream()));
     } else {
       auto pckd_rv = RecvPacker::allocate_packed_for(space, "pckd_rv", rv);
-      ncclReduce(
+      KC_NCCL_CHECK_REQ(ncclReduce(
           data_handle(sv), data_handle(pckd_rv.view_), span(sv), datatype<NcclSpace, ST>(), op, root, comm,
           space.cuda_stream()
-      );
-      req.capture_stream_state(space.cuda_stream());
+      ));
+      KC_CUDA_CHECK_REQ(req.capture_stream_state(space.cuda_stream()));
       req.add_callback([space, rv, pckd_rv]() {
         RecvPacker::unpack_into(space, rv, pckd_rv.view_);
         space.fence("fence `pckd_rv` unpacking after NCCL call");
@@ -54,18 +57,18 @@ auto reduce(
   } else {
     auto pckd_sv = SendPacker::pack(space, "pckd_sv", sv);
     if (rank != root and is_contiguous(rv)) {
-      ncclReduce(
+      KC_NCCL_CHECK_REQ(ncclReduce(
           data_handle(pckd_sv.view_), data_handle(rv), pckd_sv.count_, pckd_sv.datatype_, op, root, comm,
           space.cuda_stream()
-      );
-      req.capture_stream_state(space.cuda_stream());
+      ));
+      KC_CUDA_CHECK_REQ(req.capture_stream_state(space.cuda_stream()));
     } else {
       auto pckd_rv = RecvPacker::allocate_packed_for(space, "pckd_rv", rv);
-      ncclReduce(
+      KC_NCCL_CHECK_REQ(ncclReduce(
           data_handle(pckd_sv.view_), data_handle(pckd_rv.view_), pckd_sv.count_, pckd_sv.datatype_, op, root, comm,
           space.cuda_stream()
-      );
-      req.capture_stream_state(space.cuda_stream());
+      ));
+      KC_CUDA_CHECK_REQ(req.capture_stream_state(space.cuda_stream()));
       req.add_callback([space, rv, pckd_rv]() {
         RecvPacker::unpack_into(space, rv, pckd_rv.view_);
         space.fence("fence `pckd_rv` unpacking after NCCL call");
@@ -76,7 +79,6 @@ auto reduce(
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 
-  Kokkos::Tools::popRegion();
   return req;
 }
 
