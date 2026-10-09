@@ -8,7 +8,6 @@
 #include <optional>
 #include <span>
 #include <vector>
-#include <optional>
 
 #include <cuda_runtime.h>
 
@@ -32,7 +31,7 @@ class Request<Experimental::NcclSpace> {
   using status_type         = KokkosComm::status_type;
 
   /// @brief Constructs a `Request`.
-  explicit Request() : request_(nullptr), comm_(nullptr_) {}
+  explicit Request() : request_(nullptr), comm_(nullptr) {}
 
   /// @brief Constructs a `Request`.
   /// @param comm The communicator used in the request.
@@ -73,8 +72,14 @@ class Request<Experimental::NcclSpace> {
   Request(const Request&) = delete;
   /// @brief Copy assignment operator is deleted because a `Request` can only be moved.
   auto operator=(const Request&) -> Request& = delete;
-  /// @brief Move constructor.
-  Request(Request&&) = default;
+  /// @brief Move constructor. Non-default to erase other.request_ to avoid double destruction.
+  Request(Request&& other)
+      : request_(std::move(other.request_)),
+        callbacks_(std::move(other.callbacks_)),
+        status_(std::move(other.status_)),
+        comm_(std::move(other.comm_)) {
+    other.request_ = nullptr;
+  };
   /// @brief Move assignment operator.
   auto operator=(Request&&) -> Request& = default;
 
@@ -125,7 +130,7 @@ class Request<Experimental::NcclSpace> {
     }
 
     while (true) {
-      // poll the status of the request (event)
+      // Poll the status
       cudaError_t cuda_err = cudaEventQuery(request_);
       if (cuda_err == cudaSuccess) break;
 
@@ -159,7 +164,6 @@ class Request<Experimental::NcclSpace> {
         return;
       }
     }
-
     execute_all_callbacks();
   }
 
