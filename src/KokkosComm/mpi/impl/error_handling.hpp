@@ -32,6 +32,21 @@ inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = 
 
 }  // namespace KokkosComm::mpi::deprecated
 
+namespace KokkosComm::mpi::Impl {
+
+/// @brief Prints a diagnostic for a failed MPI call, including MPI's own error string.
+/// @param err The error code returned by MPI.
+/// @param call The text of the failed call.
+inline auto print_mpi_error(int err, std::string_view call, const char* file, int line) -> void {
+  char msg[MPI_MAX_ERROR_STRING];
+  int len = 0;
+  if (MPI_Error_string(err, msg, &len) != MPI_SUCCESS) len = 0;
+  std::cerr << "Error: MPI call `" << call << "` failed at " << file << ":" << line << " with error code " << err
+            << " (" << std::string_view(msg, len) << ")" << std::endl;
+}
+
+}  // namespace KokkosComm::mpi::Impl
+
 // Error-checking macros for functions returning `Request<MpiSpace>`.
 // On error, they print a diagnostic and either return a failed request, or abort if `KOKKOSCOMM_ABORT_ON_ERROR` is set.
 
@@ -42,24 +57,20 @@ inline auto fail_if(bool condition, std::string_view error_msg, MPI_Comm comm = 
 #endif
 
 /// Fails the enclosing function with `code` if `cond` holds.
-#define KC_MPI_FAIL_IF_REQ(cond, code)                                                                           \
-  do {                                                                                                           \
-    if (cond) {                                                                                                  \
-      std::cerr << "Error: KokkosComm check `" #cond "` failed at " << __FILE__ << ":" << __LINE__ << std::endl; \
-      KC_MPI_ON_ERROR_IMPL_((::KokkosComm::Error{code}));                                                        \
-    }                                                                                                            \
+#define KC_MPI_FAIL_IF_REQ(cond, code)                                   \
+  do {                                                                   \
+    if (cond) {                                                          \
+      ::KokkosComm::Impl::print_check_failed(#cond, __FILE__, __LINE__); \
+      KC_MPI_ON_ERROR_IMPL_((::KokkosComm::Error{code}));                \
+    }                                                                    \
   } while (0)
 
 /// Fails the enclosing function with `ErrorCode::MpiError` if `call` does not return `MPI_SUCCESS`.
-#define KC_MPI_CHECK_REQ(call)                                                                                    \
-  do {                                                                                                            \
-    int mpi_err_ = (call);                                                                                        \
-    if (mpi_err_ != MPI_SUCCESS) {                                                                                \
-      char mpi_msg_[MPI_MAX_ERROR_STRING];                                                                        \
-      int mpi_len_ = 0;                                                                                           \
-      if (MPI_Error_string(mpi_err_, mpi_msg_, &mpi_len_) != MPI_SUCCESS) mpi_len_ = 0;                           \
-      std::cerr << "Error: MPI call `" #call "` failed at " << __FILE__ << ":" << __LINE__ << " with error code " \
-                << mpi_err_ << " (" << std::string_view(mpi_msg_, mpi_len_) << ")" << std::endl;                  \
-      KC_MPI_ON_ERROR_IMPL_((::KokkosComm::Error{::KokkosComm::ErrorCode::MpiError, mpi_err_}));                  \
-    }                                                                                                             \
+#define KC_MPI_CHECK_REQ(call)                                                                   \
+  do {                                                                                           \
+    int mpi_err_ = (call);                                                                       \
+    if (mpi_err_ != MPI_SUCCESS) {                                                               \
+      ::KokkosComm::mpi::Impl::print_mpi_error(mpi_err_, #call, __FILE__, __LINE__);             \
+      KC_MPI_ON_ERROR_IMPL_((::KokkosComm::Error{::KokkosComm::ErrorCode::MpiError, mpi_err_})); \
+    }                                                                                            \
   } while (0)

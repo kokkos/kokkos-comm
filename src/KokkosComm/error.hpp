@@ -1,7 +1,9 @@
 #pragma once
 
 #include <tl/expected.hpp>
+#include <iostream>
 #include <optional>
+#include <string_view>
 
 namespace KokkosComm {
 
@@ -24,5 +26,15 @@ struct Error {
 
 /// @brief Result of a Kokkos Comm operation: empty on success, holds an `Error` on failure.
 using status_type = tl::expected<void, Error>;
+
+namespace Impl {
+
+/// @brief Prints a diagnostic for a failed KokkosComm-level check (e.g. an unsupported argument).
+/// @param cond The text of the condition that triggered the failure.
+inline auto print_check_failed(std::string_view cond, const char* file, int line) -> void {
+  std::cerr << "Error: KokkosComm check `" << cond << "` failed at " << file << ":" << line << std::endl;
+}
+
+}  // namespace Impl
 
 }  // namespace KokkosComm

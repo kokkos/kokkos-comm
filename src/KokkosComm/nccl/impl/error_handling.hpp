@@ -20,6 +20,26 @@ inline auto print_cuda_error_hint() -> void {
             << cudaGetErrorString(cuda_hint) << ");" << std::endl;
 }
 
+/// @brief Prints a diagnostic for a failed NCCL call, plus a CUDA hint if NCCL reports an unhandled CUDA error.
+/// @param err The error code returned by NCCL.
+/// @param call The text of the failed call.
+inline auto print_nccl_error(ncclResult_t err, std::string_view call, const char* file, int line) -> void {
+  std::cerr << "Error: NCCL call `" << call << "` failed at " << file << ":" << line << " with error code "
+            << static_cast<int>(err) << " (" << ncclGetErrorString(err) << ")" << std::endl;
+  if (err == ncclUnhandledCudaError) {
+    print_cuda_error_hint();
+  }
+}
+
+/// @brief Prints a diagnostic for a failed CUDA call.
+/// @param err The error code returned by CUDA.
+/// @param call The text of the failed call.
+inline auto print_cuda_error(cudaError_t err, std::string_view call, const char* file, int line) -> void {
+  std::cerr << "Error: CUDA call `" << call << "` failed at " << file << ":" << line << " with error code "
+            << static_cast<int>(err) << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")"
+            << std::endl;
+}
+
 }  // namespace KokkosComm::nccl
 
 namespace KokkosComm::nccl::deprecated {
@@ -61,12 +81,12 @@ inline auto fail_if(bool condition, std::string_view error_msg, ncclComm_t comm)
 #endif
 
 /// Fails the enclosing function with `code` if `cond` holds.
-#define KC_NCCL_FAIL_IF_REQ(cond, code)                                                                          \
-  do {                                                                                                           \
-    if (cond) {                                                                                                  \
-      std::cerr << "Error: KokkosComm check `" #cond "` failed at " << __FILE__ << ":" << __LINE__ << std::endl; \
-      KC_NCCL_ON_ERROR_IMPL_((::KokkosComm::Error{code}));                                                       \
-    }                                                                                                            \
+#define KC_NCCL_FAIL_IF_REQ(cond, code)                                  \
+  do {                                                                   \
+    if (cond) {                                                          \
+      ::KokkosComm::Impl::print_check_failed(#cond, __FILE__, __LINE__); \
+      KC_NCCL_ON_ERROR_IMPL_((::KokkosComm::Error{code}));               \
+    }                                                                    \
   } while (0)
 
 /// Fails the enclosing function with `ErrorCode::NcclError` if `call` does not return `ncclSuccess`.
@@ -74,11 +94,7 @@ inline auto fail_if(bool condition, std::string_view error_msg, ncclComm_t comm)
   do {                                                                                                                \
     ncclResult_t nccl_err_ = (call);                                                                                  \
     if (nccl_err_ != ncclSuccess) {                                                                                   \
-      std::cerr << "Error: NCCL call `" #call "` failed at " << __FILE__ << ":" << __LINE__ << " with error code "    \
-                << static_cast<int>(nccl_err_) << " (" << ncclGetErrorString(nccl_err_) << ")" << std::endl;          \
-      if (nccl_err_ == ncclUnhandledCudaError) {                                                                      \
-        ::KokkosComm::nccl::print_cuda_error_hint();                                                                  \
-      }                                                                                                               \
+      ::KokkosComm::nccl::print_nccl_error(nccl_err_, #call, __FILE__, __LINE__);                                     \
       KC_NCCL_ON_ERROR_IMPL_((::KokkosComm::Error{::KokkosComm::ErrorCode::NcclError, static_cast<int>(nccl_err_)})); \
     }                                                                                                                 \
   } while (0)
@@ -88,9 +104,7 @@ inline auto fail_if(bool condition, std::string_view error_msg, ncclComm_t comm)
   do {                                                                                                                \
     cudaError_t cuda_err_ = (call);                                                                                   \
     if (cuda_err_ != cudaSuccess) {                                                                                   \
-      std::cerr << "Error: CUDA call `" #call "` failed at " << __FILE__ << ":" << __LINE__ << " with error code "    \
-                << static_cast<int>(cuda_err_) << " (" << cudaGetErrorName(cuda_err_) << ": "                         \
-                << cudaGetErrorString(cuda_err_) << ")" << std::endl;                                                 \
+      ::KokkosComm::nccl::print_cuda_error(cuda_err_, #call, __FILE__, __LINE__);                                     \
       KC_NCCL_ON_ERROR_IMPL_((::KokkosComm::Error{::KokkosComm::ErrorCode::CudaError, static_cast<int>(cuda_err_)})); \
     }                                                                                                                 \
   } while (0)

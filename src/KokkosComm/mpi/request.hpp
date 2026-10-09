@@ -93,9 +93,9 @@ class Request<MpiSpace> {
 
   /// @brief Waits on the request until completion of the associated operation.
   /// The underlying `MPI_Request` object is set to `MPI_REQUEST_NULL` upon return.
-  /// If the request is already in the failed state, returns immediately. If `MPI_Wait` fails, the error is stored in
-  /// the request. In both cases, registered callbacks are discarded without being invoked; check `has_error()` after
-  /// waiting.
+  /// If the request is already in the failed state, returns immediately. If `MPI_Wait` fails, the error is printed and
+  /// stored in the request. In both cases, registered callbacks are discarded without being invoked; check
+  /// `has_error()` after waiting.
   auto wait() -> void {
     if (has_error()) {     // post already failed: don't touch MPI
       callbacks_.clear();  // drop lifetime captures, skip unpack
@@ -103,6 +103,7 @@ class Request<MpiSpace> {
     }
     MPI_Status mpi_status;
     if (int err = MPI_Wait(&request_, &mpi_status); err != MPI_SUCCESS) {
+      mpi::Impl::print_mpi_error(err, "MPI_Wait(&request_, &mpi_status)", __FILE__, __LINE__);
       callbacks_.clear();
       status_ = tl::unexpected(Error{KokkosComm::ErrorCode::MpiError, err});
     }

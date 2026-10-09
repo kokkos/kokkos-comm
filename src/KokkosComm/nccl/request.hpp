@@ -64,9 +64,8 @@ class Request<Experimental::NcclSpace> {
   /// @brief Destructor.
   ~Request() noexcept {
     if (request_ != nullptr) {
-      // Cannot report from a destructor: print and carry on, as before
       if (cudaError_t err = cudaEventDestroy(request_); err != cudaSuccess) {
-        std::fprintf(stderr, "%s:%d: error (CUDA): %s\n", __FILE__, __LINE__, cudaGetErrorString(err));
+        nccl::print_cuda_error(err, "cudaEventDestroy(request_)", __FILE__, __LINE__);
       }
     }
   };
@@ -123,9 +122,9 @@ class Request<Experimental::NcclSpace> {
   }
 
   /// @brief Waits on the request until completion of the associated operation.
-  /// If the request is already in the failed state, returns immediately. If `cudaEventSynchronize` fails, the error
-  /// is stored in the request with the `cudaError_t` as backend code. In both cases, registered callbacks are discarded
-  /// without being invoked; check `has_error()` after waiting.
+  /// If the request is already in the failed state, returns immediately. If the CUDA event or the NCCL communicator
+  /// reports an error, it is printed and stored in the request with the `cudaError_t` or `ncclResult_t` as backend
+  /// code. In both cases, registered callbacks are discarded without being invoked; check `has_error()` after waiting.
   auto wait() -> void {
     if (has_error()) {     // post already failed: no event was recorded, don't touch CUDA
       callbacks_.clear();  // drop lifetime captures, skip unpack
@@ -140,6 +139,7 @@ class Request<Experimental::NcclSpace> {
       // If it's not success, it might just not be ready yet (cudaErrorNotReady).
       // If it failed, return
       if (cuda_err != cudaErrorNotReady) {
+        nccl::print_cuda_error(cuda_err, "cudaEventQuery(request_)", __FILE__, __LINE__);
         status_ = tl::unexpected(Error{KokkosComm::ErrorCode::CudaError, static_cast<int>(cuda_err)});
         callbacks_.clear();
         return;
@@ -148,10 +148,8 @@ class Request<Experimental::NcclSpace> {
       // If it's not ready yet, it could be because of a nccl async error, we poll it, but first check that poll
       ncclResult_t async_err = ncclSuccess;
       if (ncclResult_t nccl_err = ncclCommGetAsyncError(comm_, &async_err); nccl_err != ncclSuccess) {
+        nccl::print_nccl_error(nccl_err, "ncclCommGetAsyncError(comm_, &async_err)", __FILE__, __LINE__);
         status_ = tl::unexpected(Error{KokkosComm::ErrorCode::NcclError, static_cast<int>(nccl_err)});
-        if (nccl_err == ncclUnhandledCudaError) {
-          nccl::print_cuda_error_hint();
-        }
         callbacks_.clear();
         return;
       }
@@ -159,10 +157,8 @@ class Request<Experimental::NcclSpace> {
       // If we did find an error, we return
       // N.B. it can't be ncclInProgress
       if (async_err != ncclSuccess) {
+        nccl::print_nccl_error(async_err, "asynchronous NCCL operation", __FILE__, __LINE__);
         status_ = tl::unexpected(Error{KokkosComm::ErrorCode::NcclError, static_cast<int>(async_err)});
-        if (async_err == ncclUnhandledCudaError) {
-          nccl::print_cuda_error_hint();
-        }
         callbacks_.clear();
         return;
       }
