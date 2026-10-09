@@ -32,9 +32,15 @@ void test_core_send_recv(const View& v) {
   if (rank == src) {
     test_utils::init_view(exec, v);
     exec.fence();
-    KokkosComm::send(comm, v, dst).wait();
+    auto request = KokkosComm::send(comm, v, dst);
+    ASSERT_FALSE(request.has_error());
+    request.wait();
+    ASSERT_FALSE(request.has_error());
   } else if (rank == dst) {
-    KokkosComm::recv(comm, v, src).wait();
+    auto request = KokkosComm::recv(comm, v, src);
+    ASSERT_FALSE(request.has_error());
+    request.wait();
+    ASSERT_FALSE(request.has_error());
     int errs = test_utils::count_errors(v);
     ASSERT_EQ(errs, 0);
   }
@@ -71,4 +77,38 @@ TYPED_TEST(SendRecv, NonContig2D) {
   test_core_send_recv(v);
 }
 
+TEST(SendRecvError, InvalidSrcDst) {
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
+  auto& nccl_ctx                 = test_utils::NcclCtx::get();
+  auto raw_comm                  = nccl_ctx.comm();
+  constexpr int expected_backend = ncclInvalidArgument;
+  constexpr auto expected_code   = KokkosComm::ErrorCode::NcclError;
+
+#else
+  auto raw_comm = MPI_COMM_WORLD;
+  constexpr int expected_backend = MPI_ERR_RANK;
+  constexpr auto expected_code = KokkosComm::ErrorCode::MpiError;
+
+#endif
+
+  auto exec      = Kokkos::DefaultExecutionSpace{};
+  auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
+  const int size = comm.size();
+  const int rank = comm.rank();
+  if (size < 2) {
+    GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
+  }
+
+  const int src = 0;
+  const int dst = 1;
+
+  // Unmanaged, contiguous view: null data pointer but non-zero extent
+  Kokkos::View<int*> v("v", 10);
+
+  auto request = (rank == src) ? KokkosComm::send(comm, v, size) : KokkosComm::recv(comm, v, size);
+
+  ASSERT_TRUE(request.has_error());
+  EXPECT_EQ(request.error_code(), expected_code);
+  EXPECT_EQ(request.backend_error_code(), expected_backend);
+}
 }  // namespace

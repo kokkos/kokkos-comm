@@ -99,4 +99,26 @@ auto allgather_contig_1d() -> void {
 TYPED_TEST(AllGather, 0D) { allgather_0d<typename TestFixture::Scalar>(); }
 TYPED_TEST(AllGather, Contiguous1D) { allgather_contig_1d<typename TestFixture::Scalar>(); }
 
+TEST(AllGatherError, NonContiguousNotSupported) {
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
+  auto& nccl_ctx = test_utils::NcclCtx::get();
+  auto raw_comm  = nccl_ctx.comm();
+#else
+  auto raw_comm = MPI_COMM_WORLD;
+#endif
+  auto exec      = Ex();
+  auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
+  const int size = comm.size();
+
+  // Strided view (stride 2): non-contiguous regardless of the default layout
+  Kokkos::View<int*, Kokkos::LayoutStride, Ex::memory_space> sv("sv", Kokkos::LayoutStride(10, 2));
+  Kokkos::View<int*, Ex::memory_space> rv("rv", 10 * size);
+
+  auto request = KokkosComm::Experimental::allgather(comm, sv, rv);
+
+  ASSERT_TRUE(request.has_error());
+  EXPECT_EQ(request.error_code(), KokkosComm::ErrorCode::NotSupported);
+  EXPECT_FALSE(request.backend_error_code().has_value());
+}
+
 }  // namespace

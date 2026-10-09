@@ -24,7 +24,7 @@ target_sources(
 target_compile_features(KokkosComm INTERFACE cxx_std_20)
 set_target_properties(KokkosComm PROPERTIES CXX_EXTENSIONS OFF)
 
-target_link_libraries(KokkosComm INTERFACE Kokkos::kokkos)
+target_link_libraries(KokkosComm INTERFACE Kokkos::kokkos tl::expected)
 
 if(KokkosComm_ENABLE_MPI)
   add_subdirectory(mpi)

@@ -7,11 +7,14 @@
 #include <memory>
 #include <span>
 #include <vector>
+#include <optional>
 
 #include <mpi.h>
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/fwd.hpp>
+#include <KokkosComm/error.hpp>
+
 #include "mpi_space.hpp"
 
 #include "impl/error_handling.hpp"
@@ -25,12 +28,23 @@ class Request<MpiSpace> {
   using communication_space = MpiSpace;
   using request_type        = MpiSpace::request_type;
   using rank_type           = MpiSpace::rank_type;
+  using status_type         = KokkosComm::status_type;
 
   /// @brief Constructs a `Request` from an `MPI_Request`.
   /// @param request The request to encapsulate. Defaults to `MPI_REQUEST_NULL`.
   explicit Request(request_type request = MPI_REQUEST_NULL) : request_(request) {}
   /// @brief Destructor.
   ~Request() = default;
+
+  /// @brief Constructs a `Request` in the failed state, without any associated operation.
+  /// Used when posting the operation failed; `wait` on such a request returns immediately.
+  /// @param e The error to store in the request.
+  /// @return A `Request` for which `has_error()` is true.
+  static auto failed(Error e) -> Request {
+    Request r;  // request_ = MPI_REQUEST_NULL
+    r.status_ = tl::unexpected(e);
+    return r;
+  }
 
   /// @brief Copy constructor is deleted because a `Request` can only be moved.
   Request(const Request&) = delete;
@@ -49,6 +63,18 @@ class Request<MpiSpace> {
   [[nodiscard]] constexpr auto request_ptr() noexcept -> request_type* { return &request_; }
   /// @return A const pointer to the underlying `MPI_Request` object.
   [[nodiscard]] constexpr auto request_ptr() const noexcept -> const request_type* { return &request_; }
+  /// @return The category of the error stored in the request, or `ErrorCode::NoError` if there is none.
+  /// Can be queried before `wait` to detect a failure to post the operation.
+  [[nodiscard]] auto error_code() const noexcept -> ErrorCode {
+    return !has_error() ? KokkosComm::ErrorCode::NoError : status_.error().code;
+  }
+  /// @return The raw backend error code stored in the request, if the error came from the backend.
+  [[nodiscard]] auto backend_error_code() const noexcept -> std::optional<int> {
+    return !has_error() ? std::nullopt : status_.error().backend_code;
+  }
+
+  /// @return True if posting or completing the associated operation failed, false otherwise.
+  [[nodiscard]] auto has_error() const noexcept -> bool { return !status_.has_value(); }
 
   /// @brief Adds a function to a list of callbacks to be invoked after the request's completion.
   /// @param cb The callback function to register.
@@ -67,12 +93,20 @@ class Request<MpiSpace> {
 
   /// @brief Waits on the request until completion of the associated operation.
   /// The underlying `MPI_Request` object is set to `MPI_REQUEST_NULL` upon return.
+  /// If the request is already in the failed state, returns immediately. If `MPI_Wait` fails, the error is printed and
+  /// stored in the request. In both cases, registered callbacks are discarded without being invoked; check
+  /// `has_error()` after waiting.
   auto wait() -> void {
-    MPI_Status status;
-    int err = MPI_Wait(request_ptr(), &status);
-    // FIXME: Do something smarter with status` for better error handling and reporting
-    mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::wait: request completion failed");
-
+    if (has_error()) {     // post already failed: don't touch MPI
+      callbacks_.clear();  // drop lifetime captures, skip unpack
+      return;
+    }
+    MPI_Status mpi_status;
+    if (int err = MPI_Wait(&request_, &mpi_status); err != MPI_SUCCESS) {
+      mpi::Impl::print_mpi_error(err, "MPI_Wait(&request_, &mpi_status)", __FILE__, __LINE__);
+      callbacks_.clear();
+      status_ = tl::unexpected(Error{KokkosComm::ErrorCode::MpiError, err});
+    }
     execute_all_callbacks();
   }
 
@@ -85,7 +119,7 @@ class Request<MpiSpace> {
     MPI_Status status;
     int err = MPI_Test(request_ptr(), &has_completed, &status);
     // FIXME: Do something smarter with status` for better error handling and reporting
-    mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::test: request query failed");
+    mpi::deprecated::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::test: request query failed");
 
     if (has_completed) {
       execute_all_callbacks();
@@ -96,6 +130,7 @@ class Request<MpiSpace> {
  private:
   request_type request_;
   std::vector<std::function<void()>> callbacks_;
+  status_type status_{};  // no error by default
 
   /// @brief Executes all the callbacks registered on the request.
   auto execute_all_callbacks() -> void {
@@ -136,7 +171,7 @@ inline auto wait_all(std::span<Request<MpiSpace>> requests) -> void {
   }
   int err = MPI_Waitall(static_cast<int>(mpi_requests.size()), mpi_requests.data(), mpi_statuses.data());
   // FIXME: Do something smarter with `statuses` for better error handling and reporting
-  mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::wait_all: request completions failed");
+  mpi::deprecated::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::wait_all: request completions failed");
 
   for (auto& req : requests) {
     req.execute_all_callbacks();
@@ -161,7 +196,7 @@ inline auto wait_any(std::span<Request<MpiSpace>> requests) -> std::optional<typ
   MPI_Status status;
   int err = MPI_Waitany(static_cast<int>(mpi_requests.size()), mpi_requests.data(), &idx, &status);
   // FIXME: Do something smarter with `status` for better error handling and reporting
-  mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::wait_any: request completion failed");
+  mpi::deprecated::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::wait_any: request completion failed");
 
   if (idx == MPI_UNDEFINED) {
     return std::nullopt;

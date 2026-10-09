@@ -5,10 +5,12 @@
 
 #include <mpi.h>
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Profiling_ScopedRegion.hpp>
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include <KokkosComm/error.hpp>
 #include "mpi_space.hpp"
 #include "communicator.hpp"
 #include "request.hpp"
@@ -23,25 +25,22 @@ auto ialltoall(const ExecSpace& space, const SView sv, RView rv, int count, MPI_
   using ST = typename SView::non_const_value_type;
   using RT = typename RView::non_const_value_type;
   static_assert(std::is_same_v<ST, RT>, "KokkosComm::mpi::ialltoall: View value types must be identical");
-  Kokkos::Tools::pushRegion("KokkosComm::mpi::ialltoall");
+  Kokkos::Profiling::ScopedRegion region("KokkosComm::mpi::ialltoall");
 
-  fail_if(
-      !is_contiguous(sv) || !is_contiguous(rv), "KokkosComm::mpi::ialltoall: unimplemented for non-contiguous views"
-  );
+  KC_MPI_FAIL_IF_REQ(!is_contiguous(sv) || !is_contiguous(rv), ErrorCode::NotSupported);
 
   // Sync: Work in space may have been used to produce view data.
   space.fence("fence before non-blocking all-gather");
 
   Request<MpiSpace> req;
   // All ranks send/recv same count
-  MPI_Ialltoall(
+  KC_MPI_CHECK_REQ(MPI_Ialltoall(
       data_handle(sv), count, datatype<MpiSpace, ST>(), data_handle(rv), count, datatype<MpiSpace, RT>(), comm,
       req.request_ptr()
-  );
+  ));
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 
-  Kokkos::Tools::popRegion();
   return req;
 }
 
@@ -62,7 +61,7 @@ void alltoall(
   // Make sure views are ready
   space.fence("KokkosComm::mpi::alltoall");
 
-  KokkosComm::mpi::fail_if(
+  KokkosComm::mpi::deprecated::fail_if(
       !KokkosComm::is_contiguous(sv) || !KokkosComm::is_contiguous(rv),
       "alltoall for non-contiguous views not implemented"
   );
@@ -74,13 +73,13 @@ void alltoall(
     std::stringstream ss;
     ss << "alltoall sendCount * communicator size (" << sendCount << " * " << size
        << ") is greater than send view size";
-    KokkosComm::mpi::fail_if(true, ss.str().data());
+    KokkosComm::mpi::deprecated::fail_if(true, ss.str().data());
   }
   if (recvCount * size > KokkosComm::extent(rv, 0)) {
     std::stringstream ss;
     ss << "alltoall recvCount * communicator size (" << recvCount << " * " << size
        << ") is greater than recv view size";
-    KokkosComm::mpi::fail_if(true, ss.str().data());
+    KokkosComm::mpi::deprecated::fail_if(true, ss.str().data());
   }
 
   MPI_Alltoall(
@@ -101,7 +100,9 @@ void alltoall(const ExecSpace& space, const RecvView& rv, const size_t recvCount
   // Make sure views are ready
   space.fence("KokkosComm::mpi::alltoall");
 
-  KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "alltoall for non-contiguous views not implemented");
+  KokkosComm::mpi::deprecated::fail_if(
+      !KokkosComm::is_contiguous(rv), "alltoall for non-contiguous views not implemented"
+  );
 
   int size;
   MPI_Comm_size(comm, &size);
@@ -110,7 +111,7 @@ void alltoall(const ExecSpace& space, const RecvView& rv, const size_t recvCount
     std::stringstream ss;
     ss << "alltoall recvCount * communicator size (" << recvCount << " * " << size
        << ") is greater than recv view size";
-    KokkosComm::mpi::fail_if(true, ss.str().data());
+    KokkosComm::mpi::deprecated::fail_if(true, ss.str().data());
   }
 
   MPI_Alltoall(

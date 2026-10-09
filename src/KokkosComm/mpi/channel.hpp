@@ -60,7 +60,7 @@ class Channel<MpiSpace> {
         KokkosComm::data_handle(view), KokkosComm::span(view), datatype<MpiSpace, value_type>(), dst_rank_, tag_, comm_,
         &requests_.back()
     );
-    mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Channel::sendinit: request initialization failed", comm_);
+    mpi::deprecated::fail_if(err != MPI_SUCCESS, "KokkosComm::Channel::sendinit: request initialization failed", comm_);
     statuses_.resize(requests_.size());
     Kokkos::Tools::popRegion();
   }
@@ -75,7 +75,7 @@ class Channel<MpiSpace> {
         KokkosComm::data_handle(view), KokkosComm::span(view), datatype<MpiSpace, value_type>(), src_rank_, tag_, comm_,
         &requests_.back()
     );
-    mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Channel::recvinit: request initialization failed", comm_);
+    mpi::deprecated::fail_if(err != MPI_SUCCESS, "KokkosComm::Channel::recvinit: request initialization failed", comm_);
     statuses_.resize(requests_.size());
     Kokkos::Tools::popRegion();
   }
@@ -84,14 +84,14 @@ class Channel<MpiSpace> {
     Kokkos::Tools::pushRegion("KokkosComm::Channel::start");
     Kokkos::fence();
     int err = MPI_Startall(static_cast<int>(requests_.size()), requests_.data());
-    mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Channel::start: request start failed", comm_);
+    mpi::deprecated::fail_if(err != MPI_SUCCESS, "KokkosComm::Channel::start: request start failed", comm_);
     Kokkos::Tools::popRegion();
   }
 
   void wait() {
     Kokkos::Tools::pushRegion("KokkosComm::Channel::wait");
     int err = MPI_Waitall(static_cast<int>(requests_.size()), requests_.data(), statuses_.data());
-    mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Channel::wait: request completion failed", comm_);
+    mpi::deprecated::fail_if(err != MPI_SUCCESS, "KokkosComm::Channel::wait: request completion failed", comm_);
     Kokkos::Tools::popRegion();
   }
 
@@ -100,7 +100,7 @@ class Channel<MpiSpace> {
     for (auto& request : requests_) {
       if (request != MPI_REQUEST_NULL) {
         int err = MPI_Request_free(&request);
-        mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Channel: request release failed", comm_);
+        mpi::deprecated::fail_if(err != MPI_SUCCESS, "KokkosComm::Channel: request release failed", comm_);
       }
     }
     requests_.clear();

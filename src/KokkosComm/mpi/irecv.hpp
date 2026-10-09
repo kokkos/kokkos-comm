@@ -6,6 +6,7 @@
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include <KokkosComm/error.hpp>
 #include "mpi_space.hpp"
 #include "communicator.hpp"
 #include "request.hpp"
@@ -28,15 +29,17 @@ struct Recv<RecvView, ExecSpace, MpiSpace> {
     Request<MpiSpace> req;
     if (KokkosComm::is_contiguous(rv)) {
       space.fence("fence before irecv");
-      MPI_Irecv(
+      KC_MPI_CHECK_REQ(MPI_Irecv(
           KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, typename RecvView::value_type>(), src,
           POINTTOPOINT_TAG, h.comm(), req.request_ptr()
-      );
+      ));
       req.extend_view_lifetime(rv);
     } else {
       auto args = Packer::allocate_packed_for(space, "TODO", rv);
       space.fence("fence before irecv");
-      MPI_Irecv(args.view.data(), args.count, args.datatype, src, POINTTOPOINT_TAG, h.comm(), req.request_ptr());
+      KC_MPI_CHECK_REQ(
+          MPI_Irecv(args.view.data(), args.count, args.datatype, src, POINTTOPOINT_TAG, h.comm(), req.request_ptr())
+      );
       // implicitly extends args.view and rv lifetime due to lambda capture
       req.add_callback([space, rv, args]() {
         Packer::unpack_into(space, rv, args.view);
@@ -54,7 +57,7 @@ template <MutKokkosView RecvView>
 void irecv(const RecvView& rv, int src, int tag, MPI_Comm comm, MPI_Request& req) {
   Kokkos::Tools::pushRegion("KokkosComm::mpi::irecv");
 
-  KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(rv), "Only contiguous irecv viewsupported");
+  KokkosComm::mpi::deprecated::fail_if(!KokkosComm::is_contiguous(rv), "Only contiguous irecv viewsupported");
 
   using RecvScalar = typename RecvView::non_const_value_type;
   MPI_Irecv(KokkosComm::data_handle(rv), KokkosComm::span(rv), datatype<MpiSpace, RecvScalar>(), src, tag, comm, &req);

@@ -8,6 +8,7 @@
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include <KokkosComm/error.hpp>
 #include "mpi_space.hpp"
 #include "communicator.hpp"
 #include "request.hpp"
@@ -23,13 +24,13 @@ namespace Impl {
 template <KokkosExecutionSpace ExecSpace, KokkosView SendView, mpi::CommunicationMode SendMode>
 Request<MpiSpace> isend_impl(Communicator<MpiSpace, ExecSpace>& h, const SendView& sv, int dest, int tag, SendMode) {
   auto mpi_isend_fn = [](void* mpi_view, int mpi_count, MPI_Datatype mpi_datatype, int mpi_dest, int mpi_tag,
-                         MPI_Comm mpi_comm, MPI_Request* mpi_req) {
+                         MPI_Comm mpi_comm, MPI_Request* mpi_req) -> int {
     if constexpr (std::is_same_v<SendMode, mpi::CommModeStandard>) {
-      MPI_Isend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
+      return MPI_Isend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
     } else if constexpr (std::is_same_v<SendMode, mpi::CommModeReady>) {
-      MPI_Irsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
+      return MPI_Irsend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
     } else if constexpr (std::is_same_v<SendMode, mpi::CommModeSynchronous>) {
-      MPI_Issend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
+      return MPI_Issend(mpi_view, mpi_count, mpi_datatype, mpi_dest, mpi_tag, mpi_comm, mpi_req);
     } else {
       static_assert(std::is_void_v<SendMode>, "unexpected communication mode");
     }
@@ -38,17 +39,16 @@ Request<MpiSpace> isend_impl(Communicator<MpiSpace, ExecSpace>& h, const SendVie
   Request<MpiSpace> req;
   if (KokkosComm::is_contiguous(sv)) {
     h.exec().fence("fence before isend");
-    mpi_isend_fn(
+    KC_MPI_CHECK_REQ(mpi_isend_fn(
         KokkosComm::data_handle(sv), KokkosComm::span(sv), datatype<MpiSpace, typename SendView::value_type>(), dest,
         tag, h.comm(), req.request_ptr()
-    );
+    ));
     req.extend_view_lifetime(sv);
   } else {
     using Packer = typename mpi::Impl::PackTraits<SendView>::packer_type;
-
-    auto args = Packer::pack(h.exec(), "pkd_sv", sv);
+    auto args    = Packer::pack(h.exec(), "pkd_sv", sv);
     h.exec().fence("fence before isend");
-    mpi_isend_fn(args.view.data(), args.count, args.datatype, dest, tag, h.comm(), req.request_ptr());
+    KC_MPI_CHECK_REQ(mpi_isend_fn(args.view.data(), args.count, args.datatype, dest, tag, h.comm(), req.request_ptr()));
     req.extend_view_lifetime(args.view);
     req.extend_view_lifetime(sv);
   }
@@ -80,7 +80,9 @@ template <KokkosView SendView>
 void isend(const SendView& sv, int dest, int tag, MPI_Comm comm, MPI_Request& req) {
   Kokkos::Tools::pushRegion("KokkosComm::Impl::isend");
 
-  KokkosComm::mpi::fail_if(!KokkosComm::is_contiguous(sv), "only contiguous views supported for low-level isend");
+  KokkosComm::mpi::deprecated::fail_if(
+      !KokkosComm::is_contiguous(sv), "only contiguous views supported for low-level isend"
+  );
 
   using SendScalar = typename SendView::non_const_value_type;
   MPI_Isend(KokkosComm::data_handle(sv), KokkosComm::span(sv), datatype<MpiSpace, SendScalar>(), dest, tag, comm, &req);

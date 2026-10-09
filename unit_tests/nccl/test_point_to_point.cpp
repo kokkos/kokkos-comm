@@ -95,4 +95,43 @@ auto p2p_noncontig_1d() -> void {
 TYPED_TEST(PointToPoint, Contiguous1D) { p2p_contig_1d<typename TestFixture::Scalar>(); }
 TYPED_TEST(PointToPoint, NonContiguous1D) { p2p_noncontig_1d<typename TestFixture::Scalar>(); }
 
+auto p2p_cuda_error() -> void {
+  auto& nccl_ctx  = test_utils::NcclCtx::get();
+  const auto comm = nccl_ctx.comm();
+  const int size  = nccl_ctx.size();
+  const int rank  = nccl_ctx.rank();
+  if (size < 2) {
+    GTEST_SKIP() << "Requires >= 2 ranks (" << size << " provided)";
+  }
+
+  cudaStream_t stream;
+  cudaStreamCreate(&stream);
+  const auto exec = Kokkos::Cuda(stream);
+  Kokkos::View<double*> v("v", 10'000);
+
+  // Both ranks: spin ~1s on the GPU, then fault. The NCCL op queued behind this never
+  // runs on either side, so neither rank hangs waiting for its peer.
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy(exec, 0, 1),
+      KOKKOS_LAMBDA(int) {
+        KOKKOS_IF_ON_DEVICE((const long long start = clock64();
+                             while (clock64() - start < 2'000'000'000LL) {} Kokkos::abort("injected CUDA error");))
+      }
+  );
+
+  auto request = (rank == 0) ? KokkosComm::Experimental::nccl::send(exec, v, 1, comm)
+                             : KokkosComm::Experimental::nccl::recv(exec, v, 0, comm);
+  EXPECT_FALSE(request.has_error());  // enqueued well before the kernel faults
+
+  request.wait();
+  EXPECT_TRUE(request.has_error());
+  EXPECT_EQ(request.error_code(), KokkosComm::ErrorCode::CudaError);
+
+  // The context is now dead: skip Kokkos/NCCL teardown, which would abort.
+  std::fflush(nullptr);
+  std::_Exit(::testing::Test::HasFailure() ? 1 : 0);
+}
+
+TEST(PointToPointError, CudaErrorDuringWait) { p2p_cuda_error(); }
+
 }  // namespace

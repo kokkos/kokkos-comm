@@ -4,16 +4,19 @@
 #pragma once
 
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Profiling_ScopedRegion.hpp>
 #include <nccl.h>
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/traits.hpp>
 #include <KokkosComm/datatype.hpp>
+#include <KokkosComm/error.hpp>
 #include "nccl_space.hpp"
 #include "communicator.hpp"
 #include "request.hpp"
 
 #include "impl/pack_traits.hpp"
+#include "impl/error_handling.hpp"
 
 namespace KokkosComm::Experimental {
 namespace nccl {
@@ -27,21 +30,18 @@ auto allgather(const ExecSpace& space, const SendView& sv, const RecvView& rv, n
   static_assert(
       std::is_same_v<ST, RT>, "KokkosComm::Experimental::nccl::allgather: View value types must be identical"
   );
-  Kokkos::Tools::pushRegion("KokkosComm::Experimental::nccl::allgather");
+  Kokkos::Profiling::ScopedRegion region("KokkosComm::Experimental::nccl::allgather");
 
-  Request<NcclSpace> req;
-  if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
-    ncclAllGather(
-        KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), comm, space.cuda_stream()
-    );
-    req.capture_stream_state(space.cuda_stream());
-  } else {
-    Kokkos::abort("KokkosComm::Experimental::nccl::allgather: unimplemented for non-contiguous views");
-  }
+  KC_NCCL_FAIL_IF_REQ(!KC::is_contiguous(sv) or !KC::is_contiguous(rv), ErrorCode::NotSupported);
+
+  Request<NcclSpace> req(comm);
+  KC_NCCL_CHECK_REQ(ncclAllGather(
+      KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), comm, space.cuda_stream()
+  ));
+  KC_CUDA_CHECK_REQ(req.capture_stream_state(space.cuda_stream()));
   req.extend_view_lifetime(sv);
   req.extend_view_lifetime(rv);
 
-  Kokkos::Tools::popRegion();
   return req;
 }
 

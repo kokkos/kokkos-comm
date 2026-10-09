@@ -5,6 +5,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -12,6 +13,8 @@
 
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/fwd.hpp>
+#include <KokkosComm/error.hpp>
+
 #include "nccl_space.hpp"
 
 #include "impl/error_handling.hpp"
@@ -25,24 +28,45 @@ class Request<Experimental::NcclSpace> {
   using communication_space = Experimental::NcclSpace;
   using request_type        = Experimental::NcclSpace::request_type;
   using rank_type           = Experimental::NcclSpace::rank_type;
+  using status_type         = KokkosComm::status_type;
 
   /// @brief Constructs a `Request`.
-  explicit Request() : request_(nullptr) {}
+  explicit Request() : request_(nullptr), comm_(nullptr) {}
+
+  /// @brief Constructs a `Request`.
+  /// @param comm The communicator used in the request.
+  explicit Request(ncclComm_t comm) : request_(nullptr), comm_(comm) {}
+
+  /// @brief Constructs a `Request` in the failed state, without any associated operation.
+  /// Used when posting the operation failed; `wait` on such a request returns immediately.
+  /// @param e The error to store in the request.
+  /// @return A `Request` for which `has_error()` is true.
+  static auto failed(Error e) -> Request {
+    Request r;  // request_ = nullptr
+    r.status_ = tl::unexpected(e);
+    return r;
+  }
 
   /// @brief Capture the state of a `cudaStream_t` for request encapsulation.
   /// @param stream The stream to capture for request encapsulation.
-  auto capture_stream_state(cudaStream_t stream) noexcept -> void {
+  [[nodiscard]] auto capture_stream_state(cudaStream_t stream) noexcept -> cudaError_t {
+    cudaError_t err;
     if (request_ != nullptr) {
-      KC_CUDA_CHECK(cudaEventDestroy(request_));
+      err = cudaEventDestroy(request_);
+      if (err != cudaSuccess) return err;
     }
-    KC_CUDA_CHECK(cudaEventCreate(&request_, cudaEventDisableTiming));
-    KC_CUDA_CHECK(cudaEventRecord(request_, stream));
+    err = cudaEventCreate(&request_, cudaEventDisableTiming);
+    if (err != cudaSuccess) return err;
+    err = cudaEventRecord(request_, stream);
+    return err;
   }
 
   /// @brief Destructor.
   ~Request() noexcept {
     if (request_ != nullptr) {
-      KC_CUDA_CHECK(cudaEventDestroy(request_));
+      if (cudaError_t err = cudaEventDestroy(request_); err != cudaSuccess) {
+        nccl::print_cuda_error(err, "cudaEventDestroy(request_)", __FILE__, __LINE__);
+      }
     }
   };
 
@@ -50,8 +74,14 @@ class Request<Experimental::NcclSpace> {
   Request(const Request&) = delete;
   /// @brief Copy assignment operator is deleted because a `Request` can only be moved.
   auto operator=(const Request&) -> Request& = delete;
-  /// @brief Move constructor.
-  Request(Request&&) = default;
+  /// @brief Move constructor. Non-default to erase other.request_ to avoid double destruction.
+  Request(Request&& other)
+      : request_(std::move(other.request_)),
+        callbacks_(std::move(other.callbacks_)),
+        status_(std::move(other.status_)),
+        comm_(std::move(other.comm_)) {
+    other.request_ = nullptr;
+  };
   /// @brief Move assignment operator.
   auto operator=(Request&&) -> Request& = default;
 
@@ -63,6 +93,18 @@ class Request<Experimental::NcclSpace> {
   [[nodiscard]] constexpr auto request_ptr() noexcept -> request_type* { return &request_; }
   /// @return A const pointer to the underlying `cudaEvent_t` object.
   [[nodiscard]] constexpr auto request_ptr() const noexcept -> const request_type* { return &request_; }
+  /// @return The category of the error stored in the request, or `ErrorCode::NoError` if there is none.
+  /// Can be queried before `wait` to detect a failure to post the operation.
+  [[nodiscard]] auto error_code() const noexcept -> ErrorCode {
+    return !has_error() ? KokkosComm::ErrorCode::NoError : status_.error().code;
+  }
+  /// @return The raw backend error code stored in the request, if the error came from the backend.
+  [[nodiscard]] auto backend_error_code() const noexcept -> std::optional<int> {
+    return !has_error() ? std::nullopt : status_.error().backend_code;
+  }
+
+  /// @return True if posting or completing the associated operation failed, false otherwise.
+  [[nodiscard]] auto has_error() const noexcept -> bool { return !status_.has_value(); }
 
   /// @brief Adds a function to a list of callbacks to be invoked after the request's completion.
   /// @param cb The callback function to register.
@@ -80,11 +122,47 @@ class Request<Experimental::NcclSpace> {
   }
 
   /// @brief Waits on the request until completion of the associated operation.
+  /// If the request is already in the failed state, returns immediately. If the CUDA event or the NCCL communicator
+  /// reports an error, it is printed and stored in the request with the `cudaError_t` or `ncclResult_t` as backend
+  /// code. In both cases, registered callbacks are discarded without being invoked; check `has_error()` after waiting.
   auto wait() -> void {
-    cudaError_t err = cudaEventSynchronize(request_);
-    // FIXME: Do something smarter with `err` for better error reporting
-    nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait: request completion failed");
+    if (has_error()) {     // post already failed: no event was recorded, don't touch CUDA
+      callbacks_.clear();  // drop lifetime captures, skip unpack
+      return;
+    }
 
+    while (true) {
+      // Poll the status
+      cudaError_t cuda_err = cudaEventQuery(request_);
+      if (cuda_err == cudaSuccess) break;
+
+      // If it's not success, it might just not be ready yet (cudaErrorNotReady).
+      // If it failed, return
+      if (cuda_err != cudaErrorNotReady) {
+        nccl::print_cuda_error(cuda_err, "cudaEventQuery(request_)", __FILE__, __LINE__);
+        status_ = tl::unexpected(Error{KokkosComm::ErrorCode::CudaError, static_cast<int>(cuda_err)});
+        callbacks_.clear();
+        return;
+      }
+
+      // If it's not ready yet, it could be because of a nccl async error, we poll it, but first check that poll
+      ncclResult_t async_err = ncclSuccess;
+      if (ncclResult_t nccl_err = ncclCommGetAsyncError(comm_, &async_err); nccl_err != ncclSuccess) {
+        nccl::print_nccl_error(nccl_err, "ncclCommGetAsyncError(comm_, &async_err)", __FILE__, __LINE__);
+        status_ = tl::unexpected(Error{KokkosComm::ErrorCode::NcclError, static_cast<int>(nccl_err)});
+        callbacks_.clear();
+        return;
+      }
+
+      // If we did find an error, we return
+      // N.B. it can't be ncclInProgress
+      if (async_err != ncclSuccess) {
+        nccl::print_nccl_error(async_err, "asynchronous NCCL operation", __FILE__, __LINE__);
+        status_ = tl::unexpected(Error{KokkosComm::ErrorCode::NcclError, static_cast<int>(async_err)});
+        callbacks_.clear();
+        return;
+      }
+    }
     execute_all_callbacks();
   }
 
@@ -101,7 +179,7 @@ class Request<Experimental::NcclSpace> {
     }
 
     // FIXME: Do something smarter with `err` for better error reporting
-    nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait: request completion failed");
+    nccl::deprecated::fail_if(err != cudaSuccess, "KokkosComm::Request::wait: request completion failed");
     // unreachable
     return false;
   }
@@ -109,6 +187,8 @@ class Request<Experimental::NcclSpace> {
  private:
   request_type request_;
   std::vector<std::function<void()>> callbacks_;
+  status_type status_{};  // no error by default
+  ncclComm_t comm_;       // Copy of the nccl communicator used for the request, to poll errors only
 
   /// @brief Executes all the callbacks registered on the request.
   auto execute_all_callbacks() -> void {
@@ -156,7 +236,7 @@ inline auto wait_all(std::span<Request<Experimental::NcclSpace>> requests) -> vo
         continue;
       } else {
         // FIXME: Do something smarter with `err` for better error reporting
-        nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait_all: request completions failed");
+        nccl::deprecated::fail_if(err != cudaSuccess, "KokkosComm::Request::wait_all: request completions failed");
       }
     }
   }
@@ -186,7 +266,7 @@ inline auto wait_any(std::span<Request<Experimental::NcclSpace>> requests)
         continue;
       } else {
         // FIXME: Do something smarter with `err` for better error reporting
-        nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait_any: request completion failed");
+        nccl::deprecated::fail_if(err != cudaSuccess, "KokkosComm::Request::wait_any: request completion failed");
       }
     }
   }
