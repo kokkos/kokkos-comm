@@ -10,25 +10,25 @@
 
 #include <cuda_runtime.h>
 
+#include "nccl_space.hpp"
 #include <KokkosComm/concepts.hpp>
 #include <KokkosComm/fwd.hpp>
-#include "nccl_space.hpp"
 
 #include "impl/error_handling.hpp"
 
 namespace KokkosComm {
 
 /// @brief Request specialization for the NCCL communication space.
-template <>
-class Request<Experimental::NcclSpace> {
- public:
+template <> class Request<Experimental::NcclSpace> {
+public:
   using communication_space = Experimental::NcclSpace;
-  using request_type        = Experimental::NcclSpace::request_type;
-  using rank_type           = Experimental::NcclSpace::rank_type;
+  using request_type = Experimental::NcclSpace::request_type;
+  using rank_type = Experimental::NcclSpace::rank_type;
 
   /// @brief Constructs a `Request`.
   explicit Request() : request_(nullptr) {}
 
+  explicit Request(request_type request) : request_(request) {}
   /// @brief Capture the state of a `cudaStream_t` for request encapsulation.
   /// @param stream The stream to capture for request encapsulation.
   auto capture_stream_state(cudaStream_t stream) noexcept -> void {
@@ -47,33 +47,61 @@ class Request<Experimental::NcclSpace> {
   };
 
   /// @brief Copy constructor is deleted because a `Request` can only be moved.
-  Request(const Request&) = delete;
-  /// @brief Copy assignment operator is deleted because a `Request` can only be moved.
-  auto operator=(const Request&) -> Request& = delete;
-  /// @brief Move constructor.
-  Request(Request&&) = default;
-  /// @brief Move assignment operator.
-  auto operator=(Request&&) -> Request& = default;
+  Request(const Request &) = delete;
+  /// @brief Copy assignment operator is deleted because a `Request` can only be
+  /// moved.
+  auto operator=(const Request &) -> Request & = delete;
+
+  Request(Request &&other) noexcept
+      : request_(std::exchange(other.request_, nullptr)),
+        callbacks_(std::move(other.callbacks_)) {}
+
+  auto operator=(Request &&other) noexcept -> Request & {
+    if (this != &other) {
+      if (request_ != nullptr) {
+        KC_CUDA_CHECK(cudaEventDestroy(request_));
+      }
+
+      request_ = std::exchange(other.request_, nullptr);
+      callbacks_ = std::move(other.callbacks_);
+    }
+
+    return *this;
+  }
 
   /// @return A reference to the underlying `cudaEvent_t` object.
-  [[nodiscard]] constexpr auto request() noexcept -> request_type& { return request_; }
+  [[nodiscard]] constexpr auto request() noexcept -> request_type & {
+    return request_;
+  }
   /// @return A const reference to the underlying `cudaEvent_t` object.
-  [[nodiscard]] constexpr auto request() const noexcept -> const request_type& { return request_; }
+  [[nodiscard]] constexpr auto request() const noexcept
+      -> const request_type & {
+    return request_;
+  }
   /// @return A pointer to the underlying `cudaEvent_t` object.
-  [[nodiscard]] constexpr auto request_ptr() noexcept -> request_type* { return &request_; }
+  [[nodiscard]] constexpr auto request_ptr() noexcept -> request_type * {
+    return &request_;
+  }
   /// @return A const pointer to the underlying `cudaEvent_t` object.
-  [[nodiscard]] constexpr auto request_ptr() const noexcept -> const request_type* { return &request_; }
+  [[nodiscard]] constexpr auto request_ptr() const noexcept
+      -> const request_type * {
+    return &request_;
+  }
 
-  /// @brief Adds a function to a list of callbacks to be invoked after the request's completion.
+  /// @brief Adds a function to a list of callbacks to be invoked after the
+  /// request's completion.
   /// @param cb The callback function to register.
-  auto add_callback(std::function<void()>&& cb) -> void { callbacks_.push_back(cb); }
+  auto add_callback(std::function<void()> &&cb) -> void {
+    callbacks_.push_back(cb);
+  }
 
-  /// @brief Captures a Kokkos View to extend its lifetime until the request's completion.
+  /// @brief Captures a Kokkos View to extend its lifetime until the request's
+  /// completion.
   /// @tparam V A Kokkos View type.
   /// @param view The Kokkos View to capture for lifetime extension.
-  template <KokkosView V>
-  auto extend_view_lifetime(const V& view) -> void {
-    // Unmanaged views don't own the underlying buffer, so no need to extend their lifetime
+  template <KokkosView V> auto extend_view_lifetime(const V &view) -> void {
+    // Unmanaged views don't own the underlying buffer, so no need to extend
+    // their lifetime
     if (view.use_count() != 0) {
       add_callback([view]() {});
     }
@@ -83,14 +111,17 @@ class Request<Experimental::NcclSpace> {
   auto wait() -> void {
     cudaError_t err = cudaEventSynchronize(request_);
     // FIXME: Do something smarter with `err` for better error reporting
-    nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait: request completion failed");
+    nccl::fail_if(err != cudaSuccess,
+                  "KokkosComm::Request::wait: request completion failed");
 
     execute_all_callbacks();
   }
 
   /// @brief Queries the request for the completion of the associated operation.
-  /// If the operation has completed, all callbacks are executed upon return, similarly to having called `wait`.
-  /// @return True if the request has completed or is null/inactive, false otherwise.
+  /// If the operation has completed, all callbacks are executed upon return,
+  /// similarly to having called `wait`.
+  /// @return True if the request has completed or is null/inactive, false
+  /// otherwise.
   [[nodiscard]] auto test() -> bool {
     cudaError_t err = cudaEventQuery(request_);
     if (err == cudaSuccess) {
@@ -101,40 +132,49 @@ class Request<Experimental::NcclSpace> {
     }
 
     // FIXME: Do something smarter with `err` for better error reporting
-    nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait: request completion failed");
+    nccl::fail_if(err != cudaSuccess,
+                  "KokkosComm::Request::wait: request completion failed");
     // unreachable
     return false;
   }
 
- private:
+private:
   request_type request_;
   std::vector<std::function<void()>> callbacks_;
 
   /// @brief Executes all the callbacks registered on the request.
   auto execute_all_callbacks() -> void {
-    for (auto& cb : callbacks_) {
+    for (auto &cb : callbacks_) {
       cb();
     }
     callbacks_.clear();
   }
 
-  friend auto wait(Request<communication_space>& request) -> void;
-  friend auto wait(Request<communication_space>&& request) -> void;
-  friend auto wait_all(std::span<Request<communication_space>> requests) -> void;
-  friend auto wait_any(std::span<Request<communication_space>> requests) -> std::optional<rank_type>;
-  friend auto test(Request<communication_space>& request) -> bool;
+  friend auto wait(Request<communication_space> &request) -> void;
+  friend auto wait(Request<communication_space> &&request) -> void;
+  friend auto wait_all(std::span<Request<communication_space>> requests)
+      -> void;
+  friend auto wait_any(std::span<Request<communication_space>> requests)
+      -> std::optional<rank_type>;
+  friend auto test(Request<communication_space> &request) -> bool;
 };
 
 /// @brief Waits on the request until completion of the associated operation.
 /// @param request A reference on the request to wait for completion.
-inline auto wait(Request<Experimental::NcclSpace>& request) -> void { request.wait(); }
+inline auto wait(Request<Experimental::NcclSpace> &request) -> void {
+  request.wait();
+}
 /// @brief Waits on the request until completion of the associated operation.
-/// @param request An r-value reference on the request, consumed upon completion.
-inline auto wait(Request<Experimental::NcclSpace>&& request) -> void { request.wait(); }
+/// @param request An r-value reference on the request, consumed upon
+/// completion.
+inline auto wait(Request<Experimental::NcclSpace> &&request) -> void {
+  request.wait();
+}
 
 /// @brief Waits for completion of all passed requests.
 /// @param requests The list of requests to complete.
-inline auto wait_all(std::span<Request<Experimental::NcclSpace>> requests) -> void {
+inline auto wait_all(std::span<Request<Experimental::NcclSpace>> requests)
+    -> void {
   if (requests.empty()) {
     return;
   }
@@ -142,12 +182,12 @@ inline auto wait_all(std::span<Request<Experimental::NcclSpace>> requests) -> vo
   int remaining = requests.size();
   // Poll until all requests are completed
   //
-  // NOTE: While this is an active-wait loop, it should be the best compromise for performance.
-  // Other implementation strategies could be:
+  // NOTE: While this is an active-wait loop, it should be the best compromise
+  // for performance. Other implementation strategies could be:
   // - Complete requests in parallel by spawning threads
   // - Complete requests one at a time in a sequential loop
   while (remaining > 0) {
-    for (auto& req : requests) {
+    for (auto &req : requests) {
       cudaError_t err = cudaEventQuery(req.request());
       if (err == cudaSuccess) {
         req.execute_all_callbacks();
@@ -156,7 +196,9 @@ inline auto wait_all(std::span<Request<Experimental::NcclSpace>> requests) -> vo
         continue;
       } else {
         // FIXME: Do something smarter with `err` for better error reporting
-        nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait_all: request completions failed");
+        nccl::fail_if(
+            err != cudaSuccess,
+            "KokkosComm::Request::wait_all: request completions failed");
       }
     }
   }
@@ -164,7 +206,8 @@ inline auto wait_all(std::span<Request<Experimental::NcclSpace>> requests) -> vo
 
 /// @brief Waits for the completion of one request among all passed requests.
 /// @param requests The list of requests to try to complete.
-/// @return The index of the request within the passed list upon successful completion, `std::nullopt` otherwise.
+/// @return The index of the request within the passed list upon successful
+/// completion, `std::nullopt` otherwise.
 inline auto wait_any(std::span<Request<Experimental::NcclSpace>> requests)
     -> std::optional<typename Request<Experimental::NcclSpace>::rank_type> {
   if (requests.empty()) {
@@ -173,20 +216,24 @@ inline auto wait_any(std::span<Request<Experimental::NcclSpace>> requests)
 
   // Poll until at least one request is completed
   //
-  // NOTE: While this is an active-wait loop, it should be the best compromise for simplicity/performance.
-  // Another implementation strategy could be to complete requests in parallel by spawning threads, but this needs
+  // NOTE: While this is an active-wait loop, it should be the best compromise
+  // for simplicity/performance. Another implementation strategy could be to
+  // complete requests in parallel by spawning threads, but this needs
   // synchronization on the first request completion.
   while (true) {
     for (size_t r = 0; r < requests.size(); ++r) {
       cudaError_t err = cudaEventQuery(requests[r].request());
       if (err == cudaSuccess) {
         requests[r].execute_all_callbacks();
-        return static_cast<typename Request<Experimental::NcclSpace>::rank_type>(r);
+        return static_cast<
+            typename Request<Experimental::NcclSpace>::rank_type>(r);
       } else if (err == cudaErrorNotReady) {
         continue;
       } else {
         // FIXME: Do something smarter with `err` for better error reporting
-        nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait_any: request completion failed");
+        nccl::fail_if(
+            err != cudaSuccess,
+            "KokkosComm::Request::wait_any: request completion failed");
       }
     }
   }
@@ -194,6 +241,8 @@ inline auto wait_any(std::span<Request<Experimental::NcclSpace>> requests)
 
 /// @brief Queries the request for completion of the associated operation.
 /// @param request A reference on the request to query its completion.
-inline auto test(Request<Experimental::NcclSpace>& request) -> bool { return request.test(); }
+inline auto test(Request<Experimental::NcclSpace> &request) -> bool {
+  return request.test();
+}
 
-}  // namespace KokkosComm
+} // namespace KokkosComm
