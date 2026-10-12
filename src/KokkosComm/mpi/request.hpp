@@ -27,21 +27,44 @@ class Request<MpiSpace> {
   using request_type        = MpiSpace::request_type;
   using rank_type           = MpiSpace::rank_type;
 
-  /// @brief Constructs a `Request` from an `MPI_Request`.
-  /// @param request The request to encapsulate. Defaults to `MPI_REQUEST_NULL`.
-  explicit Request(request_type request = MPI_REQUEST_NULL) : request_(request) {}
-  /// @brief Destructor.
-  ~Request() = default;
+  /// @brief Constructs an inactive request.
+  Request() noexcept : request_(MPI_REQUEST_NULL) {}
+
+  /// @brief Adopts a non-persistent MPI request, leaving the source null.
+  /// Only the handle is transferred; the caller must keep all associated buffers and resources valid until completion.
+  /// Persistent MPI requests are not supported; use Channel<MpiSpace> for persistent communication.
+  explicit Request(request_type&& request) noexcept : request_(std::exchange(request, MPI_REQUEST_NULL)) {}
+
+  /// @brief Requires explicit completion before destruction; never waits, cancels, or frees an operation.
+  ~Request() noexcept {
+    mpi::fail_if(
+        request_ != MPI_REQUEST_NULL || !callbacks_.empty(), "KokkosComm::Request: destruction requires completion"
+    );
+  }
 
   /// @brief Copy constructor is deleted because a `Request` can only be moved.
   Request(const Request&) = delete;
   /// @brief Copy assignment operator is deleted because a `Request` can only be moved.
   auto operator=(const Request&) -> Request& = delete;
   /// @brief Move constructor.
-  Request(Request&&) = default;
+  Request(Request&& other) noexcept
+      : request_(std::exchange(other.request_, MPI_REQUEST_NULL)), callbacks_(std::exchange(other.callbacks_, {})) {}
   /// @brief Move assignment operator.
-  auto operator=(Request&&) -> Request& = default;
+  /// Requires an inactive destination with no pending callbacks. Self-move is a no-op.
+  auto operator=(Request&& other) noexcept -> Request& {
+    if (this != &other) {
+      mpi::fail_if(
+          request_ != MPI_REQUEST_NULL || !callbacks_.empty(),
+          "KokkosComm::Request: move assignment requires an inactive destination"
+      );
+      request_   = std::exchange(other.request_, MPI_REQUEST_NULL);
+      callbacks_ = std::exchange(other.callbacks_, {});
+    }
+    return *this;
+  }
 
+  /// @brief Borrowed native access. Applications must not complete, free, replace, or retain an owning handle copy.
+  /// Backend implementations may initialize an inactive request through this access.
   /// @return A reference to the underlying `MPI_Request` object.
   [[nodiscard]] constexpr auto request() noexcept -> request_type& { return request_; }
   /// @return A const reference to the underlying `MPI_Request` object.
@@ -51,16 +74,19 @@ class Request<MpiSpace> {
   /// @return A const pointer to the underlying `MPI_Request` object.
   [[nodiscard]] constexpr auto request_ptr() const noexcept -> const request_type* { return &request_; }
 
-  /// @brief Adds a function to a list of callbacks to be invoked after the request's completion.
+  /// @brief Implementation hook: registers completion work; applications must not register callbacks.
+  /// Callbacks must be nonempty, must not throw, and must not mutate, reactivate, or re-enter their owning request.
   /// @param cb The callback function to register.
-  auto add_callback(std::function<void()>&& cb) -> void { callbacks_.push_back(cb); }
+  auto add_callback(std::function<void()>&& cb) -> void { callbacks_.push_back(std::move(cb)); }
 
   /// @brief Captures a Kokkos View to extend its lifetime until the request's completion.
+  /// Managed allocations are retained until completion. For unmanaged Views, the application must keep the
+  /// underlying user-owned allocation valid until completion; Kokkos Comm cannot retain it.
   /// @tparam V A Kokkos View type.
   /// @param view The Kokkos View to capture for lifetime extension.
   template <KokkosView V>
   auto extend_view_lifetime(const V& view) -> void {
-    // Unmanaged views don't own the underlying buffer, so no need to extend their lifetime
+    // Unmanaged Views do not own their allocation, so Kokkos Comm cannot retain it.
     if (view.use_count() != 0) {
       add_callback([view]() {});
     }
@@ -69,6 +95,10 @@ class Request<MpiSpace> {
   /// @brief Waits on the request until completion of the associated operation.
   /// The underlying `MPI_Request` object is set to `MPI_REQUEST_NULL` upon return.
   auto wait() -> void {
+    if (request_ == MPI_REQUEST_NULL) {
+      execute_all_callbacks();
+      return;
+    }
     MPI_Status status;
     int err = MPI_Wait(request_ptr(), &status);
     // FIXME: Do something smarter with status` for better error handling and reporting
@@ -82,6 +112,10 @@ class Request<MpiSpace> {
   /// `MPI_REQUEST_NULL` upon return, similarly to having called `wait`.
   /// @return True if the request has completed or is null/inactive, false otherwise.
   [[nodiscard]] auto test() -> bool {
+    if (request_ == MPI_REQUEST_NULL) {
+      execute_all_callbacks();
+      return true;
+    }
     int has_completed;
     MPI_Status status;
     int err = MPI_Test(request_ptr(), &has_completed, &status);

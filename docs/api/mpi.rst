@@ -2,6 +2,10 @@
 Low-level MPI interfaces
 ************************
 
+Asynchronous operations return move-only requests that require explicit completion before destruction.
+``Request<MpiSpace>`` supports only non-persistent MPI operations; persistent communication uses ``Channel<MpiSpace>``.
+See :ref:`request-ownership` for ownership, native interoperability, and buffer lifetime requirements.
+
 .. list-table:: MPI API Support
     :widths: 40 50 30
     :header-rows: 1
