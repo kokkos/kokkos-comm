@@ -57,7 +57,7 @@ kc_add_unit_test(test.core.communicator CORE NUM_PES 2 FILES test_main.cpp test_
 kc_add_unit_test(test.core.datatype-conv CORE NUM_PES 1 FILES test_main.cpp test_datatype_conversion.cpp)
 kc_add_unit_test(test.core.red-op-conv CORE NUM_PES 1 FILES test_main.cpp test_red_op_conversion.cpp)
 kc_add_unit_test(test.core.contiguous CORE NUM_PES 2 FILES test_main.cpp test_contiguous.cpp)
-kc_add_unit_test(test.core.request CORE NO_MPI_LAUNCH NUM_PES 1 FILES test_main.cpp test_request.cpp)
+kc_add_unit_test(test.core.request CORE NUM_PES 1 FILES test_main.cpp test_request.cpp)
 
 # --- MPI backend unit tests --- #
 if(KokkosComm_ENABLE_MPI)

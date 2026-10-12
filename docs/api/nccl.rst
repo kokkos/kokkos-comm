@@ -2,6 +2,10 @@
 Low-level NCCL interfaces
 *************************
 
+The NCCL backend uses one CUDA device per process. The calling thread must have the device owning the operation's
+CUDA stream current. Returned requests require explicit completion before destruction; completion includes unpacking
+work and releases the recorded CUDA event. See :ref:`request-ownership` for ownership and buffer lifetime requirements.
+
 .. list-table:: NCCL API Support
     :widths: 40 50 30
     :header-rows: 1

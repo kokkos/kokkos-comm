@@ -188,6 +188,8 @@ NCCL specialization
         :returns: A const reference to the associated ``Kokkos::Cuda`` execution space instance.
 
 
+.. _request-ownership:
+
 Requests
 --------
 
@@ -196,8 +198,13 @@ Requests
     Template class for request wrappers of different communication space types.
 
     ``Request`` objects are move-only: copy construction and copy assignment are explicitly deleted.
-    There is always exactly one owner of a ``Request`` and its associated callbacks. This design ensures it is
-    impossible for the same callback to be executed more than once.
+    Moves transfer the native handle and completion callbacks together, leaving the source null and empty.
+    Requests must be explicitly completed before destruction. Destruction never waits, cancels, frees, or completes
+    an operation; a non-null handle or pending callbacks trigger a fatal precondition diagnostic.
+
+    Native access through ``request()`` and ``request_ptr()`` is borrowed. Applications must not complete, free,
+    replace, or retain an owning copy of the handle: doing so bypasses callback and buffer lifetime management.
+    Backend implementations may initialize inactive requests through these accessors.
 
     :tparam C: The communication backend to use. Defaults to ``DefaultCommunicationSpace``.
 
@@ -220,26 +227,37 @@ Both specializations share the following interface:
 
     Copy assignment operator is deleted because a ``Request`` can only be moved.
 
-.. cpp:function:: Request(Request&&) = default
+.. cpp:function:: Request(Request&& other) noexcept
 
-    Move constructor is defaulted.
+    Transfers the native handle and callbacks. The source becomes inactive with no pending callbacks.
 
-.. cpp:function:: auto operator=(Request&&) -> Request& = default
+.. cpp:function:: auto operator=(Request&& other) noexcept -> Request&
 
-    Move assignment operator is defaulted.
+    Transfers the native handle and callbacks. The destination must have a null handle and no pending callbacks;
+    otherwise a fatal precondition diagnostic is issued. Self-move is a no-op. No operation is implicitly completed.
 
 .. cpp:function:: template <KokkosView V>\
                   auto extend_view_lifetime(const V& view) -> void
 
     Captures a Kokkos View to extend its lifetime until the request completes.
-    Has no effect on unmanaged Views.
+    Retains allocations owned by managed Views until completion. Has no effect on unmanaged Views: Kokkos Comm
+    cannot retain their user-owned allocations, which the application must keep valid until completion.
 
     :tparam V: A Kokkos View type.
     :param view: The view whose lifetime should be extended.
 
 .. cpp:function:: auto add_callback(std::function<void()>&& cb) -> void
 
-    Registers a callback to be invoked after the request completes.
+    Implementation hook; applications must not register callbacks directly. Callbacks execute in registration order
+    after backend completion, with captured resources retained until all callbacks finish.
+
+    .. warning::
+
+        Callbacks must be nonempty and must not throw exceptions. Kokkos Comm does not use exceptions and assumes
+        that callbacks cannot throw; it does not validate callbacks or catch exceptions.
+        Callbacks must not mutate, reactivate, destroy, or re-enter
+        their owning request, including through ``wait``, ``test``, or batch waits. Violating these requirements is
+        unsupported.
 
     :param cb: The callback function to register.
 
@@ -307,11 +325,20 @@ MPI specialization
     .. cpp:type:: request_type = MpiSpace::request_type
     .. cpp:type:: rank_type = MpiSpace::rank_type
 
-    .. cpp:function:: explicit Request(request_type request = MPI_REQUEST_NULL)
+    .. cpp:function:: Request() noexcept
 
-        Constructs a ``Request`` from an ``MPI_Request`` handle.
+        Constructs an inactive request with ``MPI_REQUEST_NULL``.
 
-        :param request: The ``MPI_Request`` to encapsulate. Defaults to ``MPI_REQUEST_NULL``.
+    .. cpp:function:: explicit Request(request_type&& request) noexcept
+
+        Adopts a non-persistent MPI request and sets the source to ``MPI_REQUEST_NULL``. A named raw handle must be
+        passed with ``std::move(raw_request)``. Persistent requests are unsupported; use ``Channel<MpiSpace>`` instead.
+        Persistence cannot be inspected portably, so non-persistence is a caller precondition.
+
+        Adoption transfers only the request handle. The caller must keep every associated buffer and other operation
+        resource valid until completion, including buffers backed by managed Views: adoption supplies no View metadata.
+
+        :param request: The non-persistent ``MPI_Request`` whose ownership is transferred.
 
     .. cpp:function:: auto request() noexcept -> request_type&
                       auto request() const noexcept -> const request_type&
@@ -341,18 +368,24 @@ NCCL specialization
     .. cpp:type:: request_type = Experimental::NcclSpace::request_type
     .. cpp:type:: rank_type = Experimental::NcclSpace::rank_type
 
-    .. cpp:function:: explicit Request()
+    .. cpp:function:: explicit Request() noexcept
 
         Constructs an empty ``Request`` with a null event handle.
 
     .. cpp:function:: ~Request() noexcept
 
-        Destructor. Destroys the underlying ``cudaEvent_t`` if one has been created.
+        Requires a null event and no pending callbacks. Violations trigger a fatal diagnostic; no CUDA work is waited
+        for and no active event is destroyed.
 
     .. cpp:function:: auto capture_stream_state(cudaStream_t stream) noexcept -> void
 
-        Records a CUDA event on ``stream`` to capture its current state for completion tracking.
-        If a ``cudaEvent_t`` was previously created on this request, it is destroyed first.
+        Implementation hook; applications and completion callbacks must not call it. Records a CUDA event on
+        ``stream`` for completion tracking. An already-owned event is a fatal precondition violation; complete the
+        request explicitly before reuse. Callbacks registered during operation setup may precede this capture.
+
+        The backend uses one CUDA device per process. The calling thread must have the stream's owning device current.
+        Event creation and recording failures are fatal. Successful ``wait`` or ``test`` destroys and nulls the event
+        before executing completion callbacks.
 
         :param stream: The CUDA stream whose state to capture.
 

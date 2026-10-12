@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <span>
+#include <utility>
 #include <vector>
 
 #include <cuda_runtime.h>
@@ -27,34 +28,53 @@ class Request<Experimental::NcclSpace> {
   using rank_type           = Experimental::NcclSpace::rank_type;
 
   /// @brief Constructs a `Request`.
-  explicit Request() : request_(nullptr) {}
+  explicit Request() noexcept : request_(nullptr) {}
 
-  /// @brief Capture the state of a `cudaStream_t` for request encapsulation.
-  /// @param stream The stream to capture for request encapsulation.
+  /// @brief Implementation hook: records completion on a stream owned by the current CUDA device.
+  /// Requires no event to be owned. Applications and completion callbacks must not call this hook.
+  /// The NCCL backend uses one device per process; the calling thread must have that device current.
   auto capture_stream_state(cudaStream_t stream) noexcept -> void {
-    if (request_ != nullptr) {
-      KC_CUDA_CHECK(cudaEventDestroy(request_));
-    }
-    KC_CUDA_CHECK(cudaEventCreateWithFlags(&request_, cudaEventDisableTiming));
-    KC_CUDA_CHECK(cudaEventRecord(request_, stream));
+    nccl::fail_if(request_ != nullptr, "KokkosComm::Request::capture_stream_state: request is active");
+    cudaEvent_t event = nullptr;
+    nccl::fail_if(
+        cudaEventCreateWithFlags(&event, cudaEventDisableTiming) != cudaSuccess,
+        "KokkosComm::Request::capture_stream_state: event creation failed"
+    );
+    nccl::fail_if(
+        cudaEventRecord(event, stream) != cudaSuccess,
+        "KokkosComm::Request::capture_stream_state: event recording failed"
+    );
+    request_ = event;
   }
 
-  /// @brief Destructor.
+  /// @brief Requires explicit completion before destruction; never waits or destroys an active event.
   ~Request() noexcept {
-    if (request_ != nullptr) {
-      KC_CUDA_CHECK(cudaEventDestroy(request_));
-    }
-  };
+    nccl::fail_if(request_ != nullptr || !callbacks_.empty(), "KokkosComm::Request: destruction requires completion");
+  }
 
   /// @brief Copy constructor is deleted because a `Request` can only be moved.
   Request(const Request&) = delete;
   /// @brief Copy assignment operator is deleted because a `Request` can only be moved.
   auto operator=(const Request&) -> Request& = delete;
   /// @brief Move constructor.
-  Request(Request&&) = default;
+  Request(Request&& other) noexcept
+      : request_(std::exchange(other.request_, nullptr)), callbacks_(std::exchange(other.callbacks_, {})) {}
   /// @brief Move assignment operator.
-  auto operator=(Request&&) -> Request& = default;
+  /// Requires an inactive destination with no pending callbacks. Self-move is a no-op.
+  auto operator=(Request&& other) noexcept -> Request& {
+    if (this != &other) {
+      nccl::fail_if(
+          request_ != nullptr || !callbacks_.empty(),
+          "KokkosComm::Request: move assignment requires an inactive destination"
+      );
+      request_   = std::exchange(other.request_, nullptr);
+      callbacks_ = std::exchange(other.callbacks_, {});
+    }
+    return *this;
+  }
 
+  /// @brief Borrowed native access. Applications must not complete, free, replace, or retain an owning handle copy.
+  /// Backend implementations may initialize an inactive request through this access.
   /// @return A reference to the underlying `cudaEvent_t` object.
   [[nodiscard]] constexpr auto request() noexcept -> request_type& { return request_; }
   /// @return A const reference to the underlying `cudaEvent_t` object.
@@ -64,16 +84,19 @@ class Request<Experimental::NcclSpace> {
   /// @return A const pointer to the underlying `cudaEvent_t` object.
   [[nodiscard]] constexpr auto request_ptr() const noexcept -> const request_type* { return &request_; }
 
-  /// @brief Adds a function to a list of callbacks to be invoked after the request's completion.
+  /// @brief Implementation hook: registers completion work; applications must not register callbacks.
+  /// Callbacks must be nonempty, must not throw, and must not mutate, reactivate, or re-enter their owning request.
   /// @param cb The callback function to register.
-  auto add_callback(std::function<void()>&& cb) -> void { callbacks_.push_back(cb); }
+  auto add_callback(std::function<void()>&& cb) -> void { callbacks_.push_back(std::move(cb)); }
 
   /// @brief Captures a Kokkos View to extend its lifetime until the request's completion.
+  /// Managed allocations are retained until completion. For unmanaged Views, the application must keep the
+  /// underlying user-owned allocation valid until completion; Kokkos Comm cannot retain it.
   /// @tparam V A Kokkos View type.
   /// @param view The Kokkos View to capture for lifetime extension.
   template <KokkosView V>
   auto extend_view_lifetime(const V& view) -> void {
-    // Unmanaged views don't own the underlying buffer, so no need to extend their lifetime
+    // Unmanaged Views do not own their allocation, so Kokkos Comm cannot retain it.
     if (view.use_count() != 0) {
       add_callback([view]() {});
     }

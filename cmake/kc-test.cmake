@@ -1,6 +1,6 @@
 function(kc_add_unit_test name)
   # gersemi: hints { FILES: command_line, OPTIONS: command_line, INCLUDES: command_line, LIBRARIES: command_line }
-  set(options CORE MPI NCCL NO_MPI_LAUNCH)
+  set(options CORE MPI NCCL)
   set(oneValueArgs NUM_PES)
   set(multiValueArgs FILES OPTIONS INCLUDES LIBRARIES)
   cmake_parse_arguments(UT "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -24,11 +24,7 @@ function(kc_add_unit_test name)
     target_link_libraries(${name} PRIVATE NCCL::NCCL CUDA::cudart)
   endif()
 
-  if(UT_NO_MPI_LAUNCH)
-    add_test(NAME ${name} COMMAND ${name})
-  else()
-    add_test(NAME ${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${UT_NUM_PES} ./${name})
-  endif()
+  add_test(NAME ${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${UT_NUM_PES} ./${name})
 endfunction()
 
 function(kc_add_perf_test name)
