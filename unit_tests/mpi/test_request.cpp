@@ -10,7 +10,6 @@
 #include <type_traits>
 #include <utility>
 
-
 // Moving a Request must transfer ownership of the underlying handle:
 // after the moved-from object is destroyed, the moved-to object must still
 // hold a valid (non-null) handle.
