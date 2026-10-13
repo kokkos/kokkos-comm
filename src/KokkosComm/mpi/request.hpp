@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <span>
+#include <utility>
 #include <vector>
 
 #include <mpi.h>
@@ -120,7 +121,7 @@ inline auto wait(Request<MpiSpace>& request) -> void { request.wait(); }
 inline auto wait(Request<MpiSpace>&& request) -> void { request.wait(); }
 
 /// @brief Waits for the completion of all passed requests.
-/// Incurs an overhead for copying the underlying `MPI_Request` objects to an intermediate container.
+/// Temporarily transfers the native handles to contiguous storage; callbacks run after all operations complete.
 /// @param requests The list of requests to complete.
 inline auto wait_all(std::span<Request<MpiSpace>> requests) -> void {
   if (requests.empty()) {
@@ -128,14 +129,11 @@ inline auto wait_all(std::span<Request<MpiSpace>> requests) -> void {
   }
 
   std::vector<MPI_Request> mpi_requests;
-  std::vector<MPI_Status> mpi_statuses;
   mpi_requests.reserve(requests.size());
-  mpi_statuses.reserve(requests.size());
   for (auto& req : requests) {
-    mpi_requests.push_back(req.request());
+    mpi_requests.push_back(std::exchange(req.request_, MPI_REQUEST_NULL));
   }
-  int err = MPI_Waitall(static_cast<int>(mpi_requests.size()), mpi_requests.data(), mpi_statuses.data());
-  // FIXME: Do something smarter with `statuses` for better error handling and reporting
+  int err = MPI_Waitall(static_cast<int>(mpi_requests.size()), mpi_requests.data(), MPI_STATUSES_IGNORE);
   mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::wait_all: request completions failed");
 
   for (auto& req : requests) {
@@ -144,9 +142,9 @@ inline auto wait_all(std::span<Request<MpiSpace>> requests) -> void {
 }
 
 /// @brief Waits for the completion of one request among all passed requests.
-/// Incurs an overhead for copying the underlying `MPI_Request` objects to an intermediate container.
+/// Temporarily transfers the native handles to contiguous storage and restores all non-selected handles.
 /// @param requests The list of requests to try to complete.
-/// @return The index of the request within the passed list upon successful completion, `std::nullopt` otherwise.
+/// @return The selected index, or `std::nullopt` if the span is empty or all handles are inactive.
 inline auto wait_any(std::span<Request<MpiSpace>> requests) -> std::optional<typename Request<MpiSpace>::rank_type> {
   if (requests.empty()) {
     return std::nullopt;
@@ -155,12 +153,14 @@ inline auto wait_any(std::span<Request<MpiSpace>> requests) -> std::optional<typ
   std::vector<MPI_Request> mpi_requests;
   mpi_requests.reserve(requests.size());
   for (auto& req : requests) {
-    mpi_requests.emplace_back(req.request());
+    mpi_requests.push_back(std::exchange(req.request_, MPI_REQUEST_NULL));
   }
   int idx;
-  MPI_Status status;
-  int err = MPI_Waitany(static_cast<int>(mpi_requests.size()), mpi_requests.data(), &idx, &status);
-  // FIXME: Do something smarter with `status` for better error handling and reporting
+  int err = MPI_Waitany(static_cast<int>(mpi_requests.size()), mpi_requests.data(), &idx, MPI_STATUS_IGNORE);
+  // MPI nulls only the selected handle. Restore ownership before running its callbacks.
+  for (size_t r = 0; r < requests.size(); ++r) {
+    requests[r].request_ = std::exchange(mpi_requests[r], MPI_REQUEST_NULL);
+  }
   mpi::fail_if(err != MPI_SUCCESS, "KokkosComm::Request::wait_any: request completion failed");
 
   if (idx == MPI_UNDEFINED) {
