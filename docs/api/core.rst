@@ -245,12 +245,15 @@ Both specializations share the following interface:
 
 .. cpp:function:: auto wait() -> void
 
-    Blocks until the associated operation completes. Executes all registered callbacks upon completion.
+    Blocks until the associated operation completes and executes all registered callbacks, including unpacking work.
+    On return, the native handle is null and callbacks have been released. Calling this on an empty request is harmless.
 
 .. cpp:function:: auto test() -> bool
 
     Non-blocking query for the completion of the associated operation.
-    Executes all registered callbacks if the operation has completed.
+    Executes all registered callbacks if the operation has completed, then leaves a null handle and no callbacks.
+    An incomplete operation retains its handle and callbacks. Empty requests return ``true``. Repeated individual
+    completion calls do not repeat callbacks.
 
     :returns: ``true`` if the request has completed, ``false`` otherwise.
 
@@ -268,16 +271,22 @@ Both specializations share the following interface:
 
 .. cpp:function:: auto wait_all(std::span<Request> requests) -> void
 
-    Waits for the completion of all requests in ``requests``.
+    Waits for every request that is active on entry. All native handles become null before any completion callbacks
+    execute. Then runs and releases every request's callbacks, including callbacks attached to inactive requests.
+    An empty span is harmless, and repeated waits do not repeat callbacks.
 
     :param requests: The list of requests to complete.
 
 .. cpp:function:: auto wait_any(std::span<Request> requests) -> std::optional<rank_type>
 
-    Waits for the completion of at least one request in ``requests``.
+    Waits for one active request to complete. The selected request's native handle becomes null, then its callbacks
+    execute and are released. Every other request retains its handle and callbacks, even if its operation has already
+    completed in the backend. Inactive requests are skipped, including those with pending callbacks; use ``wait`` or
+    ``wait_all`` to drain their callbacks. Repeated calls select each active request at most once.
 
     :param requests: The list of requests to poll.
-    :returns: The index of the completed request, or ``std::nullopt`` if ``requests`` is empty.
+    :returns: The index within the original span of the selected request, or ``std::nullopt`` if the span is empty or
+              all native handles are null. Selection order is unspecified when multiple requests are ready.
 
 .. cpp:function:: auto test(Request& request) -> bool
 
@@ -316,8 +325,9 @@ MPI specialization
 
     .. note::
 
-        Both ``wait_all`` and ``wait_any`` copy the underlying ``MPI_Request`` objects into an intermediate container
-        before calling ``MPI_Waitall`` and ``MPI_Waitany``, respectively, which incurs an allocation overhead.
+        Both ``wait_all`` and ``wait_any`` temporarily transfer non-persistent MPI handles into contiguous storage for
+        ``MPI_Waitall`` and ``MPI_Waitany``, respectively, incurring an allocation. ``wait_any`` restores non-selected
+        handles before callbacks run. MPI statuses are ignored; completion errors are fatal.
 
 NCCL specialization
 ^^^^^^^^^^^^^^^^^^^
@@ -358,8 +368,8 @@ NCCL specialization
 
     .. note::
 
-        Both ``wait_all`` and ``wait_any`` use active polling loops rather than blocking synchronization. While this
-        increases CPU utilization, it avoids the overhead of spawning threads or completing requests sequentially.
+        Both ``wait_all`` and ``wait_any`` poll only active events and destroy and null each selected event exactly
+        once. ``wait_all`` retires every active event before running callbacks. Active polling increases CPU utilization.
 
 
 Communication Primitives
