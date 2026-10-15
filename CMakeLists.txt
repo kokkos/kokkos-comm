@@ -18,11 +18,17 @@ option(KokkosComm_INSTALL_CMAKE_PACKAGE "Create and install a CMake config-file 
 
 option(KokkosComm_ENABLE_MPI "Build Kokkos Comm with MPI backend" ON)
 option(KokkosComm_ENABLE_NCCL "Build Kokkos Comm with NCCL backend" OFF)
+option(KokkosComm_ENABLE_RCCL "Build Kokkos Comm with RCCL backend" OFF)
 option(KokkosComm_ABORT_ON_ERROR "Runtime error checks trigger a global abort" OFF)
+
+if(KokkosComm_ENABLE_NCCL AND KokkosComm_ENABLE_RCCL)
+  message(FATAL_ERROR "KokkosComm_ENABLE_NCCL and KokkosComm_ENABLE_RCCL cannot both be enabled")
+endif()
 
 # Resolve options that must be PP-defined
 set(KOKKOSCOMM_ENABLE_MPI ${KokkosComm_ENABLE_MPI})
 set(KOKKOSCOMM_ENABLE_NCCL ${KokkosComm_ENABLE_NCCL})
+set(KOKKOSCOMM_ENABLE_RCCL ${KokkosComm_ENABLE_RCCL})
 set(KOKKOSCOMM_ABORT_ON_ERROR ${KokkosComm_ABORT_ON_ERROR})
 
 message(STATUS "Kokkos Comm version: ${CMAKE_PROJECT_VERSION}")
@@ -46,10 +52,19 @@ if(KokkosComm_ENABLE_NCCL)
   # Kokkos Comm uses CUDA runtime headers directly
   find_package(CUDAToolkit REQUIRED)
   list(APPEND KOKKOSCOMM_ENABLED_BACKENDS "NCCL")
+elseif(KokkosComm_ENABLE_RCCL)
+  if(NOT Kokkos_ENABLE_HIP)
+    message(FATAL_ERROR "KokkosComm_ENABLE_RCCL requires Kokkos_ENABLE_HIP")
+  endif()
+  # RCCL 2.20 was shipped as part of ROCm 6.2.0
+  find_package(rccl 2.20 CONFIG REQUIRED)
+  # Kokkos Comm uses HIP runtime headers directly
+  find_package(hip CONFIG REQUIRED)
+  list(APPEND KOKKOSCOMM_ENABLED_BACKENDS "RCCL")
 endif()
 
 if(NOT KOKKOSCOMM_ENABLED_BACKENDS)
-  message(FATAL_ERROR "No Kokkos Comm backends enabled! Enable at least one of: MPI, NCCL")
+  message(FATAL_ERROR "No Kokkos Comm backends enabled! Enable at least one of: MPI, NCCL, RCCL")
 else()
   list(JOIN KOKKOSCOMM_ENABLED_BACKENDS ";" BACKENDS_STRING)
   message(STATUS "Enabled Kokkos Comm backends: ${BACKENDS_STRING}")

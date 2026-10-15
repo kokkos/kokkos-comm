@@ -26,6 +26,15 @@
 #include "nccl/alltoall.hpp"
 #include "nccl/allreduce.hpp"
 #include "nccl/reduce.hpp"
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+#include "rccl/rccl_space.hpp"
+#include "rccl/communicator.hpp"
+#include "rccl/request.hpp"
+#include "rccl/broadcast.hpp"
+#include "rccl/reduce.hpp"
+#include "rccl/allreduce.hpp"
+#include "rccl/allgather.hpp"
+#include "rccl/alltoall.hpp"
 #endif
 
 namespace KokkosComm::Experimental {

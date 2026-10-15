@@ -5,7 +5,7 @@
 #include <Kokkos_Core.hpp>
 #include <KokkosComm/KokkosComm.hpp>
 
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
 #include "nccl/utils.hpp"
 #endif
 
@@ -19,7 +19,7 @@ class Reduce : public testing::Test {
  public:
   using Scalar = T;
 };
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
 using ScalarTypes = testing::Types<float, double, int, int64_t>;
 #else
 using ScalarTypes =
@@ -36,9 +36,9 @@ auto reduce_contig_1d() -> void {
   GTEST_SKIP() << "Unimplemented test for Open MPI + CUDA/HIP";
 #else
 
-#if defined(KOKKOSCOMM_ENABLE_NCCL)
-  auto& nccl_ctx = test_utils::NcclCtx::get();
-  auto raw_comm  = nccl_ctx.comm();
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
+  auto& xccl_ctx = test_utils::XcclCtx::get();
+  auto raw_comm  = xccl_ctx.comm();
 #else
   auto raw_comm = MPI_COMM_WORLD;
 #endif

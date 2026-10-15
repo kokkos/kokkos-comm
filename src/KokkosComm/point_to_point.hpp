@@ -19,6 +19,12 @@
 #include "nccl/request.hpp"
 #include "nccl/send.hpp"
 #include "nccl/recv.hpp"
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+#include "rccl/rccl_space.hpp"
+#include "rccl/communicator.hpp"
+#include "rccl/request.hpp"
+#include "rccl/send.hpp"
+#include "rccl/recv.hpp"
 #endif
 
 namespace KokkosComm {

@@ -11,7 +11,7 @@
 #include <Kokkos_Core.hpp>
 
 #include "logging.hpp"
-#ifdef KOKKOSCOMM_ENABLE_NCCL
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
 #include "nccl/utils.hpp"
 #endif
 
@@ -71,11 +71,15 @@ int main(int argc, char* argv[]) {
   int provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
   KC_CHECK(provided == MPI_THREAD_MULTIPLE, "MPI_THREAD_MULTIPLE is required");
-#ifdef KOKKOSCOMM_ENABLE_NCCL
-  // Initialize the NCCL environment once for all tests (false = no verbose logs)
-  test_utils::NcclCtx::init(false);
-#endif
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
+  // Initialize the xCCL environment once for all tests (false = no verbose logs)
+  test_utils::XcclCtx::init(false);
+  Kokkos::InitializationSettings kokkos_settings;
+  kokkos_settings.set_device_id(test_utils::XcclCtx::get().device());
+  Kokkos::initialize(kokkos_settings);
+#else
   Kokkos::initialize();
+#endif
   ::testing::InitGoogleTest(&argc, argv);
 
   int rank, size;
@@ -97,8 +101,8 @@ int main(int argc, char* argv[]) {
   auto exit_code = RUN_ALL_TESTS();
 
   Kokkos::finalize();
-#ifdef KOKKOSCOMM_ENABLE_NCCL
-  test_utils::NcclCtx::fini();
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
+  test_utils::XcclCtx::fini();
 #endif
   MPI_Finalize();
 

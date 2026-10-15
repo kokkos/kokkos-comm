@@ -20,11 +20,11 @@ TYPED_TEST_SUITE(Broadcast, ScalarTypes);
 
 template <typename Scalar>
 auto broadcast_0d() -> void {
-  auto& nccl_ctx  = test_utils::NcclCtx::get();
-  const auto exec = Kokkos::Cuda(nccl_ctx.stream());
-  const auto comm = nccl_ctx.comm();
-  const int size  = nccl_ctx.size();
-  const int rank  = nccl_ctx.rank();
+  auto& xccl_ctx  = test_utils::XcclCtx::get();
+  const auto exec = Kokkos::Cuda(xccl_ctx.stream());
+  const auto comm = xccl_ctx.comm();
+  const int size  = xccl_ctx.size();
+  const int rank  = xccl_ctx.rank();
   const int root  = 0;
 
   Kokkos::View<Scalar> v("v");
@@ -47,11 +47,11 @@ auto broadcast_0d() -> void {
 
 template <typename Scalar>
 auto broadcast_contig_1d() -> void {
-  auto& nccl_ctx  = test_utils::NcclCtx::get();
-  const auto exec = Kokkos::Cuda(nccl_ctx.stream());
-  const auto comm = nccl_ctx.comm();
-  const int size  = nccl_ctx.size();
-  const int rank  = nccl_ctx.rank();
+  auto& xccl_ctx  = test_utils::XcclCtx::get();
+  const auto exec = Kokkos::Cuda(xccl_ctx.stream());
+  const auto comm = xccl_ctx.comm();
+  const int size  = xccl_ctx.size();
+  const int rank  = xccl_ctx.rank();
   const int root  = 0;
 
   Kokkos::View<Scalar*> v("v", 100);

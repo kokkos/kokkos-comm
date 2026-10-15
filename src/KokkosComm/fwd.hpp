@@ -4,6 +4,11 @@
 #pragma once
 
 #include <KokkosComm/config.hpp>
+
+#if defined(KOKKOSCOMM_ENABLE_NCCL) && defined(KOKKOSCOMM_ENABLE_RCCL)
+#error "KOKKOSCOMM_ENABLE_NCCL and KOKKOSCOMM_ENABLE_RCCL cannot both be defined"
+#endif
+
 #include "concepts.hpp"
 #include "datatype.hpp"
 #include "reduction_op.hpp"
@@ -15,16 +20,21 @@ namespace Experimental {
 struct NcclSpace;
 }
 using DefaultCommunicationSpace = Experimental::NcclSpace;
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+namespace Experimental {
+struct RcclSpace;
+}
+using DefaultCommunicationSpace = Experimental::RcclSpace;
 #endif
 
 #if defined(KOKKOSCOMM_ENABLE_MPI)
 struct MpiSpace;
-#if !defined(KOKKOSCOMM_ENABLE_NCCL)
+#if !defined(KOKKOSCOMM_ENABLE_NCCL) && !defined(KOKKOSCOMM_ENABLE_RCCL)
 using DefaultCommunicationSpace = MpiSpace;
 #endif
 #endif
 
-#if !defined(KOKKOSCOMM_ENABLE_MPI) && !defined(KOKKOSCOMM_ENABLE_NCCL)
+#if !defined(KOKKOSCOMM_ENABLE_MPI) && !defined(KOKKOSCOMM_ENABLE_NCCL) && !defined(KOKKOSCOMM_ENABLE_RCCL)
 static_assert(false, "KokkosComm: at least one communication space must be defined");
 #endif
 

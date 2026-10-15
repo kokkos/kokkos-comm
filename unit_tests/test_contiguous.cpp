@@ -12,14 +12,13 @@
 
 namespace {
 
-template <KokkosComm::KokkosView View>
-void test_contiguous_allocate(const View& non_contig) {
+template <typename ExecSpace, KokkosComm::KokkosView View>
+void test_contiguous_allocate(const ExecSpace& exec, const View& non_contig) {
   // If `non_contig` isn't rank-0 (i.e., a scalar), assert that it is indeed non-contiguous
   if constexpr (View::rank >= 1) {
     EXPECT_FALSE(KokkosComm::is_contiguous(non_contig));
   }
 
-  auto exec   = Kokkos::DefaultExecutionSpace{};
   auto contig = KokkosComm::Impl::allocate_contiguous_for(exec, "contig", non_contig);
   exec.fence();
 
@@ -53,14 +52,14 @@ TYPED_TEST_SUITE(Contiguous, Ranks);
 TYPED_TEST(Contiguous, Allocate) {
   constexpr size_t R = TestFixture::rank;
   constexpr size_t N = 10;
-  auto non_contig    = [ R, N ]<size_t... Is>(std::index_sequence<Is...>) {
-       return test_utils::build_view<double, R>(
-        test_utils::NonContig{}, "non_contig", ((void)Is, std::integral_constant<size_t, N>{})...
+  auto exec          = Kokkos::DefaultExecutionSpace{};
+  auto non_contig    = [&exec, R, N]<size_t... Is>(std::index_sequence<Is...>) {
+    return test_utils::build_view<double, R>(
+        exec, test_utils::NonContig{}, "non_contig", ((void)Is, std::integral_constant<size_t, N>{})...
     );
-  }
-  (std::make_index_sequence<R>{});
+  }(std::make_index_sequence<R>{});
 
-  test_contiguous_allocate(non_contig);
+  test_contiguous_allocate(exec, non_contig);
 }
 
 }  // namespace
