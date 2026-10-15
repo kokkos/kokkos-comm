@@ -28,11 +28,13 @@ auto broadcast(const Kokkos::HIP& space, View& v, int root, ncclComm_t comm) -> 
     int rank;
     ncclCommUserRank(comm, &rank);
     if (rank == root) {
-      ncclBroadcast(
+      KC_RCCL_CHECK(ncclBroadcast(
           data_handle(v), data_handle(v), span(v), datatype_for<RcclSpace>(v), root, comm, space.hip_stream()
-      );
+      ));
     } else {
-      ncclBroadcast(nullptr, data_handle(v), span(v), datatype_for<RcclSpace>(v), root, comm, space.hip_stream());
+      KC_RCCL_CHECK(
+          ncclBroadcast(nullptr, data_handle(v), span(v), datatype_for<RcclSpace>(v), root, comm, space.hip_stream())
+      );
     }
     req.capture_stream_state(space.hip_stream());
   } else {
