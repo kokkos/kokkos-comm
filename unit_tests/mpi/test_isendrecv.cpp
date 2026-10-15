@@ -32,7 +32,7 @@ void isend_comm_mode_1d_contig() {
 
   Kokkos::View<Scalar*> a("a", 1000);
 
-  auto h = KokkosComm::Communicator<>::from_raw(MPI_COMM_WORLD);
+  auto h = KokkosComm::Communicator<KokkosComm::MpiSpace, Kokkos::DefaultExecutionSpace>::from_raw(MPI_COMM_WORLD);
   if (h.size() < 2) {
     GTEST_SKIP() << "Requires >= 2 ranks (" << h.size() << " provided)";
   }
@@ -64,7 +64,7 @@ void isend_comm_mode_1d_noncontig() {
   Kokkos::View<Scalar**, Kokkos::LayoutRight> b("a", 10, 10);
   auto a = Kokkos::subview(b, Kokkos::ALL, 2);  // take column 2 (non-contiguous)
 
-  auto h = KokkosComm::Communicator<>::from_raw(MPI_COMM_WORLD);
+  auto h = KokkosComm::Communicator<KokkosComm::MpiSpace, Kokkos::DefaultExecutionSpace>::from_raw(MPI_COMM_WORLD);
   if (h.size() < 2) {
     GTEST_SKIP() << "Requires >= 2 ranks (" << h.size() << " provided)";
   }
