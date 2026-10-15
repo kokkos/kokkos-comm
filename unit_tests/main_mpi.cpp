@@ -5,38 +5,31 @@
 
 #include <mpi.h>
 #include <gtest/gtest.h>
-#include <KokkosComm/config.hpp>
 #include <Kokkos_Core.hpp>
+#include <KokkosComm/config.hpp>
 
-#include "logging.hpp"
+#include <cstdlib>
+#include <iostream>
+
 #include "test_env.hpp"
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-#include "nccl/utils.hpp"
-#endif
 
 int main(int argc, char* argv[]) {
   int provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-  KC_CHECK(provided == MPI_THREAD_MULTIPLE, "MPI_THREAD_MULTIPLE is required");
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  // Initialize the xCCL environment once for all tests (false = no verbose logs)
-  test_utils::XcclCtx::init(false);
-  Kokkos::InitializationSettings kokkos_settings;
-  kokkos_settings.set_device_id(test_utils::XcclCtx::get().device());
-  Kokkos::initialize(kokkos_settings);
-#else
+  if (provided != MPI_THREAD_MULTIPLE) {
+    std::cerr << "MPI_THREAD_MULTIPLE is required\n";
+    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    return EXIT_FAILURE;
+  }
   Kokkos::initialize();
-#endif
   ::testing::InitGoogleTest(&argc, argv);
 
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   if (0 == rank) {
-    KC_INFO(
-        "{} - Kokkos Comm v{}.{}.{}-{} unit tests", argv[0], KOKKOSCOMM_VERSION_MAJOR, KOKKOSCOMM_VERSION_MINOR,
-        KOKKOSCOMM_VERSION_PATCH, KOKKOSCOMM_COMMIT_HASH
-    );
+    std::cout << argv[0] << " - Kokkos Comm v" << KOKKOSCOMM_VERSION_MAJOR << "." << KOKKOSCOMM_VERSION_MINOR << "."
+              << KOKKOSCOMM_VERSION_PATCH << "-" << KOKKOSCOMM_COMMIT_HASH << " unit tests\n";
   }
 
   ::testing::AddGlobalTestEnvironment(new MpiEnvironment());
@@ -48,9 +41,6 @@ int main(int argc, char* argv[]) {
   auto exit_code = RUN_ALL_TESTS();
 
   Kokkos::finalize();
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  test_utils::XcclCtx::fini();
-#endif
   MPI_Finalize();
 
   return exit_code;

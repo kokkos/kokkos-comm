@@ -45,18 +45,24 @@ FetchContent_MakeAvailable(fmt)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
 include(kc-test)
 
-# --- Core API unit tests --- #
-kc_add_unit_test(test.core.send-recv CORE NUM_PES 2 FILES test_main.cpp test_send_recv.cpp)
-kc_add_unit_test(test.core.broadcast CORE NUM_PES 2 FILES test_main.cpp test_broadcast.cpp)
-kc_add_unit_test(test.core.all-gather CORE NUM_PES 2 FILES test_main.cpp test_allgather.cpp)
-kc_add_unit_test(test.core.reduce CORE NUM_PES 2 FILES test_main.cpp test_reduce.cpp)
-kc_add_unit_test(test.core.all-reduce CORE NUM_PES 2 FILES test_main.cpp test_allreduce.cpp)
-kc_add_unit_test(test.core.all-to-all CORE NUM_PES 2 FILES test_main.cpp test_alltoall.cpp)
+# Core communication tests use xCCL when an xCCL backend is enabled.
+set(KC_CORE_TEST_MAIN main_mpi.cpp)
+if(KokkosComm_ENABLE_NCCL OR KokkosComm_ENABLE_RCCL)
+  set(KC_CORE_TEST_MAIN main_xccl.cpp)
+endif()
 
-kc_add_unit_test(test.core.communicator CORE NUM_PES 2 FILES test_main.cpp test_communicator.cpp)
-kc_add_unit_test(test.core.datatype-conv CORE NUM_PES 1 FILES test_main.cpp test_datatype_conversion.cpp)
-kc_add_unit_test(test.core.red-op-conv CORE NUM_PES 1 FILES test_main.cpp test_red_op_conversion.cpp)
-kc_add_unit_test(test.core.contiguous CORE NUM_PES 2 FILES test_main.cpp test_contiguous.cpp)
+# --- Core API unit tests --- #
+kc_add_unit_test(test.core.send-recv CORE NUM_PES 2 FILES ${KC_CORE_TEST_MAIN} test_send_recv.cpp)
+kc_add_unit_test(test.core.broadcast CORE NUM_PES 2 FILES ${KC_CORE_TEST_MAIN} test_broadcast.cpp)
+kc_add_unit_test(test.core.all-gather CORE NUM_PES 2 FILES ${KC_CORE_TEST_MAIN} test_allgather.cpp)
+kc_add_unit_test(test.core.reduce CORE NUM_PES 2 FILES ${KC_CORE_TEST_MAIN} test_reduce.cpp)
+kc_add_unit_test(test.core.all-reduce CORE NUM_PES 2 FILES ${KC_CORE_TEST_MAIN} test_allreduce.cpp)
+kc_add_unit_test(test.core.all-to-all CORE NUM_PES 2 FILES ${KC_CORE_TEST_MAIN} test_alltoall.cpp)
+
+kc_add_unit_test(test.core.communicator CORE NUM_PES 2 FILES ${KC_CORE_TEST_MAIN} test_communicator.cpp)
+kc_add_unit_test(test.core.datatype-conv CORE NUM_PES 1 FILES main_mpi.cpp test_datatype_conversion.cpp)
+kc_add_unit_test(test.core.red-op-conv CORE NUM_PES 1 FILES main_mpi.cpp test_red_op_conversion.cpp)
+kc_add_unit_test(test.core.contiguous CORE NUM_PES 2 FILES main_mpi.cpp test_contiguous.cpp)
 
 # --- MPI backend unit tests --- #
 if(KokkosComm_ENABLE_MPI)
@@ -88,7 +94,7 @@ if(KokkosComm_ENABLE_MPI)
     test.mpi.gtest
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_gtest_mpi.cpp nccl/utils.cpp
+    FILES main_mpi.cpp mpi/test_gtest_mpi.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
   # Make sure MPI can access Kokkos::View data
@@ -96,7 +102,7 @@ if(KokkosComm_ENABLE_MPI)
     test.mpi.view-access
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_mpi_view_access.cpp nccl/utils.cpp
+    FILES main_mpi.cpp mpi/test_mpi_view_access.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
 
@@ -104,71 +110,71 @@ if(KokkosComm_ENABLE_MPI)
     test.mpi.send-recv
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_sendrecv.cpp nccl/utils.cpp
+    FILES main_mpi.cpp mpi/test_sendrecv.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
   kc_add_unit_test(
     test.mpi.isend-recv
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_isendrecv.cpp nccl/utils.cpp
+    FILES main_mpi.cpp mpi/test_isendrecv.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
   kc_add_unit_test(
     test.mpi.barrier
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_barrier.cpp nccl/utils.cpp
+    FILES main_mpi.cpp mpi/test_barrier.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
   kc_add_unit_test(
     test.mpi.broadcast
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_broadcast.cpp nccl/utils.cpp
+    FILES main_mpi.cpp mpi/test_broadcast.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
   kc_add_unit_test(
     test.mpi.reduce
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_reduce.cpp nccl/utils.cpp
+    FILES main_mpi.cpp mpi/test_reduce.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
   kc_add_unit_test(
     test.mpi.ireduce
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_ireduce.cpp nccl/utils.cpp
+    FILES main_mpi.cpp mpi/test_ireduce.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
   kc_add_unit_test(
     test.mpi.all-reduce
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_allreduce.cpp nccl/utils.cpp
+    FILES main_mpi.cpp mpi/test_allreduce.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
   kc_add_unit_test(
     test.mpi.all-to-all
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_alltoall.cpp nccl/utils.cpp
+    FILES main_mpi.cpp mpi/test_alltoall.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
   kc_add_unit_test(
     test.mpi.all-gather
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_allgather.cpp nccl/utils.cpp
+    FILES main_mpi.cpp mpi/test_allgather.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
-  kc_add_unit_test(test.mpi.scan MPI NUM_PES 2 FILES test_main.cpp mpi/test_scan.cpp  nccl/utils.cpp LIBRARIES KokkosComm::KokkosComm)
+  kc_add_unit_test(test.mpi.scan MPI NUM_PES 2 FILES main_mpi.cpp mpi/test_scan.cpp LIBRARIES KokkosComm::KokkosComm)
   kc_add_unit_test(
     test.mpi.channel-p2p
     MPI
     NUM_PES 2
-    FILES test_main.cpp mpi/test_channel.cpp nccl/utils.cpp
+    FILES main_mpi.cpp mpi/test_channel.cpp
     LIBRARIES KokkosComm::KokkosComm
   )
 endif()
@@ -181,42 +187,42 @@ if(KokkosComm_ENABLE_NCCL)
     test.nccl.p2p
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_point_to_point.cpp nccl/utils.cpp
+    FILES main_xccl.cpp nccl/test_point_to_point.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.broadcast
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_broadcast.cpp nccl/utils.cpp
+    FILES main_xccl.cpp nccl/test_broadcast.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.all-gather
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_allgather.cpp nccl/utils.cpp
+    FILES main_xccl.cpp nccl/test_allgather.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.all-to-all
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_alltoall.cpp nccl/utils.cpp
+    FILES main_xccl.cpp nccl/test_alltoall.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.all-reduce
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_allreduce.cpp nccl/utils.cpp
+    FILES main_xccl.cpp nccl/test_allreduce.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
   kc_add_unit_test(
     test.nccl.reduce
     NCCL
     NUM_PES 2
-    FILES test_main.cpp nccl/test_reduce.cpp nccl/utils.cpp
+    FILES main_xccl.cpp nccl/test_reduce.cpp nccl/utils.cpp
     LIBRARIES KokkosComm::KokkosComm MPI::MPI_CXX
   )
 endif()
