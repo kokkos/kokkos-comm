@@ -41,30 +41,8 @@ void test_core_send_recv(const View& v) {
   if (rank == src) {
     test_utils::init_view(exec, v);
     exec.fence();
-#if defined(KOKKOSCOMM_ENABLE_RCCL)
-    int active_device = -1;
-    KC_HIP_CHECK(hipGetDevice(&active_device));
-
-    hipPointerAttribute_t attr{};
-    KC_HIP_CHECK(hipPointerGetAttributes(&attr, KokkosComm::data_handle(v)));
-    std::fprintf(
-        stderr, "rank %d: RCCL device=%d, active HIP device=%d, view device=%d\n", rank, xccl_ctx.device(),
-        active_device, attr.device
-    );
-#endif
     KokkosComm::send(comm, v, dst).wait();
   } else if (rank == dst) {
-#if defined(KOKKOSCOMM_ENABLE_RCCL)
-    int active_device = -1;
-    KC_HIP_CHECK(hipGetDevice(&active_device));
-
-    hipPointerAttribute_t attr{};
-    KC_HIP_CHECK(hipPointerGetAttributes(&attr, KokkosComm::data_handle(v)));
-    std::fprintf(
-        stderr, "rank %d: RCCL device=%d, active HIP device=%d, view device=%d\n", rank, xccl_ctx.device(),
-        active_device, attr.device
-    );
-#endif
     KokkosComm::recv(comm, v, src).wait();
     int errs = test_utils::count_errors(v);
     ASSERT_EQ(errs, 0);
