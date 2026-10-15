@@ -51,9 +51,19 @@ class Request<Experimental::RcclSpace> {
   /// @brief Copy assignment operator is deleted because a `Request` can only be moved.
   auto operator=(const Request&) -> Request& = delete;
   /// @brief Move constructor.
-  Request(Request&&) = default;
+  Request(Request&& other) noexcept
+      : request_(std::exchange(other.request_, nullptr)), callbacks_(std::move(other.callbacks_)) {}
   /// @brief Move assignment operator.
-  auto operator=(Request&&) -> Request& = default;
+  auto operator=(Request&& other) noexcept -> Request& {
+    if (this != &other) {
+      if (request_ != nullptr) {
+        KC_HIP_CHECK(hipEventDestroy(request_));
+      }
+      request_   = std::exchange(other.request_, nullptr);
+      callbacks_ = std::move(other.callbacks_);
+    }
+    return *this;
+  }
 
   /// @return A reference to the underlying `hipEvent_t` object.
   [[nodiscard]] constexpr auto request() noexcept -> request_type& { return request_; }
