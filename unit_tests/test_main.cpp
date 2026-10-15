@@ -74,8 +74,12 @@ int main(int argc, char* argv[]) {
 #if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
   // Initialize the xCCL environment once for all tests (false = no verbose logs)
   test_utils::XcclCtx::init(false);
-#endif
+  Kokkos::InitializationSettings kokkos_settings;
+  kokkos_settings.set_device_id(test_utils::XcclCtx::get().device());
+  Kokkos::initialize(kokkos_settings);
+#else
   Kokkos::initialize();
+#endif
   ::testing::InitGoogleTest(&argc, argv);
 
   int rank, size;
