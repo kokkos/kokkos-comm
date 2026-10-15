@@ -1,5 +1,7 @@
 #include <memory>
 #include <mutex>
+#include <iostream>
+#include <cstdio>
 
 #include <mpi.h>
 
@@ -55,7 +57,8 @@ auto XcclCtx::init(bool verbose) -> void {
     int rank = 0;
     KC_MPI_CHECK(MPI_Comm_rank(mpi_comm, &rank));
 
-    int local_rank = get_local_rank(mpi_comm, rank);
+    // this assumes all GPUs visible to all ranks
+    int my_dev = get_local_rank(mpi_comm, rank);
 
     int devs = 0;
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
@@ -68,16 +71,16 @@ auto XcclCtx::init(bool verbose) -> void {
       KC_INFO("P{} found {} GPU devices", rank, devs);
     }
 
-    KC_CHECK(local_rank < devs, "P{} needs device #{} but only {} devices available", rank, local_rank, devs);
+    KC_CHECK(my_dev < devs, "P{} needs device #{} but only {} devices available", rank, my_dev, devs);
 
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
-    KC_CUDA_CHECK(cudaSetDevice(local_rank));
+    KC_CUDA_CHECK(cudaSetDevice(my_dev));
 #elif defined(KOKKOSCOMM_ENABLE_RCCL)
-    KC_HIP_CHECK(hipSetDevice(local_rank));
+    KC_HIP_CHECK(hipSetDevice(my_dev));
 #endif
 
     if (verbose) {
-      KC_INFO("P{} assigned to GPU device #{}", rank, local_rank);
+      KC_INFO("P{} assigned to GPU device #{}", rank, my_dev);
     }
 
     ncclUniqueId nccl_id{};
@@ -98,7 +101,7 @@ auto XcclCtx::init(bool verbose) -> void {
     KC_HIP_CHECK(hipStreamCreate(&stream));
 #endif
 
-    instance_ = std::unique_ptr<XcclCtx>(new XcclCtx(nccl_comm, stream, local_rank, size, rank));
+    instance_ = std::unique_ptr<XcclCtx>(new XcclCtx(nccl_comm, stream, my_dev, size, rank));
   });
 }
 
