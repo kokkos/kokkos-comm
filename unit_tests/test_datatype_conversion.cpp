@@ -24,23 +24,8 @@ class DatatypeConversion : public testing::Test {
   using Datatype = T;
 };
 
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-using DatatypeTypes = ::testing::Types<
-    char,
-    int,
-    unsigned,
-    std::int8_t,
-    std::uint8_t,
-    std::int32_t,
-    std::uint32_t,
-    std::int64_t,
-    std::uint64_t,
-    std::size_t,
-    std::ptrdiff_t,
-    float,
-    double>;
-#else
-using DatatypeTypes = ::testing::Types<
+#if defined(KOKKOSCOMM_ENABLE_MPI)
+using MpiDatatypeTypes = ::testing::Types<
     std::byte,
     char,
     unsigned char,
@@ -68,146 +53,239 @@ using DatatypeTypes = ::testing::Types<
     Kokkos::complex<float>,
     Kokkos::complex<double>>;
 #endif
-TYPED_TEST_SUITE(DatatypeConversion, DatatypeTypes);
+
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
+using XcclDatatypeTypes = ::testing::Types<
+    char,
+    int,
+    unsigned,
+    std::int8_t,
+    std::uint8_t,
+    std::int32_t,
+    std::uint32_t,
+    std::int64_t,
+    std::uint64_t,
+    std::size_t,
+    std::ptrdiff_t,
+    float,
+    double>;
+#endif
 
 template <KokkosComm::CommunicationSpace CS, typename T>
 auto check_datatype_conversion(typename CS::datatype_type dtype) -> void {
 #if defined(KOKKOSCOMM_ENABLE_MPI)
-  if constexpr (std::is_same_v<T, std::byte>) {
-    ASSERT_EQ(MPI_BYTE, dtype);
-  } else if constexpr (std::is_same_v<T, char>) {
-    ASSERT_EQ(MPI_CHAR, dtype);
-  } else if constexpr (std::is_same_v<T, unsigned char>) {
-    ASSERT_EQ(MPI_UNSIGNED_CHAR, dtype);
-  } else if constexpr (std::is_same_v<T, short>) {
-    ASSERT_EQ(MPI_SHORT, dtype);
-  } else if constexpr (std::is_same_v<T, unsigned short>) {
-    ASSERT_EQ(MPI_UNSIGNED_SHORT, dtype);
-  } else if constexpr (std::is_same_v<T, int>) {
-    ASSERT_EQ(MPI_INT, dtype);
-  } else if constexpr (std::is_same_v<T, unsigned>) {
-    ASSERT_EQ(MPI_UNSIGNED, dtype);
-  } else if constexpr (std::is_same_v<T, long>) {
-    ASSERT_EQ(MPI_LONG, dtype);
-  } else if constexpr (std::is_same_v<T, unsigned long>) {
-    ASSERT_EQ(MPI_UNSIGNED_LONG, dtype);
-  } else if constexpr (std::is_same_v<T, long long>) {
-    ASSERT_EQ(MPI_LONG_LONG, dtype);
-  } else if constexpr (std::is_same_v<T, unsigned long long>) {
-    ASSERT_EQ(MPI_UNSIGNED_LONG_LONG, dtype);
-  } else if constexpr (std::is_same_v<T, std::int8_t>) {
-    ASSERT_EQ(MPI_INT8_T, dtype);
-  } else if constexpr (std::is_same_v<T, std::uint8_t>) {
-    ASSERT_EQ(MPI_UINT8_T, dtype);
-  } else if constexpr (std::is_same_v<T, std::int16_t>) {
-    ASSERT_EQ(MPI_INT16_T, dtype);
-  } else if constexpr (std::is_same_v<T, std::uint16_t>) {
-    ASSERT_EQ(MPI_UINT16_T, dtype);
-  } else if constexpr (std::is_same_v<T, std::int32_t>) {
-    ASSERT_EQ(MPI_INT32_T, dtype);
-  } else if constexpr (std::is_same_v<T, std::uint32_t>) {
-    ASSERT_EQ(MPI_UINT32_T, dtype);
-  } else if constexpr (std::is_same_v<T, std::int64_t>) {
-    ASSERT_EQ(MPI_INT64_T, dtype);
-  } else if constexpr (std::is_same_v<T, std::uint64_t>) {
-    ASSERT_EQ(MPI_UINT64_T, dtype);
-  } else if constexpr (std::is_same_v<T, std::size_t>) {
-    if constexpr (sizeof(std::size_t) == 1) {
-      ASSERT_EQ(MPI_UINT8_T, dtype);
-    } else if constexpr (sizeof(std::size_t) == 2) {
-      ASSERT_EQ(MPI_UINT16_T, dtype);
-    } else if constexpr (sizeof(std::size_t) == 4) {
-      ASSERT_EQ(MPI_UINT32_T, dtype);
-    } else if constexpr (sizeof(std::size_t) == 8) {
-      ASSERT_EQ(MPI_UINT64_T, dtype);
-    }
-  } else if constexpr (std::is_same_v<T, std::ptrdiff_t>) {
-    if constexpr (sizeof(std::ptrdiff_t) == 1) {
+  if constexpr (std::is_same_v<CS, KokkosComm::MpiSpace>) {
+    if constexpr (std::is_same_v<T, std::byte>) {
+      ASSERT_EQ(MPI_BYTE, dtype);
+    } else if constexpr (std::is_same_v<T, char>) {
+      ASSERT_EQ(MPI_CHAR, dtype);
+    } else if constexpr (std::is_same_v<T, unsigned char>) {
+      ASSERT_EQ(MPI_UNSIGNED_CHAR, dtype);
+    } else if constexpr (std::is_same_v<T, short>) {
+      ASSERT_EQ(MPI_SHORT, dtype);
+    } else if constexpr (std::is_same_v<T, unsigned short>) {
+      ASSERT_EQ(MPI_UNSIGNED_SHORT, dtype);
+    } else if constexpr (std::is_same_v<T, int>) {
+      ASSERT_EQ(MPI_INT, dtype);
+    } else if constexpr (std::is_same_v<T, unsigned>) {
+      ASSERT_EQ(MPI_UNSIGNED, dtype);
+    } else if constexpr (std::is_same_v<T, long>) {
+      ASSERT_EQ(MPI_LONG, dtype);
+    } else if constexpr (std::is_same_v<T, unsigned long>) {
+      ASSERT_EQ(MPI_UNSIGNED_LONG, dtype);
+    } else if constexpr (std::is_same_v<T, long long>) {
+      ASSERT_EQ(MPI_LONG_LONG, dtype);
+    } else if constexpr (std::is_same_v<T, unsigned long long>) {
+      ASSERT_EQ(MPI_UNSIGNED_LONG_LONG, dtype);
+    } else if constexpr (std::is_same_v<T, std::int8_t>) {
       ASSERT_EQ(MPI_INT8_T, dtype);
-    } else if constexpr (sizeof(std::ptrdiff_t) == 2) {
+    } else if constexpr (std::is_same_v<T, std::uint8_t>) {
+      ASSERT_EQ(MPI_UINT8_T, dtype);
+    } else if constexpr (std::is_same_v<T, std::int16_t>) {
       ASSERT_EQ(MPI_INT16_T, dtype);
-    } else if constexpr (sizeof(std::ptrdiff_t) == 4) {
+    } else if constexpr (std::is_same_v<T, std::uint16_t>) {
+      ASSERT_EQ(MPI_UINT16_T, dtype);
+    } else if constexpr (std::is_same_v<T, std::int32_t>) {
       ASSERT_EQ(MPI_INT32_T, dtype);
-    } else if constexpr (sizeof(std::ptrdiff_t) == 8) {
+    } else if constexpr (std::is_same_v<T, std::uint32_t>) {
+      ASSERT_EQ(MPI_UINT32_T, dtype);
+    } else if constexpr (std::is_same_v<T, std::int64_t>) {
       ASSERT_EQ(MPI_INT64_T, dtype);
+    } else if constexpr (std::is_same_v<T, std::uint64_t>) {
+      ASSERT_EQ(MPI_UINT64_T, dtype);
+    } else if constexpr (std::is_same_v<T, std::size_t>) {
+      if constexpr (sizeof(std::size_t) == 1) {
+        ASSERT_EQ(MPI_UINT8_T, dtype);
+      } else if constexpr (sizeof(std::size_t) == 2) {
+        ASSERT_EQ(MPI_UINT16_T, dtype);
+      } else if constexpr (sizeof(std::size_t) == 4) {
+        ASSERT_EQ(MPI_UINT32_T, dtype);
+      } else if constexpr (sizeof(std::size_t) == 8) {
+        ASSERT_EQ(MPI_UINT64_T, dtype);
+      }
+    } else if constexpr (std::is_same_v<T, std::ptrdiff_t>) {
+      if constexpr (sizeof(std::ptrdiff_t) == 1) {
+        ASSERT_EQ(MPI_INT8_T, dtype);
+      } else if constexpr (sizeof(std::ptrdiff_t) == 2) {
+        ASSERT_EQ(MPI_INT16_T, dtype);
+      } else if constexpr (sizeof(std::ptrdiff_t) == 4) {
+        ASSERT_EQ(MPI_INT32_T, dtype);
+      } else if constexpr (sizeof(std::ptrdiff_t) == 8) {
+        ASSERT_EQ(MPI_INT64_T, dtype);
+      }
+    } else if constexpr (std::is_same_v<T, float>) {
+      ASSERT_EQ(MPI_FLOAT, dtype);
+    } else if constexpr (std::is_same_v<T, double>) {
+      ASSERT_EQ(MPI_DOUBLE, dtype);
+    } else if constexpr (std::is_same_v<T, long double>) {
+      ASSERT_EQ(MPI_LONG_DOUBLE, dtype);
+    } else if constexpr (std::is_same_v<T, Kokkos::complex<float>>) {
+#if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI)
+      ASSERT_EQ(MPI_CXX_COMPLEX, dtype);
+#else
+      ASSERT_EQ(MPI_COMPLEX, dtype);
+#endif
+    } else if constexpr (std::is_same_v<T, Kokkos::complex<double>>) {
+#if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI)
+      ASSERT_EQ(MPI_CXX_DOUBLE_COMPLEX, dtype);
+#else
+      ASSERT_EQ(MPI_DOUBLE_COMPLEX, dtype);
+#endif
     }
-  } else if constexpr (std::is_same_v<T, float>) {
-    ASSERT_EQ(MPI_FLOAT, dtype);
-  } else if constexpr (std::is_same_v<T, double>) {
-    ASSERT_EQ(MPI_DOUBLE, dtype);
-  } else if constexpr (std::is_same_v<T, long double>) {
-    ASSERT_EQ(MPI_LONG_DOUBLE, dtype);
-  } else if constexpr (std::is_same_v<T, Kokkos::complex<float>>) {
-#if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI)
-    ASSERT_EQ(MPI_CXX_COMPLEX, dtype);
-#else
-    ASSERT_EQ(MPI_COMPLEX, dtype);
-#endif
-  } else if constexpr (std::is_same_v<T, Kokkos::complex<double>>) {
-#if defined(KOKKOSCOMM_IMPL_MPI_IS_OPENMPI)
-    ASSERT_EQ(MPI_CXX_DOUBLE_COMPLEX, dtype);
-#else
-    ASSERT_EQ(MPI_DOUBLE_COMPLEX, dtype);
-#endif
+    return;
   }
-#elif defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  if constexpr (std::is_same_v<T, char>) {
-    ASSERT_EQ(ncclChar, dtype);
-  } else if constexpr (std::is_same_v<T, int>) {
-    ASSERT_EQ(ncclInt, dtype);
-  } else if constexpr (std::is_same_v<T, unsigned> and sizeof(unsigned) == 4) {
-    ASSERT_EQ(ncclUint32, dtype);
-  } else if constexpr (std::is_same_v<T, std::int8_t>) {
-    ASSERT_EQ(ncclInt8, dtype);
-  } else if constexpr (std::is_same_v<T, std::uint8_t>) {
-    ASSERT_EQ(ncclUint8, dtype);
-  } else if constexpr (std::is_same_v<T, std::int32_t>) {
-    ASSERT_EQ(ncclInt32, dtype);
-  } else if constexpr (std::is_same_v<T, std::uint32_t>) {
-    ASSERT_EQ(ncclUint32, dtype);
-  } else if constexpr (std::is_same_v<T, std::int64_t>) {
-    ASSERT_EQ(ncclInt64, dtype);
-  } else if constexpr (std::is_same_v<T, std::uint64_t>) {
-    ASSERT_EQ(ncclUint64, dtype);
-  } else if constexpr (std::is_same_v<T, std::size_t>) {
-    if constexpr (sizeof(std::size_t) == 1) {
-      ASSERT_EQ(ncclUint8, dtype);
-    } else if constexpr (sizeof(std::size_t) == 4) {
+#endif
+
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
+  if constexpr (std::is_same_v<CS, KokkosComm::Experimental::NcclSpace>) {
+    if constexpr (std::is_same_v<T, char>) {
+      ASSERT_EQ(ncclChar, dtype);
+    } else if constexpr (std::is_same_v<T, int>) {
+      ASSERT_EQ(ncclInt, dtype);
+    } else if constexpr (std::is_same_v<T, unsigned> and sizeof(unsigned) == 4) {
       ASSERT_EQ(ncclUint32, dtype);
-    } else if constexpr (sizeof(std::size_t) == 8) {
-      ASSERT_EQ(ncclUint64, dtype);
-    }
-  } else if constexpr (std::is_same_v<T, std::ptrdiff_t>) {
-    if constexpr (sizeof(std::ptrdiff_t) == 1) {
+    } else if constexpr (std::is_same_v<T, std::int8_t>) {
       ASSERT_EQ(ncclInt8, dtype);
-    } else if constexpr (sizeof(std::ptrdiff_t) == 4) {
+    } else if constexpr (std::is_same_v<T, std::uint8_t>) {
+      ASSERT_EQ(ncclUint8, dtype);
+    } else if constexpr (std::is_same_v<T, std::int32_t>) {
       ASSERT_EQ(ncclInt32, dtype);
-    } else if constexpr (sizeof(std::ptrdiff_t) == 8) {
+    } else if constexpr (std::is_same_v<T, std::uint32_t>) {
+      ASSERT_EQ(ncclUint32, dtype);
+    } else if constexpr (std::is_same_v<T, std::int64_t>) {
       ASSERT_EQ(ncclInt64, dtype);
+    } else if constexpr (std::is_same_v<T, std::uint64_t>) {
+      ASSERT_EQ(ncclUint64, dtype);
+    } else if constexpr (std::is_same_v<T, std::size_t>) {
+      if constexpr (sizeof(std::size_t) == 1) {
+        ASSERT_EQ(ncclUint8, dtype);
+      } else if constexpr (sizeof(std::size_t) == 4) {
+        ASSERT_EQ(ncclUint32, dtype);
+      } else if constexpr (sizeof(std::size_t) == 8) {
+        ASSERT_EQ(ncclUint64, dtype);
+      }
+    } else if constexpr (std::is_same_v<T, std::ptrdiff_t>) {
+      if constexpr (sizeof(std::ptrdiff_t) == 1) {
+        ASSERT_EQ(ncclInt8, dtype);
+      } else if constexpr (sizeof(std::ptrdiff_t) == 4) {
+        ASSERT_EQ(ncclInt32, dtype);
+      } else if constexpr (sizeof(std::ptrdiff_t) == 8) {
+        ASSERT_EQ(ncclInt64, dtype);
+      }
+    } else if constexpr (std::is_same_v<T, float>) {
+      ASSERT_EQ(ncclFloat, dtype);
+    } else if constexpr (std::is_same_v<T, double>) {
+      ASSERT_EQ(ncclDouble, dtype);
     }
-  } else if constexpr (std::is_same_v<T, float>) {
-    ASSERT_EQ(ncclFloat, dtype);
-  } else if constexpr (std::is_same_v<T, double>) {
-    ASSERT_EQ(ncclDouble, dtype);
+    return;
   }
-#else
-  GTEST_SKIP() << "Unimplemented test for Communication Space";
 #endif
+
+#if defined(KOKKOSCOMM_ENABLE_RCCL)
+  if constexpr (std::is_same_v<CS, KokkosComm::Experimental::RcclSpace>) {
+    if constexpr (std::is_same_v<T, char>) {
+      ASSERT_EQ(ncclChar, dtype);
+    } else if constexpr (std::is_same_v<T, int>) {
+      ASSERT_EQ(ncclInt, dtype);
+    } else if constexpr (std::is_same_v<T, unsigned> and sizeof(unsigned) == 4) {
+      ASSERT_EQ(ncclUint32, dtype);
+    } else if constexpr (std::is_same_v<T, std::int8_t>) {
+      ASSERT_EQ(ncclInt8, dtype);
+    } else if constexpr (std::is_same_v<T, std::uint8_t>) {
+      ASSERT_EQ(ncclUint8, dtype);
+    } else if constexpr (std::is_same_v<T, std::int32_t>) {
+      ASSERT_EQ(ncclInt32, dtype);
+    } else if constexpr (std::is_same_v<T, std::uint32_t>) {
+      ASSERT_EQ(ncclUint32, dtype);
+    } else if constexpr (std::is_same_v<T, std::int64_t>) {
+      ASSERT_EQ(ncclInt64, dtype);
+    } else if constexpr (std::is_same_v<T, std::uint64_t>) {
+      ASSERT_EQ(ncclUint64, dtype);
+    } else if constexpr (std::is_same_v<T, std::size_t>) {
+      if constexpr (sizeof(std::size_t) == 1) {
+        ASSERT_EQ(ncclUint8, dtype);
+      } else if constexpr (sizeof(std::size_t) == 4) {
+        ASSERT_EQ(ncclUint32, dtype);
+      } else if constexpr (sizeof(std::size_t) == 8) {
+        ASSERT_EQ(ncclUint64, dtype);
+      }
+    } else if constexpr (std::is_same_v<T, std::ptrdiff_t>) {
+      if constexpr (sizeof(std::ptrdiff_t) == 1) {
+        ASSERT_EQ(ncclInt8, dtype);
+      } else if constexpr (sizeof(std::ptrdiff_t) == 4) {
+        ASSERT_EQ(ncclInt32, dtype);
+      } else if constexpr (sizeof(std::ptrdiff_t) == 8) {
+        ASSERT_EQ(ncclInt64, dtype);
+      }
+    } else if constexpr (std::is_same_v<T, float>) {
+      ASSERT_EQ(ncclFloat, dtype);
+    } else if constexpr (std::is_same_v<T, double>) {
+      ASSERT_EQ(ncclDouble, dtype);
+    }
+    return;
+  }
+#endif
+
+  GTEST_SKIP() << "Unimplemented test for Communication Space";
 }
 
-using DCS = KokkosComm::DefaultCommunicationSpace;
+#define KC_DEFINE_DATATYPE_CONVERSION_TESTS(SuiteName, TypeList, CommSpace)                                   \
+  template <typename T>                                                                                        \
+  class SuiteName : public DatatypeConversion<T> {};                                                           \
+                                                                                                               \
+  TYPED_TEST_SUITE(SuiteName, TypeList);                                                                       \
+                                                                                                               \
+  TYPED_TEST(SuiteName, DTypeConv) {                                                                           \
+    using T    = typename TestFixture::Datatype;                                                               \
+    auto dtype = KokkosComm::datatype<CommSpace, T>();                                                         \
+    check_datatype_conversion<CommSpace, T>(dtype);                                                            \
+  }                                                                                                            \
+                                                                                                               \
+  TYPED_TEST(SuiteName, DTypeConvFromView) {                                                                   \
+    using T = typename TestFixture::Datatype;                                                                  \
+    Kokkos::View<T[10]> v("v");                                                                               \
+    auto dtype = KokkosComm::datatype_for<CommSpace>(v);                                                       \
+    check_datatype_conversion<CommSpace, T>(dtype);                                                            \
+  }
 
-TYPED_TEST(DatatypeConversion, DTypeConv) {
-  using T    = typename TestFixture::Datatype;
-  auto dtype = KokkosComm::datatype<DCS, T>();
-  check_datatype_conversion<DCS, T>(dtype);
-}
+#if defined(KOKKOSCOMM_ENABLE_MPI)
+KC_DEFINE_DATATYPE_CONVERSION_TESTS(MpiDatatypeConversion, MpiDatatypeTypes, KokkosComm::MpiSpace)
+#endif
 
-TYPED_TEST(DatatypeConversion, DTypeConvFromView) {
-  using T = typename TestFixture::Datatype;
-  Kokkos::View<T[10]> v("v");
-  auto dtype = KokkosComm::datatype_for<DCS>(v);
-  check_datatype_conversion<DCS, T>(dtype);
-}
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
+KC_DEFINE_DATATYPE_CONVERSION_TESTS(
+    NcclDatatypeConversion,
+    XcclDatatypeTypes,
+    KokkosComm::Experimental::NcclSpace)
+#endif
+
+#if defined(KOKKOSCOMM_ENABLE_RCCL)
+KC_DEFINE_DATATYPE_CONVERSION_TESTS(
+    RcclDatatypeConversion,
+    XcclDatatypeTypes,
+    KokkosComm::Experimental::RcclSpace)
+#endif
+
+#undef KC_DEFINE_DATATYPE_CONVERSION_TESTS
 
 }  // namespace
