@@ -1,35 +1,21 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#include <cstddef>
+#include <cstdint>
+
 #include <gtest/gtest.h>
 #include <KokkosComm/KokkosComm.hpp>
 
+#include "communication_space_utils.hpp"
 #include "view_utils.hpp"
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-#include "nccl/utils.hpp"
-#endif
 
 namespace {
 
-auto test_exec() -> Kokkos::DefaultExecutionSpace {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  return Kokkos::DefaultExecutionSpace{test_utils::XcclCtx::get().stream()};
-#else
-  return Kokkos::DefaultExecutionSpace{};
-#endif
-}
-
-template <KokkosComm::KokkosView View>
+template <KokkosComm::CommunicationSpace CommSpace, KokkosComm::KokkosView View>
 void test_core_send_recv(const View& v) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-  auto exec      = Kokkos::DefaultExecutionSpace{xccl_ctx.stream()};
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-  auto exec     = Kokkos::DefaultExecutionSpace{};
-#endif
-  auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
+  auto comm      = test_utils::make_communicator<CommSpace>();
+  auto exec      = comm.exec();
   const int size = comm.size();
   const int rank = comm.rank();
   if (size < 2) {
@@ -50,34 +36,59 @@ void test_core_send_recv(const View& v) {
 }
 
 template <typename T>
-class SendRecv : public ::testing::Test {
+class SendRecvFixture : public ::testing::Test {
  public:
   using Scalar = T;
 };
 
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-using ScalarTypes = ::testing::Types<float, double, int, int64_t>;
-#else
-using ScalarTypes =
+using MpiScalarTypes =
     ::testing::Types<float, double, Kokkos::complex<float>, Kokkos::complex<double>, int, unsigned, int64_t, size_t>;
-#endif
-TYPED_TEST_SUITE(SendRecv, ScalarTypes);
+using XcclScalarTypes = ::testing::Types<float, double, int, int64_t>;
 
-TYPED_TEST(SendRecv, Contig1D) {
-  auto v = test_utils::build_view<typename TestFixture::Scalar, 1>(test_exec(), test_utils::Contig{}, "v", 1013);
-  test_core_send_recv(v);
-}
-TYPED_TEST(SendRecv, NonContig1D) {
-  auto v = test_utils::build_view<typename TestFixture::Scalar, 1>(test_exec(), test_utils::NonContig{}, "v", 1013);
-  test_core_send_recv(v);
-}
-TYPED_TEST(SendRecv, Contig2D) {
-  auto v = test_utils::build_view<typename TestFixture::Scalar, 2>(test_exec(), test_utils::Contig{}, "v", 137, 17);
-  test_core_send_recv(v);
-}
-TYPED_TEST(SendRecv, NonContig2D) {
-  auto v = test_utils::build_view<typename TestFixture::Scalar, 2>(test_exec(), test_utils::NonContig{}, "v", 137, 17);
-  test_core_send_recv(v);
-}
+#define KC_DEFINE_SEND_RECV_TESTS(SuiteName, TypeList, CommSpace)                \
+  template <typename T>                                                          \
+  class SuiteName : public SendRecvFixture<T> {};                                \
+                                                                                 \
+  TYPED_TEST_SUITE(SuiteName, TypeList);                                         \
+                                                                                 \
+  TYPED_TEST(SuiteName, Contig1D) {                                              \
+    auto v = test_utils::build_view<typename TestFixture::Scalar, 1>(            \
+        test_utils::get_exec<CommSpace>(), test_utils::Contig{}, "v", 1013       \
+    );                                                                           \
+    test_core_send_recv<CommSpace>(v);                                           \
+  }                                                                              \
+                                                                                 \
+  TYPED_TEST(SuiteName, NonContig1D) {                                           \
+    auto v = test_utils::build_view<typename TestFixture::Scalar, 1>(            \
+        test_utils::get_exec<CommSpace>(), test_utils::NonContig{}, "v", 1013    \
+    );                                                                           \
+    test_core_send_recv<CommSpace>(v);                                           \
+  }                                                                              \
+                                                                                 \
+  TYPED_TEST(SuiteName, Contig2D) {                                              \
+    auto v = test_utils::build_view<typename TestFixture::Scalar, 2>(            \
+        test_utils::get_exec<CommSpace>(), test_utils::Contig{}, "v", 137, 17    \
+    );                                                                           \
+    test_core_send_recv<CommSpace>(v);                                           \
+  }                                                                              \
+                                                                                 \
+  TYPED_TEST(SuiteName, NonContig2D) {                                           \
+    auto v = test_utils::build_view<typename TestFixture::Scalar, 2>(            \
+        test_utils::get_exec<CommSpace>(), test_utils::NonContig{}, "v", 137, 17 \
+    );                                                                           \
+    test_core_send_recv<CommSpace>(v);                                           \
+  }
+
+#if defined(KOKKOSCOMM_ENABLE_MPI)
+KC_DEFINE_SEND_RECV_TESTS(MpiSendRecv, MpiScalarTypes, KokkosComm::MpiSpace)
+#endif
+
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
+KC_DEFINE_SEND_RECV_TESTS(NcclSendRecv, XcclScalarTypes, KokkosComm::Experimental::NcclSpace)
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+KC_DEFINE_SEND_RECV_TESTS(RcclSendRecv, XcclScalarTypes, KokkosComm::Experimental::RcclSpace)
+#endif
+
+#undef KC_DEFINE_SEND_RECV_TESTS
 
 }  // namespace

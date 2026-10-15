@@ -2,195 +2,148 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <type_traits>
+#include <utility>
 
 #include <gtest/gtest.h>
 #include <KokkosComm/KokkosComm.hpp>
 
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-#include "nccl/utils.hpp"
-#endif
+#include "communication_space_utils.hpp"
 
 namespace {
 
-// from_raw
-// --------
+template <typename T>
+class CommunicatorTest : public testing::Test {
+ public:
+  using CommSpace = T;
+};
 
-TEST(Communicator, from_raw_returns_same_communicator) {
+using CommSpaces = ::testing::Types<
+#if defined(KOKKOSCOMM_ENABLE_MPI)
+    KokkosComm::MpiSpace
 #if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
+    ,
 #endif
-  auto result = KokkosComm::Communicator<>::from_raw(raw_comm);
+#endif
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
+    KokkosComm::Experimental::NcclSpace
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+    KokkosComm::Experimental::RcclSpace
+#endif
+    >;
+TYPED_TEST_SUITE(CommunicatorTest, CommSpaces);
 
-  ASSERT_EQ(result.comm(), raw_comm);
+// The default template argument is intentionally checked once, alongside the explicit-space suite.
+TEST(Communicator, default_space_can_construct_from_raw) {
+  using CommSpace = KokkosComm::DefaultCommunicationSpace;
+  auto raw_comm   = test_utils::get_raw_comm<CommSpace>();
+  auto comm       = KokkosComm::Communicator<>::from_raw(raw_comm, test_utils::get_exec<CommSpace>());
+
+  ASSERT_EQ(comm.comm(), raw_comm);
 }
 
-TEST(Communicator, from_raw_preserves_size_and_rank) {
-  int expected_size, expected_rank;
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-  ncclCommCount(raw_comm, &expected_size);
-  ncclCommUserRank(raw_comm, &expected_rank);
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-  MPI_Comm_size(raw_comm, &expected_size);
-  MPI_Comm_rank(raw_comm, &expected_rank);
-#endif
-  auto comm = KokkosComm::Communicator<>::from_raw(raw_comm);
+TYPED_TEST(CommunicatorTest, from_raw_returns_same_communicator) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto raw_comm   = test_utils::get_raw_comm<CommSpace>();
+  auto comm       = KokkosComm::Communicator<CommSpace>::from_raw(raw_comm, test_utils::get_exec<CommSpace>());
 
-  ASSERT_EQ(comm.size(), expected_size);
-  ASSERT_EQ(comm.rank(), expected_rank);
+  ASSERT_EQ(comm.comm(), raw_comm);
 }
 
-TEST(Communicator, exec_returns_execution_space_of_correct_type) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  using Exec = Kokkos::DefaultExecutionSpace;
-  auto comm  = KokkosComm::Communicator<>::from_raw(raw_comm);
+TYPED_TEST(CommunicatorTest, from_raw_preserves_size_and_rank) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto raw_comm   = test_utils::get_raw_comm<CommSpace>();
+  auto comm       = test_utils::make_communicator<CommSpace>();
+
+  ASSERT_EQ(comm.size(), test_utils::get_comm_size<CommSpace>(raw_comm));
+  ASSERT_EQ(comm.rank(), test_utils::get_comm_rank<CommSpace>(raw_comm));
+}
+
+TYPED_TEST(CommunicatorTest, exec_returns_execution_space_of_correct_type) {
+  using Exec      = Kokkos::DefaultExecutionSpace;
+  using CommSpace = typename TestFixture::CommSpace;
+  auto comm       = test_utils::make_communicator<CommSpace>();
 
   static_assert(std::is_same_v<decltype(comm.exec()), const Exec&>);
   ASSERT_TRUE(&comm.exec() != nullptr);
 }
 
-// duplicate
-// ---------
-
-TEST(Communicator, duplicate_from_raw_returns_valid_communicator) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto result = KokkosComm::Communicator<>::duplicate_from_raw(raw_comm);
+TYPED_TEST(CommunicatorTest, duplicate_from_raw_returns_valid_communicator) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto raw_comm   = test_utils::get_raw_comm<CommSpace>();
+  auto result = KokkosComm::Communicator<CommSpace>::duplicate_from_raw(raw_comm, test_utils::get_exec<CommSpace>());
 
   ASSERT_TRUE(result.has_value());
 }
 
-TEST(Communicator, duplicate_from_raw_preserves_size_and_rank) {
-  int expected_size, expected_rank;
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-  ncclCommCount(raw_comm, &expected_size);
-  ncclCommUserRank(raw_comm, &expected_rank);
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-  MPI_Comm_size(raw_comm, &expected_size);
-  MPI_Comm_rank(raw_comm, &expected_rank);
-#endif
-  auto result = KokkosComm::Communicator<>::duplicate_from_raw(raw_comm).value();
+TYPED_TEST(CommunicatorTest, duplicate_from_raw_preserves_size_and_rank) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto raw_comm   = test_utils::get_raw_comm<CommSpace>();
+  auto result =
+      KokkosComm::Communicator<CommSpace>::duplicate_from_raw(raw_comm, test_utils::get_exec<CommSpace>()).value();
 
-  ASSERT_EQ(result.size(), expected_size);
-  ASSERT_EQ(result.rank(), expected_rank);
+  ASSERT_EQ(result.size(), test_utils::get_comm_size<CommSpace>(raw_comm));
+  ASSERT_EQ(result.rank(), test_utils::get_comm_rank<CommSpace>(raw_comm));
 }
 
-TEST(Communicator, duplicate_preserves_size_and_rank) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto original = KokkosComm::Communicator<>::from_raw(raw_comm);
-  auto result   = original.duplicate().value();
+TYPED_TEST(CommunicatorTest, duplicate_preserves_size_and_rank) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto original   = test_utils::make_communicator<CommSpace>();
+  auto result     = original.duplicate().value();
 
   ASSERT_EQ(result.size(), original.size());
   ASSERT_EQ(result.rank(), original.rank());
 }
 
-TEST(Communicator, duplicate_produces_independent_communicator) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto original = KokkosComm::Communicator<>::from_raw(raw_comm);
-  auto result   = original.duplicate().value();
+TYPED_TEST(CommunicatorTest, duplicate_produces_independent_communicator) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto original   = test_utils::make_communicator<CommSpace>();
+  auto result     = original.duplicate().value();
 
   ASSERT_NE(result.comm(), original.comm());
 }
 
-TEST(Communicator, duplicate_chain_produces_independent_communicators) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto comm1 = KokkosComm::Communicator<>::from_raw(raw_comm);
-  auto comm2 = comm1.duplicate().value();
-  auto comm3 = comm2.duplicate().value();
+TYPED_TEST(CommunicatorTest, duplicate_chain_produces_independent_communicators) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto comm1      = test_utils::make_communicator<CommSpace>();
+  auto comm2      = comm1.duplicate().value();
+  auto comm3      = comm2.duplicate().value();
 
   ASSERT_NE(comm1.comm(), comm2.comm());
   ASSERT_NE(comm2.comm(), comm3.comm());
   ASSERT_NE(comm1.comm(), comm3.comm());
 }
 
-// split
-// -----
-
-TEST(Communicator, split_from_raw_returns_valid_communicator) {
-  int rank;
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-  ncclCommUserRank(raw_comm, &rank);
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-  MPI_Comm_rank(raw_comm, &rank);
-#endif
-  auto result = KokkosComm::Communicator<>::split_from_raw(raw_comm, 0, rank);
+TYPED_TEST(CommunicatorTest, split_from_raw_returns_valid_communicator) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto raw_comm   = test_utils::get_raw_comm<CommSpace>();
+  auto exec       = test_utils::get_exec<CommSpace>();
+  int rank        = test_utils::get_comm_rank<CommSpace>(raw_comm);
+  auto result     = KokkosComm::Communicator<CommSpace>::split_from_raw(raw_comm, 0, rank, exec);
 
   ASSERT_TRUE(result.has_value());
 }
 
-TEST(Communicator, split_undefined_color_returns_nullopt) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-  int color      = NCCL_SPLIT_NOCOLOR;
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-  int color     = MPI_UNDEFINED;
-#endif
-  auto original = KokkosComm::Communicator<>::from_raw(raw_comm);
-  auto result   = original.split(color, 0);
+TYPED_TEST(CommunicatorTest, split_undefined_color_returns_nullopt) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto original   = test_utils::make_communicator<CommSpace>();
+  const int color = test_utils::get_undefined_color<CommSpace>();
+
+  auto result = original.split(color, 0);
 
   ASSERT_FALSE(result.has_value());
 }
 
-TEST(Communicator, split_same_color_groups_all_ranks) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto original   = KokkosComm::Communicator<>::from_raw(raw_comm);
-  const int color = 0;
-
-  auto result = original.split(color, original.rank()).value();
+TYPED_TEST(CommunicatorTest, split_same_color_groups_all_ranks) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto original   = test_utils::make_communicator<CommSpace>();
+  auto result     = original.split(0, original.rank()).value();
 
   ASSERT_EQ(result.size(), original.size());
 }
 
-TEST(Communicator, split_two_colors_produces_half_sized_communicators) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto original = KokkosComm::Communicator<>::from_raw(raw_comm);
+TYPED_TEST(CommunicatorTest, split_two_colors_produces_half_sized_communicators) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto original   = test_utils::make_communicator<CommSpace>();
   if (original.size() < 2 or original.size() % 2 != 0) {
     GTEST_SKIP() << "Requires an even number of ranks >= 2 (" << original.size() << " provided)";
   }
@@ -201,19 +154,13 @@ TEST(Communicator, split_two_colors_produces_half_sized_communicators) {
   ASSERT_EQ(result.size(), original.size() / 2);
 }
 
-TEST(Communicator, split_key_controls_rank_ordering) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto original = KokkosComm::Communicator<>::from_raw(raw_comm);
+TYPED_TEST(CommunicatorTest, split_key_controls_rank_ordering) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto original   = test_utils::make_communicator<CommSpace>();
   if (original.size() < 2 or original.size() % 2 != 0) {
     GTEST_SKIP() << "Requires an even number of ranks >= 2 (" << original.size() << " provided)";
   }
-  const int color = 0;
-  // Reverse key: rank 0 gets the highest key, rank N-1 gets 0
+  // Reverse key: rank 0 gets the highest key, rank N-1 gets 0.
   const int reversed_key = original.size() - 1 - original.rank();
 
   auto result = original.split(0, reversed_key).value();
@@ -221,14 +168,9 @@ TEST(Communicator, split_key_controls_rank_ordering) {
   ASSERT_EQ(result.rank(), reversed_key);
 }
 
-TEST(Communicator, sequential_splits_produce_independent_communicators) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto original = KokkosComm::Communicator<>::from_raw(raw_comm);
+TYPED_TEST(CommunicatorTest, sequential_splits_produce_independent_communicators) {
+  using CommSpace = typename TestFixture::CommSpace;
+  auto original   = test_utils::make_communicator<CommSpace>();
   if (original.size() < 2) {
     GTEST_SKIP() << "Requires at least 2 ranks";
   }
@@ -242,17 +184,9 @@ TEST(Communicator, sequential_splits_produce_independent_communicators) {
   ASSERT_EQ(second_split.size(), first_split.size());
 }
 
-// move semantics
-// --------------
-
-TEST(Communicator, move_constructed_communicator_is_valid) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto original           = KokkosComm::Communicator<>::from_raw(raw_comm);
+TYPED_TEST(CommunicatorTest, move_constructed_communicator_is_valid) {
+  using CommSpace         = typename TestFixture::CommSpace;
+  auto original           = test_utils::make_communicator<CommSpace>();
   const int expected_size = original.size();
   const int expected_rank = original.rank();
 
@@ -262,14 +196,9 @@ TEST(Communicator, move_constructed_communicator_is_valid) {
   ASSERT_EQ(result.rank(), expected_rank);
 }
 
-TEST(Communicator, move_assigned_communicator_is_valid) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto original           = KokkosComm::Communicator<>::from_raw(raw_comm);
+TYPED_TEST(CommunicatorTest, move_assigned_communicator_is_valid) {
+  using CommSpace         = typename TestFixture::CommSpace;
+  auto original           = test_utils::make_communicator<CommSpace>();
   auto target             = original.duplicate().value();
   const int expected_size = original.size();
   const int expected_rank = original.rank();
@@ -280,14 +209,9 @@ TEST(Communicator, move_assigned_communicator_is_valid) {
   ASSERT_EQ(target.rank(), expected_rank);
 }
 
-TEST(Communicator, self_move_assignment_is_safe) {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto comm               = KokkosComm::Communicator<>::from_raw(raw_comm);
+TYPED_TEST(CommunicatorTest, self_move_assignment_is_safe) {
+  using CommSpace         = typename TestFixture::CommSpace;
+  auto comm               = test_utils::make_communicator<CommSpace>();
   const int expected_size = comm.size();
   const int expected_rank = comm.rank();
 

@@ -1,42 +1,27 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#include <cstddef>
+#include <cstdint>
+
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 #include <KokkosComm/KokkosComm.hpp>
 
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-#include "nccl/utils.hpp"
-#endif
+#include "communication_space_utils.hpp"
 
 namespace {
 
-using Ex = Kokkos::DefaultExecutionSpace;
-using Co = KokkosComm::DefaultCommunicationSpace;
-
 template <typename T>
-class AllGather : public testing::Test {
+class AllGatherFixture : public testing::Test {
  public:
   using Scalar = T;
 };
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-using ScalarTypes = testing::Types<float, double, int, int64_t>;
-#else
-using ScalarTypes =
-    testing::Types<float, double, Kokkos::complex<float>, Kokkos::complex<double>, int, unsigned, int64_t, size_t>;
-#endif
-TYPED_TEST_SUITE(AllGather, ScalarTypes);
 
-template <typename Scalar>
+template <KokkosComm::CommunicationSpace CommSpace, typename Scalar>
 auto allgather_0d() -> void {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto exec      = Ex();
-  auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
+  auto comm      = test_utils::make_communicator<CommSpace>();
+  auto exec      = comm.exec();
   const int size = comm.size();
   const int rank = comm.rank();
 
@@ -58,16 +43,10 @@ auto allgather_0d() -> void {
   EXPECT_EQ(errs, 0);
 }
 
-template <typename Scalar>
+template <KokkosComm::CommunicationSpace CommSpace, typename Scalar>
 auto allgather_contig_1d() -> void {
-#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
-  auto& xccl_ctx = test_utils::XcclCtx::get();
-  auto raw_comm  = xccl_ctx.comm();
-#else
-  auto raw_comm = MPI_COMM_WORLD;
-#endif
-  auto exec      = Ex();
-  auto comm      = KokkosComm::Communicator<>::from_raw(raw_comm, exec);
+  auto comm      = test_utils::make_communicator<CommSpace>();
+  auto exec      = comm.exec();
   const int size = comm.size();
   const int rank = comm.rank();
 
@@ -96,7 +75,33 @@ auto allgather_contig_1d() -> void {
   EXPECT_EQ(errs, 0);
 }
 
-TYPED_TEST(AllGather, 0D) { allgather_0d<typename TestFixture::Scalar>(); }
-TYPED_TEST(AllGather, Contiguous1D) { allgather_contig_1d<typename TestFixture::Scalar>(); }
+#if defined(KOKKOSCOMM_ENABLE_MPI)
+using MpiScalarTypes =
+    testing::Types<float, double, Kokkos::complex<float>, Kokkos::complex<double>, int, unsigned, int64_t, size_t>;
+#endif
+#if defined(KOKKOSCOMM_ENABLE_NCCL) || defined(KOKKOSCOMM_ENABLE_RCCL)
+using XcclScalarTypes = testing::Types<float, double, int, int64_t>;
+#endif
+
+#define KC_DEFINE_ALLGATHER_TESTS(SuiteName, TypeList, CommSpace)                        \
+  template <typename T>                                                                  \
+  class SuiteName : public AllGatherFixture<T> {};                                       \
+                                                                                         \
+  TYPED_TEST_SUITE(SuiteName, TypeList);                                                 \
+                                                                                         \
+  TYPED_TEST(SuiteName, 0D) { allgather_0d<CommSpace, typename TestFixture::Scalar>(); } \
+  TYPED_TEST(SuiteName, Contiguous1D) { allgather_contig_1d<CommSpace, typename TestFixture::Scalar>(); }
+
+#if defined(KOKKOSCOMM_ENABLE_MPI)
+KC_DEFINE_ALLGATHER_TESTS(MpiAllGather, MpiScalarTypes, KokkosComm::MpiSpace)
+#endif
+
+#if defined(KOKKOSCOMM_ENABLE_NCCL)
+KC_DEFINE_ALLGATHER_TESTS(NcclAllGather, XcclScalarTypes, KokkosComm::Experimental::NcclSpace)
+#elif defined(KOKKOSCOMM_ENABLE_RCCL)
+KC_DEFINE_ALLGATHER_TESTS(RcclAllGather, XcclScalarTypes, KokkosComm::Experimental::RcclSpace)
+#endif
+
+#undef KC_DEFINE_ALLGATHER_TESTS
 
 }  // namespace
