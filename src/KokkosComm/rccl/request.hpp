@@ -111,7 +111,7 @@ class Request<Experimental::RcclSpace> {
     }
 
     // FIXME: Do something smarter with `err` for better error reporting
-    rccl::fail_if(err != hipSuccess, "KokkosComm::Request::wait: request completion failed");
+    rccl::fail_if(err != hipSuccess, "KokkosComm::Request::test: request completion failed");
     // unreachable
     return false;
   }
