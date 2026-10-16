@@ -89,7 +89,7 @@ class Communicator<Experimental::RcclSpace, Kokkos::HIP> {
   /// @brief Move assignment operator.
   auto operator=(Communicator&& other) noexcept -> Communicator& {
     // Self-assignment guard is necessary here since the move assignment operator can be called on an already
-    // initialized object, and we must prevent self-move from calling `MPI_Comm_free`.
+    // initialized object, and we must prevent self-move from calling `ncclCommDestroy`.
     if (this != &other) {
       // Run destructor logic on current state before overwriting (if `this` is already initialized)
       if (owned_) {
@@ -106,7 +106,7 @@ class Communicator<Experimental::RcclSpace, Kokkos::HIP> {
 
   [[nodiscard]] constexpr auto exec() const noexcept -> const execution_space& { return exec_; }
   [[nodiscard]] constexpr auto comm() const noexcept -> const communicator_type& { return comm_; }
-  // Non-const overload required because most MPI communication primitives take `ncclComm_t` by value
+  // Non-const overload required because most RCCL communication primitives take `ncclComm_t` by value
   [[nodiscard]] constexpr auto comm() noexcept -> communicator_type& { return comm_; }
   [[nodiscard]] constexpr auto size() const noexcept -> size_type { return size_; }
   [[nodiscard]] constexpr auto rank() const noexcept -> rank_type { return rank_; }
