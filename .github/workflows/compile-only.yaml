@@ -129,6 +129,8 @@ jobs:
           wget -qO- https://repo.radeon.com/rocm/rocm.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/rocm.gpg
           echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/${ROCM_VERSION} noble main" \
             | sudo tee /etc/apt/sources.list.d/rocm.list
+          printf 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600\n' \
+            | sudo tee /etc/apt/preferences.d/rocm-pin-600
       - name: Install ROCm toolchain and rocPRIM
         run: |
           sudo apt-get update
