@@ -24,7 +24,11 @@ function(kc_add_unit_test name)
     target_link_libraries(${name} PRIVATE NCCL::NCCL CUDA::cudart)
   endif()
 
-  add_test(NAME ${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${UT_NUM_PES} ./${name})
+  add_test(
+    NAME ${name}
+    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${UT_NUM_PES}
+            ${MPIEXEC_PREFLAGS} ./${name} ${MPIEXEC_POSTFLAGS}
+  )
 endfunction()
 
 function(kc_add_perf_test name)
@@ -52,5 +56,9 @@ function(kc_add_perf_test name)
     target_link_libraries(${name} PRIVATE NCCL::NCCL CUDA::cudart)
   endif()
 
-  add_test(NAME ${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${PT_NUM_PES} ./${name})
+  add_test(
+    NAME ${name}
+    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${PT_NUM_PES}
+            ${MPIEXEC_PREFLAGS} ./${name} ${MPIEXEC_POSTFLAGS}
+  )
 endfunction()
