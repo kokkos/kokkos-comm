@@ -139,21 +139,22 @@ inline auto wait_all(std::span<Request<Experimental::NcclSpace>> requests) -> vo
     return;
   }
 
-  int remaining = requests.size();
-  // Poll until all requests are completed
-  //
-  // NOTE: While this is an active-wait loop, it should be the best compromise for performance.
-  // Other implementation strategies could be:
-  // - Complete requests in parallel by spawning threads
-  // - Complete requests one at a time in a sequential loop
-  while (remaining > 0) {
-    for (auto& req : requests) {
-      cudaError_t err = cudaEventQuery(req.request());
+  // Track only requests that have not yet completed so completed events are not re-polled or re-counted.
+  std::vector<Request<Experimental::NcclSpace>*> pending;
+  pending.reserve(requests.size());
+  for (auto& req : requests) {
+    pending.push_back(&req);
+  }
+
+  while (!pending.empty()) {
+    for (std::size_t i = 0; i < pending.size();) {
+      cudaError_t err = cudaEventQuery(pending[i]->request());
       if (err == cudaSuccess) {
-        req.execute_all_callbacks();
-        remaining--;
+        pending[i]->execute_all_callbacks();
+        pending[i] = pending.back();
+        pending.pop_back();
       } else if (err == cudaErrorNotReady) {
-        continue;
+        ++i;
       } else {
         // FIXME: Do something smarter with `err` for better error reporting
         nccl::fail_if(err != cudaSuccess, "KokkosComm::Request::wait_all: request completions failed");
