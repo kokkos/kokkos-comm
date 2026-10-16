@@ -106,3 +106,77 @@ jobs:
           -DKokkosComm_ENABLE_TESTS=ON
       - name: KokkosComm - Build NCCL backend
         run: cmake --build "$KOKKOSCOMM_BUILD_NCCL" --parallel $(nproc) --verbose
+
+  Kokkos_release-Open_MPI_416-ROCm_724-Release:
+    runs-on: ubuntu-24.04
+    env:
+      ROCM_VERSION: "7.2.4"
+      KOKKOS_RELEASE: "5.2.2"
+      KOKKOS_SRC: ${{ github.workspace }}/build/_deps/kokkos-src
+      KOKKOS_BUILD: ${{ github.workspace }}/build/_deps/kokkos-build
+      KOKKOS_INSTALL: ${{ github.workspace }}/build/_deps/kokkos-install
+      KOKKOSCOMM_BUILD_MPI: ${{ github.workspace }}/build/mpi
+    timeout-minutes: 90
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
+      - name: Register ROCm apt repository
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg ca-certificates
+          sudo mkdir -p /etc/apt/keyrings
+          wget -qO- https://repo.radeon.com/rocm/rocm.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/rocm.gpg
+          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/${ROCM_VERSION} noble main" \
+            | sudo tee /etc/apt/sources.list.d/rocm.list
+      - name: Install ROCm toolchain and rocPRIM
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rocm-dev rocprim-dev
+          echo "/opt/rocm/bin" >> "$GITHUB_PATH"
+          echo "ROCM_PATH=/opt/rocm" >> "$GITHUB_ENV"
+      - name: Check ROCm toolchain
+        run: |
+          hipcc --version
+
+      - name: Install MPI and build tools
+        run: |
+          sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin
+          which mpirun && mpirun --version
+          which mpicxx && mpicxx --version
+
+      - name: Kokkos - Checkout
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          repository: kokkos/kokkos
+          ref: ${{ env.KOKKOS_RELEASE }}
+          path: build/_deps/kokkos-src
+      - name: Kokkos - Configure
+        run: >
+          cmake
+          -S "$KOKKOS_SRC"
+          -B "$KOKKOS_BUILD"
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL"
+          -DCMAKE_CXX_COMPILER=hipcc
+          -DKokkos_ENABLE_SERIAL=ON
+          -DKokkos_ENABLE_HIP=ON
+          -DKokkos_ARCH_AMD_GFX942=ON
+      - name: Kokkos - Build
+        run: cmake --build "$KOKKOS_BUILD" --parallel $(nproc)
+      - name: Kokkos - Install
+        run: cmake --install "$KOKKOS_BUILD" --prefix "$KOKKOS_INSTALL"
+
+      - name: KokkosComm - Configure MPI backend
+        run: >
+          cmake
+          -S ${{ github.workspace }}
+          -B "$KOKKOSCOMM_BUILD_MPI"
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_COMPILER=hipcc
+          -DKokkos_ROOT="$KOKKOS_INSTALL"
+          -DKokkosComm_ENABLE_MPI=ON
+          -DKokkosComm_ENABLE_TESTS=ON
+          -DKokkosComm_ENABLE_PERFTESTS=ON
+      - name: KokkosComm - Build MPI backend
+        run: cmake --build "$KOKKOSCOMM_BUILD_MPI" --parallel $(nproc) --verbose
