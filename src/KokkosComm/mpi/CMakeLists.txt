@@ -15,6 +15,7 @@ target_sources(
         isend.hpp
         recv.hpp
         irecv.hpp
+        sendrecv.hpp
         channel.hpp
         # Collectives
         broadcast.hpp

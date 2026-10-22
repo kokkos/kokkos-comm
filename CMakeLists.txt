@@ -32,7 +32,7 @@ set(KOKKOSCOMM_ENABLED_BACKENDS "")
 find_package(Kokkos 4.7.0 REQUIRED)
 
 if(KokkosComm_ENABLE_MPI)
-  find_package(MPI 3.0.0 REQUIRED)
+  find_package(MPI 4.0.0 REQUIRED)
   include(mpi-vendor)
   kokkoscomm_set_mpi_vendor_variables()
   list(APPEND KOKKOSCOMM_ENABLED_BACKENDS "MPI")

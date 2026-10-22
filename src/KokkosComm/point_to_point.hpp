@@ -12,6 +12,7 @@
 #include "mpi/request.hpp"
 #include "mpi/isend.hpp"
 #include "mpi/irecv.hpp"
+#include "mpi/sendrecv.hpp"
 #endif
 #if defined(KOKKOSCOMM_ENABLE_NCCL)
 #include "nccl/nccl_space.hpp"
@@ -19,6 +20,7 @@
 #include "nccl/request.hpp"
 #include "nccl/send.hpp"
 #include "nccl/recv.hpp"
+#include "nccl/sendrecv.hpp"
 #endif
 
 namespace KokkosComm {
@@ -39,6 +41,11 @@ template <
     CommunicationSpace CommSpace   = DefaultCommunicationSpace>
 auto recv(Communicator<CommSpace, ExecSpace>& h, RecvView& rv, int peer) -> Request<CommSpace> {
   return Impl::Recv<RecvView, ExecSpace, CommSpace>::execute(h, rv, peer);
+}
+
+template <CommunicationSpace Comm, KokkosExecutionSpace Exec, KokkosView SendV, MutKokkosView RecvV>
+auto exchange(Communicator<Comm, Exec>& comm, SendV const& sv, int dst, RecvV const& rv, int src) -> Request<Comm> {
+  return Impl::Exchange<Comm, Exec, SendV, RecvV>::execute(comm, sv, dst, rv, src);
 }
 
 }  // namespace KokkosComm
