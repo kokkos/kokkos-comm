@@ -15,6 +15,7 @@
 #include "request.hpp"
 
 #include "impl/pack_traits.hpp"
+#include "impl/error_handling.hpp"
 
 namespace KokkosComm::Experimental {
 namespace nccl {
@@ -33,9 +34,9 @@ auto allreduce(const ExecSpace& space, const SendView& sv, const RecvView& rv, n
 
   Request<NcclSpace> req;
   if (KC::is_contiguous(sv) and KC::is_contiguous(rv)) {
-    ncclAllReduce(
+    KC_NCCL_CHECK(ncclAllReduce(
         KC::data_handle(sv), KC::data_handle(rv), KC::span(sv), datatype<NcclSpace, ST>(), op, comm, space.cuda_stream()
-    );
+    ));
     req.capture_stream_state(space.cuda_stream());
   } else {
     Kokkos::abort("KokkosComm::Experimental::nccl::allreduce: unimplemented for non-contiguous Views");
