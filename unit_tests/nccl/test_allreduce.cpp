@@ -77,4 +77,16 @@ auto allreduce_contig_1d() -> void {
 TYPED_TEST(AllReduce, 0D) { allreduce_0d<typename TestFixture::Scalar>(); }
 TYPED_TEST(AllReduce, Contiguous1D) { allreduce_contig_1d<typename TestFixture::Scalar>(); }
 
+TEST(AllReduce, ExtentMismatch) {
+  auto& nccl_ctx  = test_utils::NcclCtx::get();
+  const auto exec = Kokkos::Cuda(nccl_ctx.stream());
+  const auto comm = nccl_ctx.comm();
+
+  const int n = 100;
+  Kokkos::View<double*> sv("sv", n);
+  Kokkos::View<double*> rv("rv", n + 1);  // deliberately wrong
+
+  EXPECT_DEATH(KokkosComm::Experimental::nccl::allreduce(exec, sv, rv, ncclSum, comm).wait(), "extent mismatch");
+}
+
 }  // namespace

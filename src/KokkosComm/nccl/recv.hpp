@@ -12,7 +12,7 @@
 #include "nccl_space.hpp"
 #include "communicator.hpp"
 #include "request.hpp"
-
+#include "KokkosComm/impl/metadata_checks.hpp"
 #include "impl/pack_traits.hpp"
 #include "impl/error_handling.hpp"
 
@@ -30,6 +30,7 @@ auto recv(const ExecSpace& space, RecvView& rv, int peer, ncclComm_t comm) -> Re
   } else {
     using Packer = typename Impl::PackTraits<RecvView>::packer_type;
     auto pckd_rv = Packer::allocate_packed_for(space, "pckd_rv", rv);
+
     KC_NCCL_CHECK(
         ncclRecv(data_handle(pckd_rv.view_), pckd_rv.count_, pckd_rv.datatype_, peer, comm, space.cuda_stream())
     );
